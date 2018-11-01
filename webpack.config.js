@@ -48,25 +48,5 @@ module.exports = {
     //plugins: [HTMLWebpackPluginConfig]
 
     plugins: [
-        new CopyWebpackPlugin(
-            [
-                { from: 'archive.html', to: './' },
-                { from: 'archivesw.html', to: './' },
-                { from: 'bootloader.html', to: './'},
-                { from: 'dweb-archive-styles.css', to: './'},
-                { from: 'favicon.ico', to: './'},
-                { from: 'images/', to: 'images/'},
-                { from: 'includes/fonts/', to: 'includes/fonts'},
-                { from: 'includes/jw/', to: 'includes/jw'},
-                { from: 'includes/archive*css', to: './'},
-                { from: 'includes/.+[css|gif]', to: './'},
-                { from: 'includes/archive.*js', to: './'},
-                { from: 'includes/archive.*js.map', to: './'},
-                { from: 'includes/bootstrap.*js', to: './'},
-                { from: 'includes/jquery.*js', to: './'},
-                { from: 'includes/node_modules_dist', to: 'includes/node_modules'} // Note in node_modules need react/dist/react.js
-            ],
-            { }
-        )
     ]
 };

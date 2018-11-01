@@ -1,6 +1,7 @@
 //require('babel-core/register')({presets: ['env', 'react']}); // ES6 JS below!
-
+//TODO-REFACTOR-REPO - remove excess crud from here, then remove stuff here from dweb-archive and include this Util
 class Util {
+    /*
     static number_format(nStr)//this is just addCommas now
     {
         //http://www.mredkj.com/javascript/numberFormat.html
@@ -56,11 +57,11 @@ class Util {
     }
 
     static AJS_on_dom_loaded() {
-        /*
+        /-*
         This function is copied from archive.min.js because
         a) its run there on DOMLoaded, which is before we've got anything on the page
         b) Its anonymous in archive.min.js so can't call it
-         */
+         *-/
         // Use this global hack, by adding class 'accessible-link' to any mouse-only element div/img
         // Note AJS is defined in archive_min.js
         AJS.makeMouseElementAccessible('.accessible-link');
@@ -73,7 +74,7 @@ class Util {
         AJS.setUpCreativeCommonsLicenseLink();
         AJS.setUpSearchForms();
 
-        /* global  archive_setup */
+        // global  archive_setup
         if (typeof archive_setup !== 'undefined') {
             // when DOM loaded/stable, do some setup
             $(() => {
@@ -85,7 +86,7 @@ class Util {
 
         AJS.footer();
     }
-
+*/
     static fetch_json(url, cb) {
         //TODO-PROMISIFY this is a temp patch between cb and promise till p_fetch_json handles cb
         if (cb) {
@@ -95,13 +96,13 @@ class Util {
         }
     }
     static async p_fetch_json(url) {
-        /*
+        /-*
         url:   to be fetched - construct CORS safe JSON enquiry.
         throws: TypeError if cant fetch
         throws: Error if fetch doesnt return JSON.
         throws: Error if fail to fetch
         resolves to: Decoded json response
-         */
+         *-/
         const response = await fetch(new Request(url, // Throws TypeError on failed fetch
             {
                 method: 'GET',
@@ -123,6 +124,7 @@ class Util {
             throw new Error(`failed to fetch ${url} message=${response.status} ${response.statusText}`);
         }
     }
+/*
     static metaFromUpdater({uploader=undefined, email=undefined}={}) {
         // Need to be able to convert email to uploader
         const u = uploader ||email; // TODO need to be able to convert back and forth with uploader and email
@@ -136,7 +138,7 @@ class Util {
 
         }
     }
-    /*
+    /-*
     static listperson(uu) {
         // Note - might need to tighten up layout to avoid extra spaces/breaks
         return (
@@ -155,8 +157,9 @@ class Util {
             </div>
         );
     }
-    */
+    *-/
 
+*/
     static formats(k,v,{first=true}={}) {
         const ff = Util._formatarr.filter(f => f[k] === v);
         return first ? (ff.length ? ff[0] : undefined) : ff;
@@ -186,7 +189,7 @@ class Util {
     }
 }
 
-/* === Configuration info ==== */
+// === Configuration info ====
 
 //TODO expand to other formats - see mimetypes list from petabox
 // Git petabox/www/common/FormatGetter.inc has the ones with ext and name, but nothing else
@@ -735,8 +738,8 @@ Util._formatarr = [
     {format: undefined, ext:'.xyz', type: 'chemical', mimetype: 'chemical/x-xyz', playable: undefined, downloadable: undefined },
     {format: undefined, ext:'.zmt', type: 'chemical', mimetype: 'chemical/x-mopac-input', playable: undefined, downloadable: undefined },
 ];
-
-/* petabox/www/common/FormatGetter.inc has these items, not sure if useful
+/*
+/-* petabox/www/common/FormatGetter.inc has these items, not sure if useful
     '3gpp'      => '3GP',
     '3gpp2'     => '3GP',
     'avi'       => 'Cinepack',//how embarrassing for us, but legacy so leaving...
@@ -750,8 +753,8 @@ Util._formatarr = [
     'x-m4v'     => 'MPEG4',
     'x-msvideo' => 'Windows Media',
     'x-ms-wmv'  => 'Windows Media',
+*-/
 */
-
 Util.gateway = {
     "url_download": "/arc/archive.org/download/",
     "url_servicesimg": "/arc/archive.org/thumbnail/",    //TODO-MIRROR support this
@@ -761,6 +764,7 @@ Util.gateway = {
     "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues //TODO-MIRROR fix this
     "url_related_local": "/arc/archive.org/mds/v1/get_related/all/"   // Direct, no CORS issues //TODO-MIRROR fix this
 };
+/*
 // minified FROM http://sourcefrog.net/projects/natsort/natcompare.js
 function isWhitespaceChar(B){const A=B.charCodeAt(0);if(A<=32){return true;}else{return false;}}
 function isDigitChar(B){const A=B.charCodeAt(0);if(A>=48&&A<=57){return true;}else{return false;}}
@@ -1109,14 +1113,16 @@ Util.languageMapping = {
     'zun': 'Zuni',
     'zxx': 'No linguistic content'
 };
-
+*/
 Util.metadata = {
     "singletons": {    // Fields that should be single entry.
         "description": "<br/>"
     },
     "arrays": ["collection" ]
 };
+/*
 Util.config = {
     preferredAVtransports: [ "WEBTORRENT", "IPFS"], // Current reliability issues with IPFS streams accompanied by lack of negative feedback on fail
 };
 exports = module.exports = Util;
+*/

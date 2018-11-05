@@ -11,7 +11,7 @@ class ArchiveFile {
     Fields:
     metadata: metadata of item - (note will be a pointer into a Detail or Search's metadata so treat as read-only)
     sd: pointer to SmartDict created with Urls (see how did it with Academic)
-     */
+    */
 
     constructor({itemid = undefined, metadata = undefined}={}) {
         this.itemid = itemid;
@@ -39,9 +39,9 @@ class ArchiveFile {
         if no cb: resolve to urls
         Throws: Error if fetch_json doesn't succeed, or retrieves something other than JSON
          */
-        try {
-            if (!this.metadata.magnetlink   // Wont be file based metadata for example for __ia_thumb.jpg constructed from search
-                || !this.metadata.contenthash
+        try { // Some of this will be missing if not file based metadata for example for __ia_thumb.jpg constructed from search
+            if ((!this.metadata.magnetlink && !(this.metadata.name==="__ia_thumb.jpg")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
+                //|| !this.metadata.contenthash // Dont do another roundtrip just to get contenthash
                 || ((!this.metadata.ipfs && (await DwebTransports.p_connectedNames()).includes("IPFS")))
             ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
                 // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it

@@ -1,4 +1,5 @@
 //require('babel-core/register')({presets: ['env', 'react']}); // ES6 JS below!
+const debug = require('debug')('dweb-archive');
 //TODO-REFACTOR-REPO - remove excess crud from here, then remove stuff here from dweb-archive and include this Util
 class Util {
 
@@ -985,10 +986,11 @@ Util.languageMapping = {
 };
 
 Util.metadata = {
-    "singletons": {    // Fields that should be single entry.
+    "singletons": {    // Fields that should be single entry but are occasionally multi - so concatenate
         "description": "<br/>"
     },
-    "arrays": ["collection" ]
+    "arrays": ["collection", "updatedate", "updater" ]
+    // All other fields should be checked and enforced as single entry
 };
 
 exports = module.exports = Util;

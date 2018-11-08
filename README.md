@@ -49,3 +49,5 @@ Just do the "All" case above
 
 ## See also
 See [Dweb document index](https://github.com/internetarchive/dweb-transports/blob/master/DOCUMENTINDEX.md) for a list of the repos that make up the Internet Archive's Dweb project, and an index of other documents. 
+
+Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA internal. 

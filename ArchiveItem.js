@@ -50,8 +50,7 @@ class ArchiveItem {
         meta:   { metadata, files, reviews, members, and other stuff }
          */
         if (metaapi) {
-            const meta = metaapi.metadata;
-            Util.processMetadataFjords(meta); // Just processes the .metadata part
+            const meta = Util.enforceStringOrArray(metaapi.metadata); // Just processes the .metadata part
             this.files = (metaapi && metaapi.files)
                 ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
                 : [];   // Default to empty, so usage simpler.
@@ -72,7 +71,8 @@ class ArchiveItem {
             this.collection_titles = metaapi.collection_titles;
             this.collection_sort_order = metaapi.collection_sort_order;
         }
-        return metaapi;
+        //return metaapi;// Broken but unused
+        return undefined;
     }
 
 

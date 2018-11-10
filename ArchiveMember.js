@@ -11,13 +11,13 @@ class ArchiveMember {
     constructor(o) {
         // All this really does is turn o into an instance of class ArchiveMember
         //Handle weirdness in JSON where different type returned depending on none/1/many and possibly other weirdness
-        ArchiveMember.processMetadataFjords(o); // Edit in place
+        const oModified = ArchiveMember.processMetadataFjords(o);
         // And copy into initial fields
-        Object.keys(o).map(k => this[k] = o[k]);
+        Object.keys(oModified).map(k => this[k] = oModified[k]);
     }
 
     static processMetadataFjords(meta) {
-        return Util.processMetadataFjords(meta);
+        return Util.enforceStringOrArray(meta);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
     }
 
     thumbnailFile() {

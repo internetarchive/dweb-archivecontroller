@@ -1000,10 +1000,17 @@ Util.languageMapping = {
     'zxx': 'No linguistic content'
 };
 
-//TODO migrate to use Arthurs rules from item_rules.json and then confirm in dweb-archive it follows them.
+// Add some fields that the gateways add to repeatable_fields
+item_rules.repeatable_fields.push('thumbnaillinks');
+// Add fields that are missing in item_rules
+item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/metadata/GratefulDead/metadata/publisher
+
 Util.rules = {
     item: { repeatable_fields: item_rules.repeatable_fields, required_fields: item_rules.required_fields },
-    member: { repeatable_fields: [], required_fields: [] }
+    member: { repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'contributor', 'creator',
+            'external-identifier', 'format', 'indexflag','oai_updatedate','publisher',
+            'stripped_tags', 'subject', 'thumbnaillinks'],
+        required_fields: ['identifier', 'mediatype', 'publicdate', 'title'] // Doesnt have updater
+    }
 }
-Util.rules.item.repeatable_fields.push('thumbnaillinks');
 exports = module.exports = Util;

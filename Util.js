@@ -78,7 +78,7 @@ class Util {
             }
         });
         rules.required_fields.filter(f=>((typeof res[f] === "undefined") && !rules.repeatable_fields.includes(f)))
-            .forEach(f => {debug("WARNING: Metadata Fjords - field %f missing from %s", f, meta.identifier); res[f] = ""; });
+            .forEach(f => {debug("WARNING: Metadata Fjords - field %s missing from %s", f, meta.identifier); res[f] = ""; });
         rules.repeatable_fields.filter(f=>(typeof res[f] === "undefined") )
             .forEach(f => res[f] = [] )
         return res;

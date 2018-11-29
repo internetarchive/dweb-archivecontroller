@@ -1,10 +1,12 @@
 const canonicaljson = require('@stratumn/canonicaljson');
 const ArchiveFile = require("./ArchiveFile");
+const ArchiveMemberFav = require("./ArchiveMemberFav");
+const ArchiveMemberSearch = require("./ArchiveMemberSearch");
 const ArchiveMember = require("./ArchiveMember");
 const Util = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
-const debug = require('debug')('dweb-archive');
+const debug = require('debug')('dweb-archivecontroller');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 //const DwebObjects = require('@internetarchive/dweb-objects'); //Not "required" because available as window.DwebObjects by separate import
 //TODO-NAMING url could be a name
@@ -25,11 +27,20 @@ class ArchiveItem {
      */
 
 
-    constructor({itemid = undefined, metaapi = undefined}={}) {
+    constructor({itemid = undefined, query = undefined, metaapi = undefined}={}) {
         this.itemid = itemid;
+        this.query = query;
         this.loadFromMetadataAPI(metaapi);
     }
 
+    static fromMemberFav(m) {
+        // Build an ArchiveItem from a ArchiveMemberFav.
+        if (m.mediatype === "search") { // Handle weird saved searches,
+            return new this({query: m.identifier});
+        } else {
+            return new this({itemid: m.identifier});
+        }
+    }
     exportFiles() {
         return this.files.map(f => f.metadata);
     }
@@ -175,7 +186,10 @@ class ArchiveItem {
                         // noinspection JSUnresolvedVariable
                         this.start = (this.page - 1) * this.limit;
                         // noinspection JSUnresolvedVariable
-                        const newmembers = canonicaljson.parse(jsonstring).slice(this.start, this.page * this.limit).map(o => new ArchiveMember(o)); // See copy of some of this logic in dweb-mirror.MirrorCollection.fetch_query
+                        const memberClass = this.itemid.startsWith('fav-') ? ArchiveMemberFav : ArchiveMemberSearch;
+                        const newmembers = (typeof jsonstring === 'string' ? canonicaljson.parse(jsonstring) : jsonstring)
+                            .slice(this.start, this.page * this.limit)
+                            .map(o => new memberClass(o)); // See copy of some of this logic in dweb-mirror.MirrorCollection.fetch_query
                         this._appendMembers(newmembers); // Note these are ArchiveMembers, not ArchiveItems
                         // Note this does NOT support sort, there isnt enough info in members.json to do that
                         // Also that numFound isnt defined since we dont know the total number, only the number previously cached.
@@ -192,17 +206,28 @@ class ArchiveItem {
                     // noinspection JSUnresolvedVariable
                     const sort = this.collection_sort_order || this.sort;
                     // noinspection JSUnresolvedVariable
-                    const url =
-                        //`https://archive.org/advancedsearch?output=json&q=${this.query}&rows=${this.limit}&sort[]=${sort}`; // Archive (CORS fail)
-                        `${Util.gatewayServer()}${Util.gateway.url_advancedsearch}?output=json&q=${encodeURIComponent(this.query)}&rows=${this.limit}&page=${this.page}&sort[]=${sort}&and[]=${this.and}&save=yes`;
-                    //`http://localhost:4244/metadata/advancedsearch?output=json&q=${this.query}&rows=${this.limit}&sort[]=${sort}`; //Testing
+
+                    const urlparms = Object.entries({
+                            output: "json",
+                            q: this.query,
+                            rows: this.limit,
+                            page: this.page,
+                            'sort[]': sort,
+                            'and[]': this.and,
+                            'save': 'yes'
+                            })
+                        .filter(kv => typeof kv[1] !== "undefined")
+                        .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
+                        .join('&');
+                    // Note direct call to archive.org leads to CORS fail
+                    const url = `${Util.gatewayServer()}${Util.gateway.url_advancedsearch}?${urlparms}`;
                     debug("Searching with %s", url);
                     Util.fetch_json(url, (err, j) => { // Will get error "failed to fetch" if fails
                         if (err) {
                             cb(err)
                         } // Failed to fetch
                         else {
-                            const newmembers = j.response.docs.map(o => new ArchiveMember(o));
+                            const newmembers = j.response.docs.map(o => new ArchiveMemberSearch(o));
                             this._appendMembers(newmembers);
                             this.start = j.response.start;
                             this.numFound = j.response.numFound;

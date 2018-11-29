@@ -1,5 +1,5 @@
 //require('babel-core/register')({presets: ['env', 'react']}); // ES6 JS below!
-const debug = require('debug')('dweb-archive');
+const debug = require('debug')('dweb-archive-controller');
 const item_rules = require('./item_rules.js');
 //TODO-REFACTOR-REPO - remove excess crud from here, then remove stuff here from dweb-archive and include this Util
 class Util {
@@ -1007,10 +1007,19 @@ item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/meta
 
 Util.rules = {
     item: { repeatable_fields: item_rules.repeatable_fields, required_fields: item_rules.required_fields },
-    member: { repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'contributor', 'creator',
-            'external-identifier', 'format', 'indexflag','oai_updatedate','publisher',
-            'stripped_tags', 'subject', 'thumbnaillinks'],
+    memberSearch: { repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'contributor', 'creator',
+            'description', 'external-identifier', 'format', 'indexflag','oai_updatedate','publisher',
+            'related-external-id', 'stripped_tags', 'subject', 'thumbnaillinks'],
         required_fields: ['identifier', 'mediatype', 'publicdate', 'title'] // Doesnt have updater
-    }
+    },
+    memberFav: { repeatable_fields: [], required_fields: ['identifier', 'updatedate', 'mediatype']}
 }
+Object.filter = (obj, f) => Object.keys(obj)
+    .filter(k=>f(k, obj[k]))
+    .reduce((res,k)=>(res[k]=obj[k],res),{});
+
+Object.map = (obj, f) => Object.keys(obj)
+    .map(k=>f(k, obj[k]))
+    .reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
+
 exports = module.exports = Util;

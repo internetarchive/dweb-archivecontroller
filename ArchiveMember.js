@@ -19,11 +19,12 @@ class ArchiveMember {
         return Util.enforceStringOrArray(meta, rules);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
     }
 
+    /* OBSOLETE - handling ArchiveMember direct in Tile.render > loadimg > p_loadImg > p_resolveUrls
     thumbnailFile() {
-        /*
+        /-*
         Return the thumbnailfile for a member, via its item,
         this should handle the case of whether the item has had metadata fetched or not, and must be synchronous as stored in <img src=> (the resolution is asyncHronous)
-         */
+         *-/
         // New items should have __ia_thumb.jpg but older ones dont
         // noinspection JSUnresolvedVariable
         if (this.mediatype === "search") {
@@ -40,6 +41,16 @@ class ArchiveMember {
         // noinspection JSUnresolvedVariable
         return new ArchiveFile({itemid: this.identifier, metadata });
     }
-
+    */
+    urls() {
+        if (this.thumbnaillinks) {
+            return this.thumbnaillinks;
+        } else {
+            return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.itemid}`; // Supported by dweb-mirror & gateway as well
+        }
+    }
+    async p_urls() {    // Its synchronous but maybe used asynchronously e.g. by ReactFake.p_loadImg > p_resolveUrls
+        return await this.urls();
+    }
 }
 exports = module.exports = ArchiveMember;

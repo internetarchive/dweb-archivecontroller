@@ -651,10 +651,10 @@ Util._formatarr = [
 */
 Util.gateway = {
     "url_download": "/arc/archive.org/download/",
-    "url_servicesimg": "/arc/archive.org/thumbnail/",    //TODO-MIRROR support this
+    "url_servicesimg": "/arc/archive.org/thumbnail/",
     "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this
-    "url_metadata": "/arc/archive.org/metadata/", //TODO-MIRROR support this
-    "url_advancedsearch": "/arc/archive.org/advancedsearch", //TODO-MIRROR support this
+    "url_metadata": "/arc/archive.org/metadata/",
+    "url_advancedsearch": "/arc/archive.org/advancedsearch",
     "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues //TODO-MIRROR fix this
     "url_related_local": "/arc/archive.org/mds/v1/get_related/all/"   // Direct, no CORS issues //TODO-MIRROR fix this
 };

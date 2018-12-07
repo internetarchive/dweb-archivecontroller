@@ -46,11 +46,15 @@ class ArchiveMember {
         if (this.thumbnaillinks) {
             return this.thumbnaillinks;
         } else {
-            return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.itemid}`; // Supported by dweb-mirror & gateway as well
+            return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.identifier}`; // Supported by dweb-mirror & gateway as well
         }
     }
     async p_urls() {    // Its synchronous but maybe used asynchronously e.g. by ReactFake.p_loadImg > p_resolveUrls
         return await this.urls();
+    }
+    collection0() {
+        // The first collection listed, for ArchiveMemberFav this is probably undefined
+        return (this.collection && this.collection.length) ? this.collection[0] : undefined;
     }
 }
 exports = module.exports = ArchiveMember;

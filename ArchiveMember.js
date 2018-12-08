@@ -42,12 +42,12 @@ class ArchiveMember {
         return new ArchiveFile({itemid: this.identifier, metadata });
     }
     */
+    httpUrl() {
+        return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.identifier}`;  // Supported by dweb-mirror & gateway as well
+    }
     urls() {
-        if (this.thumbnaillinks) {
-            return this.thumbnaillinks;
-        } else {
-            return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.identifier}`; // Supported by dweb-mirror & gateway as well
-        }
+        // Return single or array of urls
+        return this.thumbnaillinks ? this.thumbnaillinks : this.httpUrl();
     }
     async p_urls() {    // Its synchronous but maybe used asynchronously e.g. by ReactFake.p_loadImg > p_resolveUrls
         return await this.urls();

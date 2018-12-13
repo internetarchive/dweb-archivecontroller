@@ -187,7 +187,7 @@ class ArchiveItem {
                         this.start = (this.page - 1) * this.limit;
                         // noinspection JSUnresolvedVariable
                         const memberClass = this.itemid.startsWith('fav-') ? ArchiveMemberFav : ArchiveMemberSearch;
-                        const newmembers = (typeof jsonstring === 'string' ? canonicaljson.parse(jsonstring) : jsonstring)
+                        const newmembers = ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring)
                             .slice(this.start, this.page * this.limit)
                             .map(o => new memberClass(o)); // See copy of some of this logic in dweb-mirror.MirrorCollection.fetch_query
                         this._appendMembers(newmembers); // Note these are ArchiveMembers, not ArchiveItems

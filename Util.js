@@ -1,5 +1,6 @@
 //require('babel-core/register')({presets: ['env', 'react']}); // ES6 JS below!
-const debug = require('debug')('dweb-archive-controller');
+const canonicaljson = require('@stratumn/canonicaljson');
+const debug = require('debug')('dweb-archivecontroller:Util');
 const item_rules = require('./item_rules.js');
 //TODO-REFACTOR-REPO - remove excess crud from here, then remove stuff here from dweb-archive and include this Util
 class Util {
@@ -20,6 +21,7 @@ class Util {
         throws: Error if fail to fetch
         resolves to: Decoded json response
          */
+        debug("p_fetch_json: %s",url);
         const response = await fetch(new Request(url, // Throws TypeError on failed fetch
             {
                 method: 'GET',
@@ -80,7 +82,7 @@ class Util {
         rules.required_fields.filter(f=>((typeof res[f] === "undefined") && !rules.repeatable_fields.includes(f)))
             .forEach(f => {debug("WARNING: Metadata Fjords - field %s missing from %s", f, meta.identifier); res[f] = ""; });
         rules.repeatable_fields.filter(f=>(typeof res[f] === "undefined") )
-            .forEach(f => res[f] = [] )
+            .forEach(f => res[f] = [] );
         return res;
     }
 }
@@ -656,7 +658,8 @@ Util.gateway = {
     "url_metadata": "/arc/archive.org/metadata/",
     "url_advancedsearch": "/arc/archive.org/advancedsearch",
     "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues //TODO-MIRROR fix this
-    "url_related_local": "/arc/archive.org/mds/v1/get_related/all/"   // Direct, no CORS issues //TODO-MIRROR fix this
+    "url_related_local": "/arc/archive.org/mds/v1/get_related/all/",  // Direct, no CORS issues //TODO-MIRROR fix this
+    "url_default_fl": "identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"  // Note also used in dweb-mirror
 };
 
 // NOTE: copied _verbatim_ from  Details::$langList & Languages.inc until @hank and @ximm weigh in.. 8-)
@@ -1007,19 +1010,66 @@ item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/meta
 
 Util.rules = {
     item: { repeatable_fields: item_rules.repeatable_fields, required_fields: item_rules.required_fields },
-    memberSearch: { repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'contributor', 'creator',
-            'description', 'external-identifier', 'format', 'indexflag','oai_updatedate','publisher',
-            'related-external-id', 'stripped_tags', 'subject', 'thumbnaillinks'],
+    memberSearch: { repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks'],  //TODO use nonrepeatable fields
         required_fields: ['identifier', 'mediatype', 'publicdate', 'title'] // Doesnt have updater
     },
     memberFav: { repeatable_fields: [], required_fields: ['identifier', 'updatedate', 'mediatype']}
-}
-Object.filter = (obj, f) => Object.keys(obj)
-    .filter(k=>f(k, obj[k]))
-    .reduce((res,k)=>(res[k]=obj[k],res),{});
+};
+Object.fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
+Object.filter = (obj, f) => Object.fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
+Object.map = (obj, f) => Object.fromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
+Object.indexFrom = (arr, f) => Object.fromEntries( arr.map(o => [f(o), o]));
 
-Object.map = (obj, f) => Object.keys(obj)
-    .map(k=>f(k, obj[k]))
-    .reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
+Util.objectFrom = (jsonstring) =>
+    ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring);
+
+Util.asyncMap = (arr, f, cb) => {
+    // calls f(x, cb') in parallel for each element of x, calls cb(err) immediately on error or cb(null, arr) when last finished
+    // This is similar to npm module async/map
+    let i = 0;
+    let resarr = [];
+    let len = arr.length;
+    arr.forEach( o => {
+        const x = i++;
+        f(o, (err, res) => {
+            if (err) {
+                cb(err)
+            } else {
+                resarr[x] = res;
+                if (!--len) cb(null, resarr);
+            }})
+    });
+};
+
+Util.forEach = (arr, f, cb) => {
+    // calls f(x) in parallel for each element of x, calls cb(err) immediately on error or cb(null, arr) when last finished
+    // This is similar to npm module async/map
+    let len = arr.length;
+    arr.forEach( o => {
+        f(o, (err) => {
+            if (err) {
+                cb(err)
+            } else {
+                if (!--len) cb(null);
+            }})
+    });
+};
+Util._query = (queryobj, cb) => { // No opts currently
+    // rejects: TransportError or CodingError if no urls
+    try {
+        const urlparms = Object.entries(queryobj)
+            .filter(kv => typeof kv[1] !== "undefined")
+            .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
+            .join('&');
+        // Note direct call to archive.org leads to CORS fail
+        const url = `${Util.gatewayServer()}${Util.gateway.url_advancedsearch}?${urlparms}`;
+        debug("Searching with %s", url);
+        Util.fetch_json(url, cb);
+    } catch(err) {
+        console.error('Caught unhandled error in Util._query',err);
+        cb(err);
+    }
+}
+
 
 exports = module.exports = Util;

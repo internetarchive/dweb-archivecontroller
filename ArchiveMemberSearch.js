@@ -12,5 +12,35 @@ class ArchiveMemberSearch extends ArchiveMember {
         super(ArchiveMember.processMetadataFjords(o, Util.rules.memberSearch));
     }
 
+
+    static expand(ids, cb) {
+        /* Expand ids into the Search Docs that can be used to paint tiles or collection lists
+            ids [ identifier ]
+            cb(err, { id1: ArchiveSearch(id1) }
+        */
+        if (ids && ids.length) {
+            Util._query({
+                output: "json",
+                q: "identifier:" + ids.join(" OR "), // Note it will be URLencoded, don't use "%20OR%20"
+                rows: ids.length,
+                page: 1,
+                'sort[]': "identifier",
+                'fl': Util.gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
+            }, (err, j) => {
+                if (err) {
+                    debug("Unable to expand ids for %s %s", this.itemid, err.message);
+                    cb(err);
+                } else {
+                    const res = Object.indexFrom(j.response.docs.map(o => new ArchiveMemberSearch(o)), as => as.identifier); // { id1: as; id2: as2 }
+                    cb(null, res);
+                }
+            })
+        } else { // Short cut, no ids so dont need to do the query.
+            cb(null, {});
+        }
+    }
 }
+
+
+
 exports = module.exports = ArchiveMemberSearch;

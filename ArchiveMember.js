@@ -57,5 +57,8 @@ class ArchiveMember {
         // The first collection listed, for ArchiveMemberFav this is probably undefined
         return (this.collection && this.collection.length) ? this.collection[0] : undefined;
     }
+    isExpanded() {
+        return this.publicdate && this.title;
+    }
 }
 exports = module.exports = ArchiveMember;

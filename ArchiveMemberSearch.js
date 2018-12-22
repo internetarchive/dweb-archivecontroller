@@ -1,5 +1,6 @@
 const ArchiveMember = require("./ArchiveMember");
 const Util = require("./Util");
+const debug = require("debug")("archive-controller:ArchiveMemberSearch")
 
 class ArchiveMemberSearch extends ArchiveMember {
     /*
@@ -17,6 +18,8 @@ class ArchiveMemberSearch extends ArchiveMember {
         /* Expand ids into the Search Docs that can be used to paint tiles or collection lists
             ids [ identifier ]
             cb(err, { id1: ArchiveSearch(id1) }
+
+            Pathway is ...  ArchiveItem._fetch_query > ArchiveMemberSearch.expand
         */
         if (ids && ids.length) {
             Util._query({
@@ -31,7 +34,9 @@ class ArchiveMemberSearch extends ArchiveMember {
                     debug("Unable to expand ids for %s %s", this.itemid, err.message);
                     cb(err);
                 } else {
-                    const res = Object.indexFrom(j.response.docs.map(o => new ArchiveMemberSearch(o)), as => as.identifier); // { id1: as; id2: as2 }
+                    // Note some of these might still not be expanded if query partially or fully fails to expand
+                    // index should only be the expanded ones
+                    const res = Object.indexFrom(j.response.docs.filter(o=>o.publicdate).map(o => new ArchiveMemberSearch(o)), as => as.identifier); // { id1: as; id2: as2 }
                     cb(null, res);
                 }
             })
@@ -39,6 +44,11 @@ class ArchiveMemberSearch extends ArchiveMember {
             cb(null, {});
         }
     }
+    isExpanded() {
+        console.assert(this.publicdate && this.title, "Debugging check for half-expanded ArchiveMemberSearches");
+        return true;
+    }
+
 }
 
 

@@ -169,7 +169,7 @@ class ArchiveItem {
     }
 
     _expandMembers(cb) {
-        const ids = this.members && this.members.filter(am => !am.publicdate).map(am => am.identifier);
+        const ids = this.members && this.members.filter(am => !am.isExpanded()).map(am => am.identifier);
         if (ids) {
             ArchiveMemberSearch.expand(ids, (err, res) => {
                 if (!err) {
@@ -370,6 +370,57 @@ class ArchiveItem {
         this.playlist = Object.values(pl).filter(p => p.sources.length > 0);
     }
 
+    minimumForUI() {
+        /*
+         returns: [ ArchiveFile* ]  minimum files required to play this item
+        */
+        // This will be tuned for different mediatype etc}
+        // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
+        const minimumFiles = [];
+        if (this.itemid) { // Exclude "search"
+            console.assert(this.files, "minimumForUI assumes .files already set up");
+            const thumbnailFiles = this.files.filter(af =>
+                af.metadata.name === "__ia_thumb.jpg"
+                || af.metadata.name.endsWith("_itemimage.jpg")
+            );
+            // Note thumbnail is also explicitly saved by saveThumbnail
+            minimumFiles.push(...thumbnailFiles);
+            switch (this.metadata.mediatype) {
+                case "search": // Pseudo-item
+                    break;
+                case "collection": //TODO-THUMBNAILS
+                    break;
+                case "texts": //TODO-THUMBNAILS for text - texts use the Text Reader anyway so dont know which files needed
+                    break;
+                case "image":
+                    minimumFiles.push(this.files.find(fi => fi.playable("image"))); // First playable image is all we need
+                    break;
+                case "audio":  //TODO-THUMBNAILS check that it can find the image for the thumbnail with the way the UI is done. Maybe make ReactFake handle ArchiveItem as teh <img>
+                case "etree":   // Generally treated same as audio, at least for now
+                    if (!this.playlist) { // noinspection JSUnresolvedFunction
+                        this.setPlaylist();
+                    }
+                    // Almost same logic for video & audio
+                    minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
+                    // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://dweb.me/thumbnail/itemid which should get canonicalized
+                    break;
+                case "movies":
+                    if (!this.playlist) { // noinspection JSUnresolvedFunction
+                        this.setPlaylist();
+                    }
+                    // Almost same logic for video & audio
+                    minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
+                    // noinspection JSUnresolvedFunction
+                    minimumFiles.push(this.videoThumbnailFile());
+                    break;
+                case "account":
+                    break;
+                default:
+                //TODO Not yet supporting software, zotero (0 items); data; web because rest of dweb-archive doesnt
+            }
+        }
+        return minimumFiles;
+    };
 
 }
 exports = module.exports = ArchiveItem;

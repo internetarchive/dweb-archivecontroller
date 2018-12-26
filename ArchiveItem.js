@@ -27,8 +27,8 @@ class ArchiveItem {
 
     constructor({itemid = undefined, query = undefined, metaapi = undefined}={}) {
         this.itemid = itemid;
+        this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
         this.query = query;
-        this.loadFromMetadataAPI(metaapi);
     }
 
     static fromMemberFav(m) {
@@ -55,11 +55,12 @@ class ArchiveItem {
     }
     loadFromMetadataAPI(metaapi) {
         /*
-        Apply the results of a metadata API call to an ArchiveItem,
+        Apply the results of a metadata API or exportMetadataAPI() call to an ArchiveItem,
         meta:   { metadata, files, reviews, members, and other stuff }
          */
         if (metaapi) {
             const meta = Util.enforceStringOrArray(metaapi.metadata, Util.rules.item); // Just processes the .metadata part
+            console.assert(this.itemid, "itemid should be loaded before here - if legit reason why not, then load from meta.identifier")
             this.files = (metaapi && metaapi.files)
                 ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
                 : [];   // Default to empty, so usage simpler.

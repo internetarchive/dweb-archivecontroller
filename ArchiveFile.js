@@ -1,6 +1,7 @@
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const Util = require( './Util');
 const prettierBytes = require( "prettier-bytes");
+const waterfall = require('async/waterfall');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 
 class ArchiveFile {
@@ -47,42 +48,39 @@ class ArchiveFile {
         return this.metadata.name;
     }
 
-    urls(cb) {
-        //TODO-PROMISIFY this is a temp patch between cb and promise till p_urls handles cb which depends on p_connectdNames (fetch_json already does)
-        if (cb) {
-            this.p_urls().then(urls => cb(null, urls)).catch(err => cb(err));
-        } else {
-            return this.p_urls(); // Return a promise
-        }
-    }
-    async p_urls() { //TODO-MIRROR fix this to make sense for _torrent.xml files which dont have sha1 and probably not IPFS
+    //TODO-API remove p_urls and make urls() cb or promise
+    urls(cb) { //TODO-MIRROR fix this to make sense for _torrent.xml files which dont have sha1 and probably not IPFS
         //TODO-MIRROR may need to fix this for tiles where item's metadata not downloaded and no __ia_thumb.jpg file (e.g. fav_mitra)
-        //TODO-PROMISIFY - fix Util.fetch_json to not depend on the fetch/request library then fix this to use the Promisify pattern
         /*
         cb(err, urls)   passed an array of urls that might be a good place to get this item
         if no cb: resolve to urls
         Throws: Error if fetch_json doesn't succeed, or retrieves something other than JSON
          */
-        try { // Some of this will be missing if not file based metadata for example for __ia_thumb.jpg constructed from search
-            if ((!this.metadata.magnetlink && !(this.metadata.name==="__ia_thumb.jpg")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
-                //|| !this.metadata.contenthash // Dont do another roundtrip just to get contenthash
-                || ((!this.metadata.ipfs && (await DwebTransports.p_connectedNames()).includes("IPFS")))
-            ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
-                // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
-                let name = this.metadata.name.replace('?','%3F');
-                this.metadata = await Util.fetch_json(`${Util.gatewayServer()}${Util.gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`);
-            }
-        } catch(err) {
-            console.warn("Error from Util.fetch_json meant ArchiveFile failed to retrieve metadata for", this.itemid, this.metadata.name);
-            return []; // Empty array as nowhere to fetch
+        if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
+        function f(cbout) {
+            waterfall([
+                (cb) => DwebTransports.p_connectedNames(cb),
+                (connectedNames, cb) => { // Decide if need to get file-specific metadata because missing dweb urls
+                    if  (  (!this.metadata.ipfs && connectedNames.includes("IPFS"))
+                        || (!this.metadata.magnetlink && !(this.metadata.name === "__ia_thumb.jpg")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
+                     // || !this.metadata.contenthash // Dont do another roundtrip just to get contenthash
+                        ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
+                        let name = this.metadata.name.replace('?', '%3F');  // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
+                        Util.fetch_json(`${Util.gatewayServer()}${Util.gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`, (err, res)=>{
+                            if (!err) this.metadata = res;
+                            cb(err); });
+                    } else {
+                        cb(null, this.metadata);
+                    }},
+                (cb) => {
+                    const res = [this.metadata.ipfs, this.metadata.magnetlink, this.metadata.contenthash].filter(f => !!f);   // Multiple potential sources eliminate any empty
+                    res.push(this.httpUrl()); // HTTP link to file (note this was added Oct2018 and might not be correct)
+                    cb(null, res);
+                }
+                ], cbout);
         }
-        // (NO LONGER) includes both ipfs and ipfs via gateway link as the latter can prime the IPFS DHT so the former works for the next user
-        // removed ipfs via gateway as IPFS transport will try this, and it usually doesnt work for Archive items anyway since not announced to gateway . this.metadata.ipfs ? this.metadata.ipfs.replace('ipfs:/ipfs/','https://ipfs.io/ipfs/') : undefined
-        // noinspection JSUnresolvedVariable
-        const res = [this.metadata.ipfs, this.metadata.magnetlink, this.metadata.contenthash].filter(f => !!f);   // Multiple potential sources eliminate any empty
-        res.push(this.httpUrl()); // HTTP link to file (note this was added Oct2018 and might not be correct)
-        return res;
     }
+
     httpUrl() {
         // This will typically be dweb.me, but may be overridden un URL with mirror=localhost:4244
         return `${Util.gatewayServer()}${Util.gateway.url_download}${this.itemid}/${this.metadata.name}`;
@@ -100,7 +98,7 @@ class ArchiveFile {
         // cb(data)
         // Throws TransportError (or poss CodingError) if urls empty or cant fetch
         //TODO-PROMISIFY need cb version of p_rawfetch then use promisify pattern here
-        return this.p_urls()
+        return this.urls()
             .then(urls => DwebTransports.p_rawfetch(urls))
             .then(res => { if (cb) { cb(null, res); return undefined; } else {return res; } })
             .catch(err => { if (cb) { cb(err); return undefined; } else { throw(err); } } )
@@ -112,8 +110,6 @@ class ArchiveFile {
         return URL.createObjectURL(await this.blob());
     }
     async p_download(a, options) {
-        // noinspection JSUnusedLocalSymbols
-        let urls = await this.p_urls();   // Multiple potential sources elimating any empty - may fetch file metadata in process
         // noinspection UnnecessaryLocalVariableJS
         let objectURL = await this.blobUrl();
         //browser.downloads.download({filename: this.metadata.name, url: objectURL});   //Doesnt work

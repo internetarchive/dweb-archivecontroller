@@ -13,6 +13,7 @@
     "@internetarchive/dweb-objects": "^0.1.10",
     "@internetarchive/dweb-transports": "^0.1.18",
     "@stratumn/canonicaljson": "^1.0.2",
+    "async": "latest",
     "debug": "^3.2.5",
     "es2015": "latest",
     "prettier-bytes": "^1.0.4"

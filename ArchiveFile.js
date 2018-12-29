@@ -19,7 +19,7 @@ class ArchiveFile {
         this.metadata = metadata;
     }
 
-    new({archiveitem=undefined, filename=undefined}={}, cb) {
+    static new({archiveitem=undefined, filename=undefined}={}, cb) {
         /*
          Asynchronously create a new ArchiveFile instance and load its metadata.
 

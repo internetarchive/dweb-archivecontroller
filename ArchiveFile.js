@@ -70,7 +70,7 @@ class ArchiveFile {
                             if (!err) this.metadata = res;
                             cb(err); });
                     } else {
-                        cb(null, this.metadata);
+                        cb(null);
                     }},
                 (cb) => {
                     const res = [this.metadata.ipfs, this.metadata.magnetlink, this.metadata.contenthash].filter(f => !!f);   // Multiple potential sources eliminate any empty

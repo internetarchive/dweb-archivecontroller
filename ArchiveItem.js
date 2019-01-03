@@ -184,24 +184,36 @@ class ArchiveItem {
     }
 
     _fetch_query({wantFullResp=false}={}, cb) { // No opts currently
-        // noinspection JSUnresolvedVariable
-        // rejects: TransportError or CodingError if no urls
+        /*
+            rejects: TransportError or CodingError if no urls
+
+            Several differnet scenarios
+            Defined by a members.json file e.g. "fav-brewster"
+            Defined by a metadata.search_collection e.g. "ElectricSheep"
+            Defined by mediatype:collection, query should be q=collection:<IDENTIFIER>
+            Defined by query - e.g. from searchbox
+
+        */
         // First we look for the fav-xyz type collection, where there is an explicit JSON of the members
         try {
             // noinspection JSUnusedLocalSymbols
             // noinspection JSUnusedLocalSymbols
+            this.page = this.page || 1; // Page starts at 1, sometimes set to 0, or left undefined.
             this._expandMembers((err, self) => { // Always succeeds even if it fails it just leaves members unexpanded.
-                if ((typeof this.members === "undefined") || this.members.length < (Math.max(this.page,1)*this.limit)) { // Either cant read file (cos yet cached), or it has a smaller set of results
-                    if (this.metadata && this.metadata.search_collection) { // Search will have !this.item
+                if ((typeof this.members === "undefined") || this.members.length < (Math.max(this.page,1)*this.limit)) {
+                    // Either cant read file (cos yet cached), or it has a smaller set of results
+                    if (this.metadata && this.metadata.search_collection) { // Search will have !this.item example = "ElectricSheep"
                         this.query = this.metadata.search_collection.replace('\"', '"');
                     }
+                    if (!this.query && this.metadata.mediatype === "collection") {  //TODO its possible with this that dont need to define query in Collection classes (MirrorCollection, or dweb-archive)
+                        this.query = "collection:"+this.itemid
+                    }
                     if (this.query) {   // If this is a "Search" then will come here.
-                        const sort = this.collection_sort_order || this.sort;
-
+                        const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
                         Util._query( {
                             output: "json",
                             q: this.query,
-                            rows: this.limit,
+                            rows: this.limit,   //TODO-REFACTOR rename limit as rows in dweb-archivecontroller, dweb-archive; dweb-mirror
                             page: this.page,
                             'sort[]': sort,
                             'and[]': this.and,

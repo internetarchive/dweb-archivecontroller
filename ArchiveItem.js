@@ -141,7 +141,9 @@ class ArchiveItem {
             .then((m) => {
                 // noinspection ES6ModulesDependencies
                 const metaapi = DwebObjects.utils.objectfrom(m); // Handle Buffer or Uint8Array
-                console.assert(metaapi.metadata.identifier === this.itemid);
+                if (metaapi.is_dark) {
+                    cb(new Error(`Item ${this.itemid} is dark`)); }
+                console.assert(metaapi.metadata.identifier === this.itemid, "_fetch_metadata didnt read back expected identifier for", this.itemid);
                 this.loadFromMetadataAPI(metaapi); // Loads .item .files .reviews and some other fields
                 debug("metadata for %s fetched successfully", this.itemid);
                 cb(null, this);
@@ -170,7 +172,7 @@ class ArchiveItem {
     }
 
     _expandMembers(cb) {
-        const ids = this.members && this.members.filter(am => !am.isExpanded()).map(am => am.identifier);
+        const ids = this.members && this.members.filter(am=>am.mediatype !== "search").filter(am => !am.isExpanded()).map(am => am.identifier);
         if (ids) {
             ArchiveMemberSearch.expand(ids, (err, res) => {
                 if (!err) {

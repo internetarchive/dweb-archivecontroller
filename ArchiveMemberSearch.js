@@ -24,7 +24,7 @@ class ArchiveMemberSearch extends ArchiveMember {
         if (ids && ids.length) {
             Util._query({
                 output: "json",
-                q: "identifier:" + ids.join(" OR "), // Note it will be URLencoded, don't use "%20OR%20"
+                q: 'identifier:('+ ids.join(' OR ') + ")", // Note it will be URLencoded, don't use "%20OR%20"
                 rows: ids.length,
                 page: 1,
                 'sort[]': "identifier",

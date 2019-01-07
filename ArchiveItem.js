@@ -4,7 +4,7 @@ const ArchiveMemberSearch = require("./ArchiveMemberSearch");
 const Util = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
-const debug = require('debug')('dweb-archivecontroller');
+const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 //const DwebObjects = require('@internetarchive/dweb-objects'); //Not "required" because available as window.DwebObjects by separate import
 //TODO-NAMING url could be a name
@@ -48,6 +48,7 @@ class ArchiveItem {
             files_count: this.files_count,
             collection_sort_order: this.collection_sort_order,
             collection_titles: this.collection_titles,
+            is_dark: this.is_dark,
             members: this.members,
             metadata: this.metadata,
             reviews: this.reviews,
@@ -59,28 +60,31 @@ class ArchiveItem {
         meta:   { metadata, files, reviews, members, and other stuff }
          */
         if (metaapi) {
-            const meta = Util.enforceStringOrArray(metaapi.metadata, Util.rules.item); // Just processes the .metadata part
             console.assert(this.itemid, "itemid should be loaded before here - if legit reason why not, then load from meta.identifier")
             this.files = (metaapi && metaapi.files)
                 ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
                 : [];   // Default to empty, so usage simpler.
-            if (meta.mediatype === "education") {
-                // Typically miscategorized, have a guess !
-                if (this.files.find(af => af.playable("video")))
-                    meta.mediatype = "movies";
-                else if (this.files.find(af => af.playable("text")))
-                    meta.mediatype = "texts";
-                else if (this.files.find(af => af.playable("image")))
-                    meta.mediatype = "image";
-                debug('Metadata Fjords - switched mediatype on %s from "education" to %s', meta.identifier, meta.mediatype);
+            if (metaapi.metadata) {
+                const meta = Util.enforceStringOrArray(metaapi.metadata, Util.rules.item); // Just processes the .metadata part
+                if (meta.mediatype === "education") {
+                    // Typically miscategorized, have a guess !
+                    if (this.files.find(af => af.playable("video")))
+                        meta.mediatype = "movies";
+                    else if (this.files.find(af => af.playable("text")))
+                        meta.mediatype = "texts";
+                    else if (this.files.find(af => af.playable("image")))
+                        meta.mediatype = "image";
+                    debug('Metadata Fjords - switched mediatype on %s from "education" to %s', meta.identifier, meta.mediatype);
+                }
+                this.metadata = meta;
             }
-            this.metadata = meta;
             //These will be ArchiveMemberFav, its converted to ArchiveMemberSearch by fetch_query (either from cache or in _fetch_query>expandMembers)
             this.members = metaapi.members && metaapi.members.map(o => new ArchiveMemberFav(o));
             this.reviews = metaapi.reviews;
             this.files_count = metaapi.files_count;
             this.collection_titles = metaapi.collection_titles;
             this.collection_sort_order = metaapi.collection_sort_order;
+            this.is_dark = metaapi.is_dark;
         }
         //return metaapi;// Broken but unused
         return undefined;
@@ -120,15 +124,15 @@ class ArchiveItem {
         else { return new Promise((resolve, reject) => f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}        //NOTE this is PROMISIFY pattern used elsewhere
         function f(cb) {
             // noinspection JSPotentiallyInvalidUsageOfClassThis
-            if (this.itemid && !this.metadata) {
+            if (this.itemid && !(this.metadata || this.is_dark)) { // If havent already fetched (is_dark means no .metadata field)
                 // noinspection JSPotentiallyInvalidUsageOfClassThis
-                this._fetch_metadata(cb); // Processes Fjords & Loads .metadata .files etc
+                this._fetch_metadata(opts, cb); // Processes Fjords & Loads .metadata .files etc
             } else {
                 cb(null, this);
             }
         }
     }
-    _fetch_metadata(cb) {
+    _fetch_metadata(opts, cb) {
         /*
         Fetch the metadata for this item - dont use directly, use fetch_metadata.
          */
@@ -141,12 +145,16 @@ class ArchiveItem {
             .then((m) => {
                 // noinspection ES6ModulesDependencies
                 const metaapi = DwebObjects.utils.objectfrom(m); // Handle Buffer or Uint8Array
-                if (metaapi.is_dark) {
-                    cb(new Error(`Item ${this.itemid} is dark`)); }
-                console.assert(metaapi.metadata.identifier === this.itemid, "_fetch_metadata didnt read back expected identifier for", this.itemid);
-                this.loadFromMetadataAPI(metaapi); // Loads .item .files .reviews and some other fields
-                debug("metadata for %s fetched successfully", this.itemid);
-                cb(null, this);
+                if (metaapi.is_dark && !opts.darkOk) { // Only some code handles dark metadata ok
+                    this.is_dark = true; // Flagged so wont continuously try and call
+                    cb(new Error(`Item ${this.itemid} is dark`));
+                } else if (!m.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
+                    cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
+                } else {
+                    debug("metadata for %s fetched successfully %s", m.itemid, this.is_dark ? "BUT ITS DARK" : "");
+                    this.loadFromMetadataAPI(metaapi); // Loads .item .files .reviews and some other fields
+                    cb(null, this);
+                }
             }).catch(err => cb(err));
     }
 

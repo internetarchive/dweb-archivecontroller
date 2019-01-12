@@ -50,7 +50,6 @@ class ArchiveFile {
 
     //TODO-API remove p_urls and make urls() cb or promise
     urls(cb) { //TODO-MIRROR fix this to make sense for _torrent.xml files which dont have sha1 and probably not IPFS
-        //TODO-MIRROR may need to fix this for tiles where item's metadata not downloaded and no __ia_thumb.jpg file (e.g. fav_mitra)
         /*
         cb(err, urls)   passed an array of urls that might be a good place to get this item
         if no cb: resolve to urls

@@ -210,12 +210,12 @@ class ArchiveItem {
             // noinspection JSUnusedLocalSymbols
             this.page = this.page || 1; // Page starts at 1, sometimes set to 0, or left undefined.
             this._expandMembers((err, self) => { // Always succeeds even if it fails it just leaves members unexpanded.
-                if ((typeof this.members === "undefined") || this.members.length < (Math.max(this.page,1)*this.limit)) {
+                if ((typeof this.members === "undefined") || this.members.length < (Math.max(this.page,1)*this.rows)) {
                     // Either cant read file (cos yet cached), or it has a smaller set of results
                     if (this.metadata && this.metadata.search_collection) { // Search will have !this.item example = "ElectricSheep"
                         this.query = this.metadata.search_collection.replace('\"', '"');
                     }
-                    if (!this.query && this.metadata.mediatype === "collection") {  //TODO its possible with this that dont need to define query in Collection classes (MirrorCollection, or dweb-archive)
+                    if (!this.query && this.metadata.mediatype === "collection") {  //TODO-TEST its possible with this that dont need to define query in Collection classes (MirrorCollection, or dweb-archive)
                         this.query = "collection:"+this.itemid
                     }
                     if (this.query) {   // If this is a "Search" then will come here.
@@ -223,7 +223,7 @@ class ArchiveItem {
                         Util._query( {
                             output: "json",
                             q: this.query,
-                            rows: this.limit,   //TODO-REFACTOR rename limit as rows in dweb-archivecontroller, dweb-archive; dweb-mirror
+                            rows: this.rows,   //TODO-REFACTOR rename limit as rows in dweb-archivecontroller, dweb-archive; dweb-mirror
                             page: this.page,
                             'sort[]': sort,
                             'and[]': this.and,
@@ -244,7 +244,7 @@ class ArchiveItem {
                         cb(null, undefined); // No results return undefined (which is also what the patch in dweb-mirror does if no collection instead of empty array)
                     }
                 } else {
-                    const newmembers = this.members.slice((this.page - 1) * this.limit, this.page * this.limit);
+                    const newmembers = this.members.slice((this.page - 1) * this.rows, this.page * this.rows);
                     cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
                 }
             });

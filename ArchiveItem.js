@@ -120,8 +120,8 @@ class ArchiveItem {
          */
         if (typeof opts === "function") { cb = opts; // noinspection JSUnusedAssignment
             opts = {}; } // Allow opts parameter to be skipped
-        if (cb) { return f.call(this, cb) }
-        else { return new Promise((resolve, reject) => f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}        //NOTE this is PROMISIFY pattern used elsewhere
+
+        if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
         function f(cb) {
             // noinspection JSPotentiallyInvalidUsageOfClassThis
             if (this.itemid && !(this.metadata || this.is_dark)) { // If havent already fetched (is_dark means no .metadata field)

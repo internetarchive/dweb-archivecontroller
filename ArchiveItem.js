@@ -223,7 +223,7 @@ class ArchiveItem {
                         Util._query( {
                             output: "json",
                             q: this.query,
-                            rows: this.rows,   //TODO-REFACTOR rename limit as rows in dweb-archivecontroller, dweb-archive; dweb-mirror
+                            rows: this.rows,
                             page: this.page,
                             'sort[]': sort,
                             'and[]': this.and,
@@ -254,22 +254,37 @@ class ArchiveItem {
         }
     }
 
-    relatedItems(opts = {}, cb) { //TODO-REFACTOR-RELATED probably make these members
-        if (typeof opts === "function") { cb = opts; opts = {}; } // Allow opts parameter to be skipped
-        if (cb) { return this._relatedItems(opts, cb) } else { return new Promise((resolve, reject) => this._relatedItems(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
+    relatedItems({wantStream = false, wantMembers = false} = {}, cb) {
+        /* This is complex because handles three cases, where want a stream, the generic result of the query or the results expanded to Tile-able info
+            Current usage:
+            in dweb-mirror/ArchiveItemPatched.relatedItems ... subclassed to expand itself, cache and return obj
+            in dweb-mirror/CrawlManager CrawlItem.process uses ArchiveItemPatched.relatedItems
+            in dweb-mirror/mirrorHttp/sendRelated wantStream=true
+            in dweb-archive/Details/itemDetailsAlsoFound > loadDetailsAlsoFound > TileComponent which needs expansion
 
-
-    }
-    _relatedItems({wantStream=false} = {}, cb) {  //TODO-REFACTOR-RELATED probably make these members
-        /*
-        cb(err, obj)  Callback on completion with related items object
-        TODO-REFACTOR-CACHE add hook in dweb-archive and use in dweb-archive.itemDetailsAlsoFound
+            returns either related items object, stream or array of members, via cb or Promise
         */
-        const relatedUrl = ( DwebArchive.mirror ? (Util.gatewayServer()+Util.gateway.url_related_local) : Util.gateway.url_related)+this.itemid;
-        if (wantStream) { // Stream doesnt really make sense unless caching to file
-            DwebTransports.createReadStream(relatedUrl, {}, cb);
-        } else {
-            Util.fetch_json(relatedUrl, cb);
+        if (typeof opts === "function") { cb = opts; opts = {}; } // Allow opts parameter to be skipped
+        if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
+        function f(cb) {
+            const relatedUrl = (DwebArchive.mirror ? (Util.gatewayServer() + Util.gateway.url_related_local) : Util.gateway.url_related) + this.itemid;
+            if (wantStream) { // Stream doesnt really make sense unless caching to file
+                DwebTransports.createReadStream(relatedUrl, {}, cb);
+            } else {
+                Util.fetch_json(relatedUrl, (err, rels) => {
+                    if (!err && rels && wantMembers) {
+                        ArchiveMemberSearch.expand(rels.hits.hits.map(r => r._id), (err, searchmembersdict) => {
+                            if (err) {
+                                cb(err)
+                            } else {
+                                cb(null, rels.map(r => searchmembersdict[r._id])); // Can be undefined, but shouldnt see rels should all be valid
+                            }
+                        });
+                    } else {
+                        cb(err, rels);
+                    }
+                });
+            }
         }
     }
 

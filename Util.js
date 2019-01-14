@@ -51,14 +51,14 @@ class Util {
         return (typeof DwebArchive !== "undefined") && DwebArchive.mirror || "https://dweb.me";
     }
 
-    static enforceStringOrArray(meta, rules) { // TODO-FJORDS move code tagged TODO-FJORDS to this routine where possible
+    static enforceStringOrArray(meta, rules) { // See ArchiveItem.loadMetadataFromAPI for other Fjord handling
         // The Archive is nothing but edge cases, handle some of them here so the code doesnt have to !
         // Note this called by ArchiveMember and ArchiveItem and will probably be called by ArchiveFiles so keep it generic and put class-specifics in Archive*.processMetadataFjord
         const res = {};
         Object.keys(meta).forEach(f => {
             if (rules.nonrepeatable_fields.includes(f)) {
                 if (Array.isArray(meta[f])) {
-                    if (meta[f].length > 1) { //TODO-IAJS TODO-FJORDS change this to use the rules in item_rules.js
+                    if (meta[f].length > 1) {
                         debug("WARNING: Metadata Fjords - multi item in non-repeating field %s on %s, choosing first", f, meta.identifier);
                     }
                     res[f] = (meta[f].length > 0) ? meta[f][0] : "";
@@ -648,11 +648,11 @@ Util._formatarr = [
 Util.gateway = {
     "url_download": "/arc/archive.org/download/",
     "url_servicesimg": "/arc/archive.org/thumbnail/",
-    "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this
+    "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
     "url_metadata": "/arc/archive.org/metadata/",
     "url_advancedsearch": "/arc/archive.org/advancedsearch",
-    "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues //TODO-MIRROR fix this
-    "url_related_local": "/arc/archive.org/mds/v1/get_related/all/",  // Direct, no CORS issues //TODO-MIRROR fix this
+    "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues
+    "url_related_local": "/arc/archive.org/mds/v1/get_related/all/",  // Direct, no CORS issues
     "url_default_fl": "identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"  // Note also used in dweb-mirror
 };
 //https://archive.org/advancedsearch.php?q=mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:(fav-* OR what_cd OR cd OR vinyl OR librarygenesis OR bibalex OR movies OR audio OR texts OR software OR image OR data OR web OR additional_collections OR animationandcartoons OR artsandmusicvideos OR audio_bookspoetry OR audio_foreign OR audio_music OR audio_news OR audio_podcast OR audio_religion OR audio_tech OR computersandtechvideos OR coverartarchive OR culturalandacademicfilms OR ephemera OR gamevideos OR inlibrary OR moviesandfilms OR newsandpublicaffairs OR ourmedia OR radioprograms OR samples_only OR spiritualityandreligion OR stream_only OR television OR test_collection OR usgovfilms OR vlogs OR youth_media)&sort[]=-downloads&rows=10&output=json&save=yes&page=

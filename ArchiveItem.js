@@ -273,13 +273,7 @@ class ArchiveItem {
             } else {
                 Util.fetch_json(relatedUrl, (err, rels) => {
                     if (!err && rels && wantMembers) {
-                        ArchiveMemberSearch.expand(rels.hits.hits.map(r => r._id), (err, searchmembersdict) => {
-                            if (err) {
-                                cb(err)
-                            } else {
-                                cb(null, rels.map(r => searchmembersdict[r._id])); // Can be undefined, but shouldnt see rels should all be valid
-                            }
-                        });
+                        ArchiveMemberSearch.expandRels(rels, cb)
                     } else {
                         cb(err, rels);
                     }

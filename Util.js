@@ -2,27 +2,20 @@
 const canonicaljson = require('@stratumn/canonicaljson');
 const debug = require('debug')('dweb-archivecontroller:Util');
 const item_rules = require('./item_rules.js');
-//TODO-REFACTOR-REPO - remove excess crud from here, then remove stuff here from dweb-archive and include this Util
+
 class Util {
 
+
     static fetch_json(url, cb) {
-        //TODO-PROMISIFY this is a temp patch between cb and promise till p_fetch_json handles cb
-        if (cb) {
-            this.p_fetch_json(url).then(j => cb(null, j)).catch(err => cb(err));
-        } else {
-            return this.p_fetch_json(url); // Return a promise
-        }
-    }
-    static async p_fetch_json(url) {
         /*
         url:   to be fetched - construct CORS safe JSON enquiry.
         throws: TypeError if cant fetch
         throws: Error if fetch doesnt return JSON.
         throws: Error if fail to fetch
-        resolves to: Decoded json response
+        returns Decoded json response via cb or promise
          */
-        debug("p_fetch_json: %s",url);
-        const response = await fetch(new Request(url, // Throws TypeError on failed fetch
+        debug("fetch_json: %s",url);
+        const prom = fetch(new Request(url, // Throws TypeError on failed fetch
             {
                 method: 'GET',
                 headers: new Headers(),
@@ -30,18 +23,20 @@ class Util {
                 cache: 'default',
                 redirect: 'follow',  // Chrome defaults to manual
             }
-        ));
-        if (response.ok) {
-            if (response.headers.get('Content-Type').startsWith("application/json")) {
-                return await response.json(); // response.json is a promise resolving to JSON already parsed
-            } else {
-                const t = response.text(); // promise resolving to text
-                throw new Error(`Unable to fetch, return was not JSON - got: ${response.headers.get('Content-Type')} ${t}`);
+        )).then(response => {
+            if (response.ok) {
+                if (response.headers.get('Content-Type').startsWith("application/json")) {
+                    return await response.json(); // response.json is a promise resolving to JSON already parsed
+                } else {
+                    const t = response.text(); // promise resolving to text
+                    throw new Error(`Unable to fetch, return was not JSON - got: ${response.headers.get('Content-Type')} ${t}`);
+                }
+            } else { // response not OK (some files e.g. https://dweb.me/arc/archive.org/metadata/kaled_jalil/001.mp3 get !response.ok instead of error
+                // Note - if copy this for binary files, make sure to look at TransportHTTP which uses response.arrayBuffer
+                throw new Error(`failed to fetch ${url} message=${response.status} ${response.statusText}`);
             }
-        } else { // response not OK (some files e.g. https://dweb.me/arc/archive.org/metadata/kaled_jalil/001.mp3 get !response.ok instead of error
-            // Note - if copy this for binary files, make sure to look at TransportHTTP which uses response.arrayBuffer
-            throw new Error(`failed to fetch ${url} message=${response.status} ${response.statusText}`);
-        }
+        });
+        if (cb) { prom.catch((err) => cb(err)).then((res)=>cb(null,res)); } else { return prom; } // Unpromisify pattern v2
     }
 
     static formats(k,v,{first=true}={}) {

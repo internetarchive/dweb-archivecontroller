@@ -61,28 +61,27 @@ class Util {
         // Note this called by ArchiveMember and ArchiveItem and will probably be called by ArchiveFiles so keep it generic and put class-specifics in Archive*.processMetadataFjord
         const res = {};
         Object.keys(meta).forEach(f => {
-            if (rules.repeatable_fields.includes(f)) {
-                res[f] = (Array.isArray(meta[f]) ? meta[f] : (typeof(meta[f]) === 'string' ? [meta[f]] : [])); // [str*]
-            } else {
+            if (rules.nonrepeatable_fields.includes(f)) {
                 if (Array.isArray(meta[f])) {
                     if (meta[f].length > 1) { //TODO-IAJS TODO-FJORDS change this to use the rules in item_rules.js
                         debug("WARNING: Metadata Fjords - multi item in non-repeating field %s on %s, choosing first", f, meta.identifier);
-                        res[f] = meta[f][0];
-                    } else if (meta[f].length > 0) {
-                        res[f] = meta[f][0];
-                    } else { // Empty array
-                        res[f] = "";     // Old standard would have it undefined if not in singletons else "" - can do that if we test for undefined anywhere
                     }
+                    res[f] = (meta[f].length > 0) ? meta[f][0] : "";
+                        // Old standard would have it undefined if not in singletons else "" - can do that if we test for undefined anywhere
                 } else {
                     // Already converted to string and want a string
                     res[f] = meta[f];
                 }
+            } else {
+                res[f] = (Array.isArray(meta[f]) ? meta[f] : (typeof(meta[f]) === 'string' ? [meta[f]] : [])); // [str*]
+
             }
         });
-        rules.required_fields.filter(f=>((typeof res[f] === "undefined") && !rules.repeatable_fields.includes(f)))
-            .forEach(f => {debug("WARNING: Metadata Fjords - field %s missing from %s", f, meta.identifier); res[f] = ""; });
-        rules.repeatable_fields.filter(f=>(typeof res[f] === "undefined") )
-            .forEach(f => res[f] = [] );
+        rules.required_fields.filter(f=>(typeof res[f] === "undefined"))
+            .forEach(f => {
+                debug("WARNING: Metadata Fjords - required field %s missing from %s", f, meta.identifier);
+                res[f] = rules.nonrepeatable_fields.includes(f) ? "" : []
+            });
         return res;
     }
 }
@@ -1019,11 +1018,17 @@ item_rules.repeatable_fields.push('thumbnaillinks');
 item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/metadata/GratefulDead/metadata/publisher
 
 Util.rules = {
-    item: { repeatable_fields: item_rules.repeatable_fields, required_fields: item_rules.required_fields },
-    memberSearch: { repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks'],  //TODO use nonrepeatable fields
-        required_fields: ['identifier', 'mediatype', 'publicdate', 'title'] // Doesnt have updater
+    item: item_rules,
+    memberSearch: {
+        repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks'],
+        nonrepeatable_fields: item_rules.nonrepeatable_fields,
+        required_fields: Util.gateway.url_default_fl.filter(f => item_rules.required_fields.includes(f))
     },
-    memberFav: { repeatable_fields: [], required_fields: ['identifier', 'updatedate', 'mediatype']}
+    memberFav: { // Expect fields for url_default_fl above:
+        repeatable_fields: [],
+        required_fields: ['identifier', 'updatedate', 'mediatype'],
+        nonrepeatable_fields: ['identifier', 'updatedate', 'mediatype']
+    }
 };
 Object.fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
 Object.filter = (obj, f) => Object.fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));

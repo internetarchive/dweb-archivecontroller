@@ -23,7 +23,7 @@ class ArchiveMemberSearch extends ArchiveMember {
                 if (err) {
                     cb(err)
                 } else {
-                    cb(null, rels.map(r => searchmembersdict[r._id])); // Can be undefined, but shouldnt see rels should all be valid
+                    cb(null, rels.hits.hits.map(r => searchmembersdict[r._id])); // Can be undefined, but shouldnt see rels should all be valid
                 }
             });
         }

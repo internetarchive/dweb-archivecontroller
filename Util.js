@@ -26,7 +26,7 @@ class Util {
         )).then(response => {
             if (response.ok) {
                 if (response.headers.get('Content-Type').startsWith("application/json")) {
-                    return await response.json(); // response.json is a promise resolving to JSON already parsed
+                    return response.json(); // response.json is a promise resolving to JSON already parsed
                 } else {
                     const t = response.text(); // promise resolving to text
                     throw new Error(`Unable to fetch, return was not JSON - got: ${response.headers.get('Content-Type')} ${t}`);
@@ -1017,7 +1017,7 @@ Util.rules = {
     memberSearch: {
         repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks'],
         nonrepeatable_fields: item_rules.nonrepeatable_fields,
-        required_fields: Util.gateway.url_default_fl.filter(f => item_rules.required_fields.includes(f))
+        required_fields: Util.gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
     memberFav: { // Expect fields for url_default_fl above:
         repeatable_fields: [],

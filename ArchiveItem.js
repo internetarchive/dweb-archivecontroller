@@ -215,7 +215,7 @@ class ArchiveItem {
                     if (this.metadata && this.metadata.search_collection) { // Search will have !this.item example = "ElectricSheep"
                         this.query = this.metadata.search_collection.replace('\"', '"');
                     }
-                    if (!this.query && this.metadata.mediatype === "collection") {  //TODO-TEST its possible with this that dont need to define query in Collection classes (MirrorCollection, or dweb-archive)
+                    if (!this.query && this.metadata && this.metadata.mediatype === "collection") {  //TODO-TEST its possible with this that dont need to define query in Collection classes (MirrorCollection, or dweb-archive)
                         this.query = "collection:"+this.itemid
                     }
                     if (this.query) {   // If this is a "Search" then will come here.
@@ -231,14 +231,18 @@ class ArchiveItem {
                             'fl': Util.gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
                         }, (err, j) => {
                             if (err) { // Will get error "failed to fetch" if fails
-                                cb(err)
+                                debug("_fetch_query %s", err.message)
+                                // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
+                                // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
                             } else {
                                 const newmembers = j.response.docs.map(o => new ArchiveMemberSearch(o));
                                 this._appendMembers(newmembers);
                                 this.start = j.response.start;
                                 this.numFound = j.response.numFound;
-                                cb(null, wantFullResp ? j : newmembers);  // wantFullResp is used when proxying unmodified result
                             }
+                            //cb(null, wantFullResp ? j : newmembers);  // wantFullResp is used when proxying unmodified result
+                            const newmembers = (this.members || []).slice((this.page - 1) * this.rows, this.page * this.rows);
+                            cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
                         });
                     } else { // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
                         cb(null, undefined); // No results return undefined (which is also what the patch in dweb-mirror does if no collection instead of empty array)
@@ -262,7 +266,7 @@ class ArchiveItem {
             in dweb-mirror/mirrorHttp/sendRelated wantStream=true
             in dweb-archive/Details/itemDetailsAlsoFound > loadDetailsAlsoFound > TileComponent which needs expansion
 
-            returns either related items object, stream or array of members, via cb or Promise
+            returns either related items object, stream or array of ArchiveMemberSearch, via cb or Promise
         */
         if (typeof opts === "function") { cb = opts; opts = {}; } // Allow opts parameter to be skipped
         if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2

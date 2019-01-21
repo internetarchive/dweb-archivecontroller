@@ -36,7 +36,8 @@ class Util {
                 throw new Error(`failed to fetch ${url} message=${response.status} ${response.statusText}`);
             }
         });
-        if (cb) { prom.catch((err) => cb(err)).then((res)=>cb(null,res)); } else { return prom; } // Unpromisify pattern v2
+        //if (cb) { prom.catch((err) => cb(err)).then((res)=>cb(null,res)); } else { return prom; } // Unpromisify pattern v2
+        if (cb) { prom.then((res)=>cb(null,res)).catch((err) => cb(err)); } else { return prom; } // Unpromisify pattern v3
     }
 
     static formats(k,v,{first=true}={}) {

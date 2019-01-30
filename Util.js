@@ -1030,7 +1030,25 @@ Object.fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
 Object.filter = (obj, f) => Object.fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
 Object.map = (obj, f) => Object.fromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
 Object.indexFrom = (arr, f) => Object.fromEntries( arr.map(o => [f(o), o]));
-
+Object.deeperAssign = (res, ...objs) => {
+    /*
+        return res the result of copying the objs into the existing res in order
+        its a recursive copy, but not a full deep copy, i.e. if the field is an object, it will be copied, but not strings
+        Note that arrays are just copied over the existing value, so it can't be used to add to an array.
+     */
+    objs.forEach(o => {
+        Object.entries(o).forEach(kv => {
+            const k = kv[0];
+            const v = kv[1];
+            if (!(res[k] && typeof(v) !== "object" && !Array.isArray(v))) {
+                res[k] = v
+            } else { // Its an object, not an array, and already has a value
+                res[k] = deeperAssign(res[k], v); // Recurse, merging into existing value
+            }
+        })
+    })
+    return res;
+};
 Util.objectFrom = (jsonstring) =>
     ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring);
 

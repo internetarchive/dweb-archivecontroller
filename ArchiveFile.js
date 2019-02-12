@@ -82,7 +82,7 @@ class ArchiveFile {
 
     httpUrl() {
         // This will typically be dweb.me, but may be overridden un URL with mirror=localhost:4244
-        return `${Util.gatewayServer()}${Util.gateway.url_download}${this.itemid}/${this.metadata.name}`;
+        return `${Util.gatewayServer()}${Util.gateway.urlDownload}/${this.itemid}/${this.metadata.name}`;
     }
     mimetype() {
         let f =  Util.formats("format", this.metadata.format)

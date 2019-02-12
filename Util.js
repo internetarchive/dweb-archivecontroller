@@ -646,8 +646,8 @@ Util._formatarr = [
     'x-msvideo' => 'Windows Media',
     'x-ms-wmv'  => 'Windows Media',
 */
-Util.gateway = {
-    "url_download": "/arc/archive.org/download/",
+Util.gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
+    "urlDownload": "/arc/archive.org/download",
     "url_servicesimg": "/arc/archive.org/thumbnail/",
     "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
     "url_metadata": "/arc/archive.org/metadata/",

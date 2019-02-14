@@ -6,7 +6,7 @@ const item_rules = require('./item_rules.js');
 class Util {
 
 
-    static fetch_json(url, cb) {
+    static fetch_json(url, cb) { //TODO replace with httptools.p_GET
         /*
         url:   to be fetched - construct CORS safe JSON enquiry.
         throws: TypeError if cant fetch

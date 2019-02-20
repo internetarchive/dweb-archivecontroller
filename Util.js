@@ -1043,10 +1043,11 @@ Object.deeperAssign = (res, ...objs) => {
         Object.entries(o).forEach(kv => {
             const k = kv[0];
             const v = kv[1];
-            if (!(res[k] && typeof(v) === "object" && !Array.isArray(v))) {
+            if (typeof (v) === "object" && !Array.isArray(v)) {
+                // If its an object, then merge in newer one, creating place to merge it into if reqd.
+                res[k] = Object.deeperAssign(res[k] || {}, v); // Recurse
+            } else {
                 res[k] = v
-            } else { // Its an object, not an array, and already has a value
-                res[k] = Object.deeperAssign(res[k], v); // Recurse, merging into existing value
             }
         })
     })

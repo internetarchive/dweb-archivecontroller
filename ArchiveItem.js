@@ -49,6 +49,8 @@ class ArchiveItem {
             collection_sort_order: this.collection_sort_order,
             collection_titles: this.collection_titles,
             is_dark: this.is_dark,
+            dir: this.dir,
+            server: this.server,
             members: this.members,
             metadata: this.metadata,
             reviews: this.reviews,
@@ -80,11 +82,7 @@ class ArchiveItem {
             }
             //These will be ArchiveMemberFav, its converted to ArchiveMemberSearch by fetch_query (either from cache or in _fetch_query>expandMembers)
             this.members = metaapi.members && metaapi.members.map(o => new ArchiveMemberFav(o));
-            this.reviews = metaapi.reviews;
-            this.files_count = metaapi.files_count;
-            this.collection_titles = metaapi.collection_titles;
-            this.collection_sort_order = metaapi.collection_sort_order;
-            this.is_dark = metaapi.is_dark;
+            ArchiveItem.extraFields.forEach(k => this[k] = metaapi[k]);
         }
         //return metaapi;// Broken but unused
         return undefined;
@@ -459,4 +457,6 @@ class ArchiveItem {
     };
 
 }
+ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "reviews", "server" ]
+
 exports = module.exports = ArchiveItem;

@@ -9,6 +9,12 @@ const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 //const DwebObjects = require('@internetarchive/dweb-objects'); //Not "required" because available as window.DwebObjects by separate import
 //TODO-NAMING url could be a name
 
+/* Note for Bookreader
+    API = RawBookReaderResponse = AI.exportBookReader() = { data: { data, brOptions, lendingInfo, metadata }
+    ArchiveItem.bookreader =  file <IDENTIFIER>_bookreader.json = { data, brOptions, lendingInfo, metadata }
+ */
+
+
 class ArchiveItem {
     /*
     Base class representing an Item and/or a Search query (A Collection is both).
@@ -87,6 +93,17 @@ class ArchiveItem {
         //return metaapi;// Broken but unused
         return undefined;
     }
+    loadFromBookreaderAPI(bookapi) {
+        /*
+        Apply the results of a bookreader API or exportBookreaderAPI() call to an ArchiveItem, (see notes at page top on which structure is where)
+         */
+        if (bookapi) {
+            console.assert(this.itemid, "itemid should be loaded before here - if legit reason why not, then load from meta.identifier")
+            delete(bookapi.data.metadata);  // Dont keep  metadata as its just a duplcate
+            this.bookreader = bookapi.data;
+        }
+        return undefined;
+    }
 
 
     async fetch() {
@@ -155,7 +172,23 @@ class ArchiveItem {
                 }
             }).catch(err => cb(err));
     }
-
+    fetch_bookreader(opts={}, cb) {
+            if (cb) { return this._fetch_bookreader(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
+    }
+    _fetch_bookreader(opts, cb) {
+        console.assert(this.server, "fetch_bookreader must be called after fetch_metadata because it requires specific IA server");
+        //TODO-BOOK use naming to redirect to dewb.me and (when gun has hikacker) to GUN
+        //TODO-BOOK should be going thru the local server where appropriate
+        //TODO-BOOK this was requesting format=jsonp but seems to return json (which is what we want) anyway
+        const url=`https://${this.server}/BookReader/BookReaderJSIA.php?id=${this.itemid}&itemPath=${this.dir}&server=${this.server}&format=json&subPrefix=${this.itemid}&requestUri=/details/${this.itemid}`;
+        DwebTransports.httptools.p_GET(url, {}, (err, res) => {
+                if (res) {
+                    delete res.data.metadata;   // Duplicates ai.metadata
+                    this.bookreader = res.data; // undefined if err
+                }
+                cb(err, this)
+            });
+    }
     fetch_query(opts={}, cb) { // opts = {wantFullResp=false}
         /*  Action a query, return the array of docs found and store the accumulated search on .members
             Subclassed in Account.js since dont know the query till the metadata is fetched

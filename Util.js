@@ -45,11 +45,14 @@ class Util {
         return first ? (ff.length ? ff[0] : undefined) : ff;
     }
 
-    static gatewayServer() {
+    static gatewayServer(server=undefined) {
         // Return location for http calls to a gateway server that understands canonical addresses like /arc/archive.. or /ipfs/Q...
         // Has to be a function rather than constant because searchparams is defined after this library is loaded
         // Note that for example where Util.js is included from dweb-mirror that currently (this may change) DwebArchive is not defined
-        return (typeof DwebArchive !== "undefined") && DwebArchive.mirror || "https://dweb.me";
+        // If server is supplied will use that rather than dweb.me, this is (possibly temporary) for bookreader //TODO-BOOK
+        return (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
+                || (server && "https://"+server)
+                || "https://dweb.me");
     }
 
     static enforceStringOrArray(meta, rules) { // See ArchiveItem.loadMetadataFromAPI for other Fjord handling

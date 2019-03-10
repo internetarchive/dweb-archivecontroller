@@ -1090,6 +1090,13 @@ Util.forEach = (arr, f, cb) => {
             }})
     });
 };
+Util.parmsFrom = (queryobj) => {
+    // Turn a object into the parameter portion of a URL, encoding where appropriate.
+    return Object.entries(queryobj)
+        .filter(kv => typeof kv[1] !== "undefined")
+        .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
+        .join('&');
+}
 Util._query = (queryobj, cb) => { // No opts currently
     // rejects: TransportError or CodingError if no urls
     try {

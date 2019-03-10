@@ -175,12 +175,22 @@ class ArchiveItem {
     fetch_bookreader(opts={}, cb) {
             if (cb) { return this._fetch_bookreader(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
     }
-    _fetch_bookreader(opts, cb) {
+    _fetch_bookreader(unusedopts, cb) {
         console.assert(this.server, "fetch_bookreader must be called after fetch_metadata because it requires specific IA server");
         //TODO-BOOK use naming to redirect to dewb.me and (when gun has hikacker) to GUN
         //TODO-BOOK should be going thru the local server where appropriate
         //TODO-BOOK this was requesting format=jsonp but seems to return json (which is what we want) anyway
-        const url=`https://${this.server}/BookReader/BookReaderJSIA.php?id=${this.itemid}&itemPath=${this.dir}&server=${this.server}&format=json&subPrefix=${this.itemid}&requestUri=/details/${this.itemid}`;
+        const protocolServer = Util.gatewayServer(this.server); // naming mismatch - gatewayServer is of form http[s]://foo.com
+        const [protocol, unused, server] = protocolServer.split('/');
+        const parms = Util.parmsFrom({
+            id: this.itemid,
+            itemPath: this.dir,
+            server: server,
+            format: "json",
+            subPrefix: this.itemid,            // TODO-BOOK where is this used
+            requestUri: "/details/"+this.itemid // Doesnt seem to be used
+        })
+        const url=`${protocolServer}/BookReader/BookReaderJSIA.php?${parms}`;
         DwebTransports.httptools.p_GET(url, {}, (err, res) => {
                 if (res) {
                     delete res.data.metadata;   // Duplicates ai.metadata

@@ -243,6 +243,7 @@ class ArchiveItem {
             Defined by a members.json file e.g. "fav-brewster"
             Defined by a metadata.search_collection e.g. "ElectricSheep"
             Defined by mediatype:collection, query should be q=collection:<IDENTIFIER>
+            Defined by simple Lists  e.g. vtmas_disabilityresources
             Defined by query - e.g. from searchbox
 
         */

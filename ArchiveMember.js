@@ -9,11 +9,26 @@ class ArchiveMember {
         An array of these can sit in the members field of an item.
      */
 
-    constructor(o) {
+    constructor(o, {unexpanded=false}={}) {
         // All this really does is turn o into an instance of class ArchiveMember
         // And copy into initial fields
         // Super class will have checked matches contract
-        Object.keys(o).map(k => this[k] = o[k]);
+        const conforming = ArchiveMember.processMetadataFjords(o, Util.rules.memberSearch);
+        Object.keys(conforming).map(k => this[k] = conforming[k]);
+        this.unexpanded = unexpanded;   // Flag so can tell whether needs expanding
+    }
+    static fromRel(rel) {
+        const o = {
+            identifier: rel._id,
+            creator: rel._source.creatorSorter, //TODO-IA ask Gio to give us creator as well
+        };
+        [ "collection", "description"].forEach(k => o[k] = rel._source[k]); // Arrays
+        ["publicdate", "title", "downloads","mediatype","item_count"].forEach(k => o[k] = (rel._source[k] ? rel._source[k][0] : undefined)); // Singles
+        return new ArchiveMember(o);
+    }
+    static fromFav(fav) {
+        // Create a ArchiveMember but flag unexpanded so will get expanded asynchronously elsewhere
+        return new ArchiveMember(o, {unexpanded: true}); // Esp [updatedate]
     }
 
     static processMetadataFjords(meta, rules) {
@@ -30,11 +45,62 @@ class ArchiveMember {
         return await this.urls();
     }
     collection0() {
-        // The first collection listed, for ArchiveMemberFav this is probably undefined
+        // The first collection listed, (undefined if unexpanded) this is probably undefined
         return (this.collection && this.collection.length) ? this.collection[0] : undefined;
     }
     isExpanded() {
-        return this.publicdate && this.title;
+        return !this.unexpanded;
     }
+
+    static expandRels(rels, cb) {
+        // Expand result of a RelatedItems call to Gio's API
+        // rels {hits: {hits: [id: ... ] }}
+        // return [ArchiveSearchMember*] via cb(err,res) or Promise
+        if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
+        function f(cb) {
+            cb(null,rels.hits.hits.map(r => this.fromRel(r)));
+            /*
+            // Dont need to expand as Gio's related API now returns all necessary fields
+            this.expand(rels.hits.hits.map(r => r._id), (err, searchmembersdict) => {
+                if (err) {
+                    cb(err)
+                } else {
+                    cb(null, rels.hits.hits.map(r => searchmembersdict[r._id]).filter(o => typeof o === "object" )); // Can be undefined, but shouldnt see rels should all be valid
+                }
+            });
+             */
+        }
+    }
+    static expand(ids, cb) {
+        /* Expand ids into the Search Docs that can be used to paint tiles or collection lists
+            ids [ identifier ]
+            cb(err, { id1: ArchiveSearch(id1) }
+
+            Pathway is ...  ArchiveItem._fetch_query > ArchiveMember.expand
+        */
+        if (ids && ids.length) {
+            Util._query({
+                output: "json",
+                q: 'identifier:('+ ids.join(' OR ') + ")", // Note it will be URLencoded, don't use "%20OR%20"
+                rows: ids.length,
+                page: 1,
+                'sort[]': "identifier",
+                'fl': Util.gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
+            }, (err, j) => {
+                if (err) {
+                    debug("Unable to expand ids for %s %s", this.itemid, err.message);
+                    cb(err);
+                } else {
+                    // Note some of these might still not be expanded if query partially or fully fails to expand
+                    // index should only be the expanded ones
+                    const res = Object.indexFrom(j.response.docs.filter(o=>o.publicdate).map(o => new ArchiveMember(o)), as => as.identifier); // { id1: as; id2: as2 }
+                    cb(null, res);
+                }
+            })
+        } else { // Short cut, no ids so dont need to do the query.
+            cb(null, {});
+        }
+    }
+
 }
 exports = module.exports = ArchiveMember;

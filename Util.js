@@ -1020,7 +1020,7 @@ Util.rules = {
     item: item_rules,
     memberSearch: {
         repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks'],
-        nonrepeatable_fields: item_rules.nonrepeatable_fields,
+        nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status"],
         required_fields: Util.gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
     memberFav: { // Expect fields for url_default_fl above:

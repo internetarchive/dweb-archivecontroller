@@ -19,30 +19,6 @@ class ArchiveMember {
     static processMetadataFjords(meta, rules) {
         return Util.enforceStringOrArray(meta, rules);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
     }
-
-    /* OBSOLETE - handling ArchiveMember direct in Tile.render > loadimg > p_loadImg > p_resolveUrls
-    thumbnailFile() {
-        /-*
-        Return the thumbnailfile for a member, via its item,
-        this should handle the case of whether the item has had metadata fetched or not, and must be synchronous as stored in <img src=> (the resolution is asynchronous)
-         *-/
-        // New items should have __ia_thumb.jpg but older ones dont
-        // noinspection JSUnresolvedVariable
-        if (this.mediatype === "search") {
-            throw new Error("Coding error - Saved searches dont have a thumbnail");
-        }
-        const metadata =  {
-            format: "JPEG Thumb",
-            name:   "__ia_thumb.jpg",
-            // Could also set source:"original",rotation:"0",
-        };
-        // noinspection JSUnresolvedVariable
-        const ipfs = this.thumbnaillinks && this.thumbnaillinks.find(f=>f.startsWith("ipfs:")); // Will be empty if no thumbnaillinks
-        if (ipfs) metadata.ipfs = ipfs;
-        // noinspection JSUnresolvedVariable
-        return new ArchiveFile({itemid: this.identifier, metadata });
-    }
-    */
     httpUrl() {
         return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.identifier}`;  // Supported by dweb-mirror & gateway as well
     }

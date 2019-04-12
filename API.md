@@ -23,7 +23,6 @@ The classes represent the core Archive objcts
 
 The ArchiveMember has three subclasses, representing the places lists of items are found.
 * ArchivMemberFav - in someone's personal favorites
-* ArchiveMemberRelated - in a response to the Related Items API call
 * ArchiveMemberSearch - in response to an AdvancedSearch query, this is the only one with sufficient info to render a Tile.
 
 ## ArchiveFile
@@ -46,7 +45,6 @@ Asynchronously create a new ArchiveFile instance and load its metadata.
 ## ArchiveItem
 ## ArchiveMember
 ## ArchiveMemberFav
-## ArchiveMemberRelated
 ## ArchiveMemberSearch
 ## Util
 

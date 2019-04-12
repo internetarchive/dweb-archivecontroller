@@ -1019,15 +1019,10 @@ item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/meta
 Util.rules = {
     item: item_rules,
     memberSearch: {
-        repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks'],
-        nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status"],
+        repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks', "comments"],
+        nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status", "updatedate"],
         required_fields: Util.gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
-    memberFav: { // Expect fields for url_default_fl above:
-        repeatable_fields: [],
-        required_fields: ['identifier', 'updatedate', 'mediatype'],
-        nonrepeatable_fields: ['identifier', 'updatedate', 'mediatype']
-    }
 };
 Object.fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
 Object.filter = (obj, f) => Object.fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));

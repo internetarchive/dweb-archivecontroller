@@ -1,6 +1,5 @@
 const ArchiveFile = require("./ArchiveFile");
-const ArchiveMemberFav = require("./ArchiveMemberFav");
-const ArchiveMemberSearch = require("./ArchiveMemberSearch");
+const ArchiveMember = require("./ArchiveMember");
 const Util = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
@@ -38,7 +37,7 @@ class ArchiveItem {
     }
 
     static fromMemberFav(m) {
-        // Build an ArchiveItem from a ArchiveMemberFav.
+        // Build an ArchiveItem from an entry in a favories (i.e. a IDENTIFIER_member.json file).
         if (m.mediatype === "search") { // Handle weird saved searches,
             return new this({query: m.identifier});
         } else {
@@ -86,8 +85,8 @@ class ArchiveItem {
                 }
                 this.metadata = meta;
             }
-            //These will be ArchiveMemberFav, its converted to ArchiveMemberSearch by fetch_query (either from cache or in _fetch_query>expandMembers)
-            this.members = metaapi.members && metaapi.members.map(o => new ArchiveMemberFav(o));
+            //These will be unexpanded, its expanded by fetch_query (either from cache or in _fetch_query>expandMembers)
+            this.members = metaapi.members && metaapi.members.map(o => ArchiveMember.from_fav(o));
             ArchiveItem.extraFields.forEach(k => this[k] = metaapi[k]);
         }
         //return metaapi;// Broken but unused
@@ -224,7 +223,7 @@ class ArchiveItem {
     _expandMembers(cb) {
         const ids = this.members && this.members.filter(am=>am.mediatype !== "search").filter(am => !am.isExpanded()).map(am => am.identifier);
         if (ids) {
-            ArchiveMemberSearch.expand(ids, (err, res) => {
+            ArchiveMember.expand(ids, (err, res) => {
                 if (!err) {
                     this.members = this.members.map(m => res[m.identifier] || m);
                 }
@@ -278,7 +277,7 @@ class ArchiveItem {
                                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
                             } else {
-                                const newmembers = j.response.docs.map(o => new ArchiveMemberSearch(o));
+                                const newmembers = j.response.docs.map(o => new ArchiveMember(o));
                                 this._appendMembers(newmembers);
                                 this.start = j.response.start;
                                 this.numFound = j.response.numFound;
@@ -309,7 +308,7 @@ class ArchiveItem {
             in dweb-mirror/mirrorHttp/sendRelated wantStream=true
             in dweb-archive/Details/itemDetailsAlsoFound > loadDetailsAlsoFound > TileComponent which needs expansion
 
-            returns either related items object, stream or array of ArchiveMemberSearch, via cb or Promise
+            returns either related items object, stream or array of ArchiveMember, via cb or Promise
         */
         if (typeof opts === "function") { cb = opts; opts = {}; } // Allow opts parameter to be skipped
         if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
@@ -320,7 +319,7 @@ class ArchiveItem {
             } else {
                 Util.fetch_json(relatedUrl, (err, rels) => {
                     if (!err && rels && wantMembers) {
-                        ArchiveMemberSearch.expandRels(rels, cb)
+                        ArchiveMember.expandRels(rels, cb)
                     } else {
                         cb(err, rels);
                     }

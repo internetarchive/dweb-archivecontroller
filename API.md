@@ -21,9 +21,7 @@ The classes represent the core Archive objcts
 * ArchiveItem - an item, the primary unit of IA organiation, includes usually a directory of files. 
 * ArchiveMember - a Search Engine Document, relates to an ArchiveItem, but is a super/subset of the data
 
-The ArchiveMember has three subclasses, representing the places lists of items are found.
-* ArchivMemberFav - in someone's personal favorites
-* ArchiveMemberSearch - in response to an AdvancedSearch query, this is the only one with sufficient info to render a Tile.
+The ArchiveMember can be created from any set list of members - including in a Search, a Favorites list, and returned by the related items call
 
 ## ArchiveFile
 
@@ -42,12 +40,10 @@ Asynchronously create a new ArchiveFile instance and load its metadata.
  errors:        FileNotFound or errors from ArchiveFile() or fetch_metadata()
 ```
 
-## ArchiveItem
-## ArchiveMember
-## ArchiveMemberFav
-## ArchiveMemberSearch
-## Util
+## ArchiveItem TODO-API
+## ArchiveMember   TODO-API
+## Util  TODO-API
 
 # Other files
-## item_rules.js
+## item_rules.js  TODO-API
 

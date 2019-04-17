@@ -50,19 +50,23 @@ class ArchiveItem {
     exportFiles() {
         return this.files.map(f => f.metadata);
     }
-    exportMetadataAPI() {
-        return {
-            files: this.exportFiles(),
-            files_count: this.files_count,
-            collection_sort_order: this.collection_sort_order,
-            collection_titles: this.collection_titles,
-            is_dark: this.is_dark,
-            dir: this.dir,
-            server: this.server,
-            members: this.members,
-            metadata: this.metadata,
-            reviews: this.reviews,
-        }
+    exportMetadataAPI({wantPlaylist=false}={}) {
+        return Object.assign(
+            {
+                files: this.exportFiles(),
+                files_count: this.files_count,
+                collection_sort_order: this.collection_sort_order,
+                collection_titles: this.collection_titles,
+                is_dark: this.is_dark,
+                dir: this.dir,
+                server: this.server,
+                members: this.members,
+                metadata: this.metadata,
+                reviews: this.reviews,
+            },
+            wantPlaylist ? { playlist: this.playlist} : { }
+        )
+
     }
     loadFromMetadataAPI(metaapi) {
         /*
@@ -182,6 +186,7 @@ class ArchiveItem {
                             if (err) {
                                 cb(new Error("Unable to read playlist: "+ err.message));
                             } else {
+                                metaapi.playlist = res;
                                 this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
                                 cb(null, this);
                             }

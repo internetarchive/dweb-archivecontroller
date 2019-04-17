@@ -51,26 +51,6 @@ class ArchiveMember {
     isExpanded() {
         return !this.unexpanded;
     }
-
-    static expandRels(rels, cb) {
-        // Expand result of a RelatedItems call to Gio's API
-        // rels {hits: {hits: [id: ... ] }}
-        // return [ArchiveSearchMember*] via cb(err,res) or Promise
-        if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
-        function f(cb) {
-            cb(null,rels.hits.hits.map(r => this.fromRel(r)));
-            /*
-            // Dont need to expand as Gio's related API now returns all necessary fields
-            this.expand(rels.hits.hits.map(r => r._id), (err, searchmembersdict) => {
-                if (err) {
-                    cb(err)
-                } else {
-                    cb(null, rels.hits.hits.map(r => searchmembersdict[r._id]).filter(o => typeof o === "object" )); // Can be undefined, but shouldnt see rels should all be valid
-                }
-            });
-             */
-        }
-    }
     static expand(ids, cb) {
         /* Expand ids into the Search Docs that can be used to paint tiles or collection lists
             ids [ identifier ]

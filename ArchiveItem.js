@@ -69,6 +69,7 @@ class ArchiveItem {
         Apply the results of a metadata API or exportMetadataAPI() call to an ArchiveItem,
         meta:   { metadata, files, reviews, members, and other stuff }
          */
+        //TODO - I think this is skipping reviews which should be stored
         if (metaapi) {
             console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
             this.files = (metaapi && metaapi.files)
@@ -88,9 +89,12 @@ class ArchiveItem {
                 }
                 this.metadata = meta;
             }
-            //These will be unexpanded, its expanded by fetch_query (either from cache or in _fetch_query>expandMembers)
+            //These will be unexpanded if comes from favorites, its expanded by fetch_query (either from cache or in _fetch_query>expandMembers)
             this.members = metaapi.members && metaapi.members.map(o => ArchiveMember.fromFav(o));
             ArchiveItem.extraFields.forEach(k => this[k] = metaapi[k]);
+            if (metaapi.playlist) {
+                this.playlist = this.processPlaylist(metaapi.playlist);
+            }
         }
         //return metaapi;// Broken but unused
         return undefined;
@@ -167,24 +171,23 @@ class ArchiveItem {
                 if (metaapi.is_dark && !opts.darkOk) { // Only some code handles dark metadata ok
                     this.is_dark = true; // Flagged so wont continuously try and call
                     cb(new Error(`Item ${this.itemid} is dark`));
-                } else if (!m.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
+                } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
                     cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
                 } else {
-                    debug("metadata for %s fetched successfully %s", m.itemid, this.is_dark ? "BUT ITS DARK" : "");
-                    this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields
-
-                    if (['audio','etree','movies'].includes(this.metadata.mediatype)) {
+                    debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
+                    if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
                         // Fetch and process a playlist (see processPlaylist for documentation of result)
-                        //TODO-PLAYLIST - does this make sense on all mediatypes e.g. text ?
-                        DwebTransports.fetch([`https://archive.org/embed/${this.itemid}?output=json`], (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
+                        const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (Util.gatewayServer() + Util.gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
+                        DwebTransports.fetch([playlistUrl], (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
                             if (err) {
                                 cb(new Error("Unable to read playlist: "+ err.message));
                             } else {
-                                this.playlist = this.processPlaylist(res);
+                                this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
                                 cb(null, this);
                             }
                         });
                     } else { // Dont need playlist and the embed code has a bug on other mediatypes.
+                        this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
                         cb(null, this)
                     }
                 }
@@ -332,13 +335,13 @@ class ArchiveItem {
         */
         if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
         function f(cb) {
-            const relatedUrl = (DwebArchive.mirror ? (Util.gatewayServer() + Util.gateway.url_related_local) : Util.gateway.url_related) + this.itemid;
+            const relatedUrl = (((typeof DwebArchive  !== "undefined")  && DwebArchive.mirror)  ? (Util.gatewayServer() + Util.gateway.url_related_local) : Util.gateway.url_related) + this.itemid;
             if (wantStream) { // Stream doesnt really make sense unless caching to file
                 DwebTransports.createReadStream(relatedUrl, {}, cb);
             } else {
                 Util.fetch_json(relatedUrl, (err, rels) => {
                     if (!err && rels && wantMembers) {
-                        ArchiveMember.expandRels(rels, cb)
+                        cb(err, rels.map(r=>ArchiveMember.fromRel(r)))
                     } else {
                         cb(err, rels);
                     }
@@ -395,6 +398,8 @@ class ArchiveItem {
 
     processPlaylist(rawplaylist) {
         /* Process the rawplaylist and add fields to make it into something usable.
+        this must have files read before calling this.
+        rawplaylist:    As returned by API - or an already cooked processed version
         returns: [ {
             title,
             autoplay,
@@ -425,7 +430,7 @@ class ArchiveItem {
             t.sources.forEach(s => {
                 // "file" is unusable root-relative URL but its not used by callers
                 s.name = filename(s.file);                       // Filename
-                s.url = this.files.find(f => f.metadata.name === s.name);   // An ArchiveFile
+                s.urls = this.files.find(f => f.metadata.name === s.name);   // An ArchiveFile from which can get the urls
             });
             const seconds = parseInt(t.duration);
             const secs = seconds % 60;

@@ -55,3 +55,4 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 ## Release notes
 
 * v0.1.52 add playlist
+* v0.1.53 bug fixes: relateditems; package.json refer to specific versions 

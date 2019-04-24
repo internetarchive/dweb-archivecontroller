@@ -1,4 +1,3 @@
-const ArchiveFile = require("./ArchiveFile");
 const Util = require("./Util");
 const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
 
@@ -28,7 +27,7 @@ class ArchiveMember {
     }
     static fromFav(fav) {
         // Create a ArchiveMember but flag unexpanded so will get expanded asynchronously elsewhere
-        return new ArchiveMember(o, {unexpanded: true}); // Esp [updatedate]
+        return new ArchiveMember(fav, {unexpanded: true}); // Esp [updatedate]
     }
 
     static processMetadataFjords(meta, rules) {

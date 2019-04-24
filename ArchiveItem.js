@@ -346,7 +346,7 @@ class ArchiveItem {
             } else {
                 Util.fetch_json(relatedUrl, (err, rels) => {
                     if (!err && rels && wantMembers) {
-                        cb(err, rels.map(r=>ArchiveMember.fromRel(r)))
+                        cb(err, rels.hits.hits.map(r=>ArchiveMember.fromRel(r)))
                     } else {
                         cb(err, rels);
                     }

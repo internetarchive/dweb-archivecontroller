@@ -344,6 +344,8 @@ class ArchiveItem {
             if (wantStream) { // Stream doesnt really make sense unless caching to file
                 DwebTransports.createReadStream(relatedUrl, {}, cb);
             } else {
+                // TODO this should be using DwebTransports via Gun & Wolk as well
+                // Maybe problem if offline but I believe error propogates up
                 Util.fetch_json(relatedUrl, (err, rels) => {
                     if (!err && rels && wantMembers) {
                         cb(err, rels.hits.hits.map(r=>ArchiveMember.fromRel(r)))

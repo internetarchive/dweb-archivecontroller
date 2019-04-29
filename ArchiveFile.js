@@ -65,6 +65,8 @@ class ArchiveFile {
                      // || !this.metadata.contenthash // Dont do another roundtrip just to get contenthash
                         ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
                         let name = this.metadata.name.replace('?', '%3F');  // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
+                        // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
+                        // maybe problem offline but above test should catch cases where no IPFS so not useful
                         Util.fetch_json(`${Util.gatewayServer()}${Util.gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`, (err, res)=>{
                             if (!err) this.metadata = res;
                             cb(err); });

@@ -14,7 +14,7 @@
     "@internetarchive/dweb-transports": "^0.1.30",
     "@stratumn/canonicaljson": "^1.0.2",
     "async": "^2.6.2",
-    "debug": "^3.2.5",
+    "debug": "^4.1.1",
     "es2015": "^0.0.0",
     "prettier-bytes": "^1.0.4"
   },

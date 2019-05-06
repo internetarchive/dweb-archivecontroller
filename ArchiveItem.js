@@ -261,11 +261,11 @@ class ArchiveItem {
 
     _expandMembers(cb) {
         ArchiveMember.expandMembers(this.members, (err, mm) => {
-                if (!err) {
+            if (!err) {
                 this.members = mm;
-                }
-                cb(null, this);  // Dont pass error up, its ok not to be able to expand some or all of them
-            });
+            }
+            cb(null, this);  // Dont pass error up, its ok not to be able to expand some or all of them
+        });
     }
 
     _fetch_query({wantFullResp=false}={}, cb) { // No opts currently
@@ -336,13 +336,16 @@ class ArchiveItem {
 
     relatedItems({wantStream = false, wantMembers = false} = {}, cb) {
         /* This is complex because handles three cases, where want a stream, the generic result of the query or the results expanded to Tile-able info
-            Current usage:
-            in dweb-mirror/ArchiveItemPatched.relatedItems ... subclassed to expand itself, cache and return obj
-            in dweb-mirror/CrawlManager CrawlItem.process uses ArchiveItemPatched.relatedItems
-            in dweb-mirror/mirrorHttp/sendRelated wantStream=true
-            in dweb-archive/Details/itemDetailsAlsoFound > loadDetailsAlsoFound > TileComponent which needs expansion
-
             returns either related items object, stream or array of ArchiveMember, via cb or Promise
+
+            Current usage:
+            In ia-components/.../RelatedItems (wantMembers)
+            Note that wantStream is currently only used by callers of ArchiveItemPatched, thought it should work
+
+            It is also replaced in ArchiveItemPatched to use the cache and that function is used ..
+            in dweb-mirror/CrawlManager CrawlItem.process uses ArchiveItemPatched.relatedItems(wantMembers) to crawl
+            in dweb-mirror/mirrorHttp/sendRelated (wantStream) to proxy to a client
+
         */
         if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
         function f(cb) {

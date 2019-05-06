@@ -52,7 +52,7 @@ class ArchiveMember {
     }
 
     static expandMembers(members, cb) { //TODO-API
-        /* Expand an array of members */
+        /* Expand an array of ArchiveMember from a source that might not be giving all the fields (e.g. a favorites list) */
         const ids = members && members.filter(am=>am.mediatype !== "search").filter(am => !am.isExpanded()).map(am => am.identifier);
         if (ids) {
             this.expand(ids, (err, res) => {
@@ -68,9 +68,11 @@ class ArchiveMember {
 
 
     static expand(ids, cb) {
-        /* Expand ids into the Search Docs that can be used to paint tiles or collection lists
+        /* Use advancedSearch api to expand an array of ids into a dictionary mapping that id to an ArchiveMember
+           This is only currently used when presented with a list of ids for example from a favorites list.
+
             ids [ identifier ]
-            cb(err, { id1: ArchiveSearch(id1) }
+            cb(err, { id1: ArchiveMember(id1) }
 
             Pathway is ...  ArchiveItem._fetch_query > ArchiveMember.expand
         */

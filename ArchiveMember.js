@@ -50,6 +50,23 @@ class ArchiveMember {
     isExpanded() {
         return !this.unexpanded;
     }
+
+    static expandMembers(members, cb) { //TODO-API
+        /* Expand an array of members */
+        const ids = members && members.filter(am=>am.mediatype !== "search").filter(am => !am.isExpanded()).map(am => am.identifier);
+        if (ids) {
+            this.expand(ids, (err, res) => {
+                if (!err) {
+                    members = members.map(m => res[m.identifier] || m);
+                }
+                cb(null, members);  // Dont pass error up, its ok not to be able to expand some or all of them
+            });
+        } else {
+            cb(null, members); // Nothing to expand
+        }
+    }
+
+
     static expand(ids, cb) {
         /* Expand ids into the Search Docs that can be used to paint tiles or collection lists
             ids [ identifier ]

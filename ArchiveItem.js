@@ -241,6 +241,17 @@ class ArchiveItem {
         if (cb) { return this._fetch_query(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
     }
 
+    more(opts, cb) { //TODO-API
+        // Fetch next page of query
+        // opts as defined in fetch_query
+        // cb( err, [ ArchiveMember*] )
+        this.page++;
+        this.fetch_query(opts, (err, newmembers) => {
+            if (err) { this.page--; } // Decrement page back if error
+            cb(err, newmembers);
+        });
+    }
+
     _appendMembers(newmembers) {
         this.members = this.members ? this.members.concat(newmembers) : newmembers;
     }
@@ -249,17 +260,12 @@ class ArchiveItem {
     }
 
     _expandMembers(cb) {
-        const ids = this.members && this.members.filter(am=>am.mediatype !== "search").filter(am => !am.isExpanded()).map(am => am.identifier);
-        if (ids) {
-            ArchiveMember.expand(ids, (err, res) => {
+        ArchiveMember.expandMembers(this.members, (err, mm) => {
                 if (!err) {
-                    this.members = this.members.map(m => res[m.identifier] || m);
+                this.members = mm;
                 }
                 cb(null, this);  // Dont pass error up, its ok not to be able to expand some or all of them
             });
-        } else {
-            cb(null, this); // Nothing to expand
-        }
     }
 
     _fetch_query({wantFullResp=false}={}, cb) { // No opts currently

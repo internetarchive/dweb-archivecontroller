@@ -254,7 +254,14 @@ class ArchiveItem {
     }
 
     _appendMembers(newmembers) {
-        this.members = this.members ? this.members.concat(newmembers) : newmembers;
+        if (!this.members) {
+            this.members = newmembers;
+        } else {
+            const oldids = this.members.map(am => am.identifier)
+            this.members = this.members.concat(
+                newmembers.filter(m => !oldids.includes(m.identifier))
+            );
+        }
     }
     _wrapMembersInResponse(members) {
         return { response: { numFound: undefined, start: this.start, docs: members }}

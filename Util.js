@@ -72,7 +72,10 @@ class Util {
                     res[f] = meta[f];
                 }
             } else {
-                res[f] = (Array.isArray(meta[f]) ? meta[f] : (typeof(meta[f]) === 'string' ? [meta[f]] : [])); // [str*]
+                res[f] = Array.isArray(meta[f])         ? meta[f]       // arrays already ok
+                    : (typeof(meta[f]) === 'string')    ? [meta[f]]     // strings should be turned into array
+                    : (typeof(meta[f]) === 'object')    ? meta[f]       // Dont muck with objects that aren't arrays
+                                                        : [];           // nothing mean an empty array
 
             }
         });

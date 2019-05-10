@@ -57,6 +57,7 @@ class ArchiveItem {
                 files_count: this.files_count,
                 collection_sort_order: this.collection_sort_order,
                 collection_titles: this.collection_titles,
+                crawl: this.crawl, // For dweb-mirror
                 is_dark: this.is_dark,
                 dir: this.dir,
                 server: this.server,

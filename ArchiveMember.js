@@ -12,7 +12,7 @@ class ArchiveMember {
         // All this really does is turn o into an instance of class ArchiveMember
         // And copy into initial fields
         // Super class will have checked matches contract
-        const conforming = ArchiveMember.processMetadataFjords(o, Util.rules.memberSearch);
+        const conforming = unexpanded ? o : ArchiveMember.processMetadataFjords(o, Util.rules.memberSearch); // If claiming unexpanded dont check data
         Object.keys(conforming).map(k => this[k] = conforming[k]);
         this.unexpanded = unexpanded;   // Flag so can tell whether needs expanding
     }
@@ -25,9 +25,12 @@ class ArchiveMember {
         ["publicdate", "title", "downloads","mediatype","item_count"].forEach(k => o[k] = (rel._source[k] ? rel._source[k][0] : undefined)); // Singles
         return new ArchiveMember(o);
     }
+    static fromIdentifier(identifier) {
+        return new ArchiveMember({identifier}, {unexpanded: true});
+    }
     static fromFav(fav) {
         // Create a ArchiveMember but flag unexpanded so will get expanded asynchronously elsewhere
-        return new ArchiveMember(fav, {unexpanded: true}); // Esp [updatedate]
+        return new ArchiveMember(fav, {unexpanded: true});
     }
 
     static processMetadataFjords(meta, rules) {

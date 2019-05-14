@@ -54,6 +54,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.55 support for adding crawl objects; bugs in upstream checking & appending queries to small collections
 * v0.1.54 added ArchiveItem.more
 * v0.1.53 bug fixes: relateditems; package.json refer to specific versions 
 * v0.1.52 add playlist

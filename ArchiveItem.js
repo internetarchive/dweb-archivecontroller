@@ -47,7 +47,7 @@ class ArchiveItem {
             return new this({itemid: m.identifier});
         }
     }
-    exportFiles() {
+    exportFiles() {  // Note overridden in dweb-mirror.ArchiveItemPatched
         return this.files.map(f => f.metadata);
     }
     exportMetadataAPI({wantPlaylist=false}={}) {
@@ -58,6 +58,7 @@ class ArchiveItem {
                 collection_sort_order: this.collection_sort_order,
                 collection_titles: this.collection_titles,
                 crawl: this.crawl, // For dweb-mirror
+                downloaded: this.downloaded,
                 is_dark: this.is_dark,
                 dir: this.dir,
                 server: this.server,

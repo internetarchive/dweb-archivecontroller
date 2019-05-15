@@ -1025,7 +1025,7 @@ Util.rules = {
     item: item_rules,
     memberSearch: {
         repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks', "comments"],
-        nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status", "updatedate"],
+        nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status", "updatedate", "downloaded", "crawl"],
         required_fields: Util.gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
 };

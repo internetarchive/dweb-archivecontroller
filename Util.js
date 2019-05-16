@@ -40,19 +40,25 @@ class Util {
         if (cb) { prom.then((res)=>cb(null,res)).catch((err) => cb(err)); } else { return prom; } // Unpromisify pattern v3
     }
 
+    // Note copy of this in ia-components/util.js and dweb-archivecontroller/util.js
     static formats(k,v,{first=true}={}) {
         const ff = Util._formatarr.filter(f => f[k] === v);
         return first ? (ff.length ? ff[0] : undefined) : ff;
     }
 
+    /*
+    Return a string suitable for prepending to root relative URLs choosing between normal, Dweb, and dweb-mirror scenarios
+
+    Note copy of this in dweb-archivecontroller/Util.js and ia-components/util.js
+     */
     static gatewayServer(server=undefined) {
         // Return location for http calls to a gateway server that understands canonical addresses like /arc/archive.. or /ipfs/Q...
         // Has to be a function rather than constant because searchparams is defined after this library is loaded
         // Note that for example where Util.js is included from dweb-mirror that currently (this may change) DwebArchive is not defined
         // If server is supplied will use that rather than dweb.me, this is (possibly temporary) for bookreader //TODO-BOOK
-        return (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
-                || (server && "https://"+server)
-                || "https://dweb.me");
+        return DwebArchive ? DwebArchive.mirror
+                : server ? "https://"+server
+                : "https://dweb.me"
     }
 
     static enforceStringOrArray(meta, rules) { // See ArchiveItem.loadMetadataFromAPI for other Fjord handling
@@ -90,9 +96,40 @@ class Util {
 
 // === Configuration info ====
 
-//TODO expand to other formats - see mimetypes list from petabox
-// Git petabox/www/common/FormatGetter.inc has the ones with ext and name, but nothing else
-// Git petabox/etc/nginx/mime.types has 2 mappings of ext to mimetype
+/*
+A table, and a function to access it.
+
+The table is an array of information about formats, useful for converting between the multitude of ways that formats are used at the Archive.
+
+It is incomplete, there does not appear to be any consistent usable tables in petabox, but various partial mappings done in different places
+
+Each row of the array corresponds to a unique format, any field may be duplicated.
+
+The row is intentionally not exported, but could be if code needs to use it.
+
+format:         as used in file metadata
+ext:            file extension
+type:           mediatype
+mimetype:       As in Content-type http header
+playable:       true if suitable for playing, usually this is smaller format videos and audio etc
+downloadable:   Set to the upper case string used for sorting in the downloads bar on details page
+
+Use as follows:
+
+formats(field, value, {first=false})
+
+field: of _formatarr to check
+value: value to check for,
+first:  true to return first match or undefined, false for array
+
+formats("format", "VBR MP3", {first: true}.downloadable
+
+TODO expand to other formats - see mimetypes list from petabox
+TODO fill in missing fields, esp format fiel
+Git petabox/www/common/FormatGetter.inc has the ones with ext and name, but nothing else
+Git petabox/etc/nginx/mime.types has 2 mappings of ext to mimetype
+*/
+// Note copy of this in ia-components/util.js and dweb-archivecontroller/util.js
 Util._formatarr = [
     {format: 'VBR MP3',  ext: undefined, type: "audio",    mimetype: "audio/mpeg3",          playable: true,  downloadable: "VBR MP3"},
     {format: 'Ogg Vorbis',  ext: undefined, type: "audio",    mimetype: "audio/TODO",           playable: true,  downloadable: "OGG VORBIS"},

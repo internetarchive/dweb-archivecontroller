@@ -18,8 +18,13 @@ to support the decentralized web.
 git clone https://git@github.com/internetarchive/dweb-archivecontroller.git
 cd dweb-archivecontroller
 
-# install the dependencies including IPFS & WebTorrent and dweb-transports and dweb-objects
-npm install  
+# install the dependencies including IPFS & WebTorrent
+npm install
+
+# NOTE:
+# dweb-transports - will be provided to client using window.DwebTransports in a separate import
+# dweb-objects - will be provided to client using window.DwebObjects in a separate import
+
 ```
 
 ### Node Installation to work on this repo

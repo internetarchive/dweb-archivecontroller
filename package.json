@@ -10,8 +10,6 @@
   "description": "Archive UI to run in Browser",
   "dependencies": {
     "@babel/core": "^7.2.2",
-    "@internetarchive/dweb-objects": "^0.1.20",
-    "@internetarchive/dweb-transports": "^0.1.30",
     "@stratumn/canonicaljson": "^1.0.2",
     "async": "^2.6.2",
     "debug": "^4.1.1",

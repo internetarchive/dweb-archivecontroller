@@ -1,6 +1,6 @@
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
-const Util = require("./Util");
+const {enforceStringOrArray, fetch_json, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query} = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
@@ -82,7 +82,7 @@ class ArchiveItem {
                 ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
                 : [];   // Default to empty, so usage simpler.
             if (metaapi.metadata) {
-                const meta = Util.enforceStringOrArray(metaapi.metadata, Util.rules.item); // Just processes the .metadata part
+                const meta = enforceStringOrArray(metaapi.metadata, rules.item); // Just processes the .metadata part
                 if (meta.mediatype === "education") {
                     // Typically miscategorized, have a guess !
                     if (this.files.find(af => af.playable("video")))
@@ -165,7 +165,7 @@ class ArchiveItem {
          */
         debug('getting metadata for %s', this.itemid);
         // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
-        const name = `dweb:${Util.gateway.url_metadata}${this.itemid}`;
+        const name = `dweb:${gateway.url_metadata}${this.itemid}`;
         // Fetch using Transports as its multiurl and might not be HTTP urls
         // noinspection JSUnusedLocalSymbols
         DwebTransports.fetch([name], {timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
@@ -173,7 +173,7 @@ class ArchiveItem {
                 cb(err);
             } else {
                 // noinspection ES6ModulesDependencies
-                const metaapi = DwebObjects.utils.objectfrom(m); // Handle Buffer or Uint8Array
+                const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
                 if (metaapi.is_dark && !opts.darkOk) { // Only some code handles dark metadata ok
                     this.is_dark = true; // Flagged so wont continuously try and call
                     cb(new Error(`Item ${this.itemid} is dark`));
@@ -183,7 +183,7 @@ class ArchiveItem {
                     debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
                     if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
                         // Fetch and process a playlist (see processPlaylist for documentation of result)
-                        const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (Util.gatewayServer() + Util.gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
+                        const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
                         DwebTransports.fetch([playlistUrl], (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
                             if (err) {
                                 cb(new Error("Unable to read playlist: "+ err.message));
@@ -210,9 +210,9 @@ class ArchiveItem {
         //TODO-BOOK should be going thru the local server where appropriate
         //TODO-BOOK this was requesting format=jsonp but seems to return json (which is what we want) anyway
         // See also configuration in dweb-archive/BookReaderWrapper.js
-        const protocolServer = Util.gatewayServer(this.server); // naming mismatch - gatewayServer is of form http[s]://foo.com
+        const protocolServer = gatewayServer(this.server); // naming mismatch - gatewayServer is of form http[s]://foo.com
         const [protocol, unused, server] = protocolServer.split('/');
-        const parms = Util.parmsFrom({
+        const parms = parmsFrom({
             id: this.itemid,
             itemPath: this.dir,
             server: server,
@@ -305,7 +305,7 @@ class ArchiveItem {
                     }
                     if (this.query) {   // If this is a "Search" then will come here.
                         const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
-                        Util._query( {
+                        _query( {
                             output: "json",
                             q: this.query,
                             rows: this.rows,
@@ -313,7 +313,7 @@ class ArchiveItem {
                             'sort[]': sort,
                             'and[]': this.and,
                             'save': 'yes',
-                            'fl': Util.gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
+                            'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
                         }, (err, j) => {
                             if (err) { // Will get error "failed to fetch" if fails
                                 debug("_fetch_query %s", err.message)
@@ -358,13 +358,13 @@ class ArchiveItem {
         */
         if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
         function f(cb) {
-            const relatedUrl = (((typeof DwebArchive  !== "undefined")  && DwebArchive.mirror)  ? (Util.gatewayServer() + Util.gateway.url_related_local) : Util.gateway.url_related) + this.itemid;
+            const relatedUrl = (((typeof DwebArchive  !== "undefined")  && DwebArchive.mirror)  ? (gatewayServer() + gateway.url_related_local) : gateway.url_related) + this.itemid;
             if (wantStream) { // Stream doesnt really make sense unless caching to file
                 DwebTransports.createReadStream(relatedUrl, {}, cb);
             } else {
                 // TODO this should be using DwebTransports via Gun & Wolk as well
                 // Maybe problem if offline but I believe error propogates up
-                Util.fetch_json(relatedUrl, (err, rels) => {
+                fetch_json(relatedUrl, (err, rels) => {
                     if (!err && rels && wantMembers) {
                         cb(err, rels.hits.hits.map(r=>ArchiveMember.fromRel(r)))
                     } else {

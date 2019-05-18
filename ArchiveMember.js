@@ -1,5 +1,6 @@
-const Util = require("./Util");
+const {enforceStringOrArray, gateway, rules, _query} = require("./Util");
 const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
+const {Object_indexFrom, Object_forEach} = require('./Util');
 
 class ArchiveMember {
     /*
@@ -12,7 +13,7 @@ class ArchiveMember {
         // All this really does is turn o into an instance of class ArchiveMember
         // And copy into initial fields
         // Super class will have checked matches contract
-        const conforming = unexpanded ? o : ArchiveMember.processMetadataFjords(o, Util.rules.memberSearch); // If claiming unexpanded dont check data
+        const conforming = unexpanded ? o : ArchiveMember.processMetadataFjords(o, rules.memberSearch); // If claiming unexpanded dont check data
         Object.keys(conforming).map(k => this[k] = conforming[k]);
         this.unexpanded = unexpanded;   // Flag so can tell whether needs expanding
     }
@@ -34,10 +35,10 @@ class ArchiveMember {
     }
 
     static processMetadataFjords(meta, rules) {
-        return Util.enforceStringOrArray(meta, rules);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
+        return enforceStringOrArray(meta, rules);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
     }
     httpUrl() {
-        return `${Util.gatewayServer()}${Util.gateway.url_servicesimg}${this.identifier}`;  // Supported by dweb-mirror & gateway as well
+        return `${gatewayServer()}${gateway.url_servicesimg}${this.identifier}`;  // Supported by dweb-mirror & gateway as well
     }
     urls() {
         // Return single or array of urls
@@ -79,14 +80,15 @@ class ArchiveMember {
 
             Pathway is ...  ArchiveItem._fetch_query > ArchiveMember.expand
         */
+        for (id in specialidentifiers)
         if (ids && ids.length) {
-            Util._query({
+            _query({
                 output: "json",
                 q: 'identifier:('+ ids.join(' OR ') + ")", // Note it will be URLencoded, don't use "%20OR%20"
                 rows: ids.length,
                 page: 1,
                 'sort[]': "identifier",
-                'fl': Util.gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
+                'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
             }, (err, j) => {
                 if (err) {
                     debug("Unable to expand ids for %s %s", this.itemid, err.message);

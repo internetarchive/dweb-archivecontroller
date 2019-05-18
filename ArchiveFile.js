@@ -1,5 +1,5 @@
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
-const Util = require( './Util');
+const {fetch_json, gatewayServer, gateway, formats, } = require( './Util');
 const prettierBytes = require( "prettier-bytes");
 const waterfall = require('async/waterfall');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
@@ -67,7 +67,7 @@ class ArchiveFile {
                         let name = this.metadata.name.replace('?', '%3F');  // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
                         // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
                         // maybe problem offline but above test should catch cases where no IPFS so not useful
-                        Util.fetch_json(`${Util.gatewayServer()}${Util.gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`, (err, res)=>{
+                        fetch_json(`${gatewayServer()}${gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`, (err, res)=>{
                             if (!err) this.metadata = res;
                             cb(err); });
                     } else {
@@ -84,13 +84,13 @@ class ArchiveFile {
 
     httpUrl() {
         // This will typically be dweb.me, but may be overridden un URL with mirror=localhost:4244
-        return `${Util.gatewayServer()}${Util.gateway.urlDownload}/${this.itemid}/${this.metadata.name}`;
+        return `${gatewayServer()}${gateway.urlDownload}/${this.itemid}/${this.metadata.name}`;
     }
     mimetype() {
-        let f =  Util.formats("format", this.metadata.format)
+        let f =  formats("format", this.metadata.format)
         if (typeof f === "undefined") {
             const ext = this.metadata.name.split('.').pop();
-            f =  Util.formats("ext", "."+ext)
+            f =  formats("ext", "."+ext)
         }
         return  (typeof f === "undefined") ? undefined : f.mimetype;
     }
@@ -134,17 +134,17 @@ class ArchiveFile {
     }
     istype(type) {
         // True if specify a type and it matches, or don't specify a type BUT fails if type unrecognized
-        let format = Util.formats("format", this.metadata.format);
+        let format = formats("format", this.metadata.format);
         //if (!format) console.warn("Format", this.metadata.format, "unrecognized");
         return format && (!type || (format.type === type));
     }
     // noinspection JSUnusedGlobalSymbols
     playable(type) {
-        return this.istype(type) && Util.formats("format", this.metadata.format).playable;
+        return this.istype(type) && formats("format", this.metadata.format).playable;
     }
     // noinspection JSUnusedGlobalSymbols
     downloadable(type) {
-        return this.istype(type) && !!Util.formats("format", this.metadata.format).downloadable;
+        return this.istype(type) && !!formats("format", this.metadata.format).downloadable;
     }
 
 }

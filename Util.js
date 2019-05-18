@@ -3,10 +3,7 @@ const canonicaljson = require('@stratumn/canonicaljson');
 const debug = require('debug')('dweb-archivecontroller:Util');
 const item_rules = require('./item_rules.js');
 
-class Util {
-
-
-    static fetch_json(url, cb) { //TODO replace with httptools.p_GET
+    function fetch_json(url, cb) { //TODO replace with httptools.p_GET
         /*
         url:   to be fetched - construct CORS safe JSON enquiry.
         throws: TypeError if cant fetch
@@ -41,8 +38,8 @@ class Util {
     }
 
     // Note copy of this in ia-components/util.js and dweb-archivecontroller/util.js
-    static formats(k,v,{first=true}={}) {
-        const ff = Util._formatarr.filter(f => f[k] === v);
+    function formats(k,v,{first=true}={}) {
+        const ff = _formatarr.filter(f => f[k] === v);
         return first ? (ff.length ? ff[0] : undefined) : ff;
     }
 
@@ -51,17 +48,17 @@ class Util {
 
     Note copy of this in dweb-archivecontroller/Util.js and ia-components/util.js
      */
-    static gatewayServer(server=undefined) {
+    function gatewayServer(server=undefined) {
         // Return location for http calls to a gateway server that understands canonical addresses like /arc/archive.. or /ipfs/Q...
         // Has to be a function rather than constant because searchparams is defined after this library is loaded
         // Note that for example where Util.js is included from dweb-mirror that currently (this may change) DwebArchive is not defined
         // If server is supplied will use that rather than dweb.me, this is (possibly temporary) for bookreader //TODO-BOOK
-        return DwebArchive ? DwebArchive.mirror
+        return (typeof DwebArchive != "undefined") ? DwebArchive.mirror
                 : server ? "https://"+server
                 : "https://dweb.me"
     }
 
-    static enforceStringOrArray(meta, rules) { // See ArchiveItem.loadMetadataFromAPI for other Fjord handling
+    function enforceStringOrArray(meta, rules) { // See ArchiveItem.loadMetadataFromAPI for other Fjord handling
         // The Archive is nothing but edge cases, handle some of them here so the code doesnt have to !
         // Note this called by ArchiveMember and ArchiveItem and will probably be called by ArchiveFiles so keep it generic and put class-specifics in Archive*.processMetadataFjord
         const res = {};
@@ -92,7 +89,6 @@ class Util {
             });
         return res;
     }
-}
 
 // === Configuration info ====
 
@@ -130,7 +126,7 @@ Git petabox/www/common/FormatGetter.inc has the ones with ext and name, but noth
 Git petabox/etc/nginx/mime.types has 2 mappings of ext to mimetype
 */
 // Note copy of this in ia-components/util.js and dweb-archivecontroller/util.js
-Util._formatarr = [
+const _formatarr = [
     {format: 'VBR MP3',  ext: undefined, type: "audio",    mimetype: "audio/mpeg3",          playable: true,  downloadable: "VBR MP3"},
     {format: 'Ogg Vorbis',  ext: undefined, type: "audio",    mimetype: "audio/TODO",           playable: true,  downloadable: "OGG VORBIS"},
     {format: '128Kbps MP3',  ext: undefined, type: "audio",    mimetype: "audio/mpeg3",          playable: false, downloadable: "128KBPS MP3" },
@@ -689,7 +685,7 @@ Util._formatarr = [
     'x-msvideo' => 'Windows Media',
     'x-ms-wmv'  => 'Windows Media',
 */
-Util.gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
+const gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
     "urlDownload": "/arc/archive.org/download",
     "url_servicesimg": "/arc/archive.org/thumbnail/",
     "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
@@ -702,7 +698,7 @@ Util.gateway = { //TODO remove trailing slash here and in callers and change nam
     "url_default_fl": "identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"  // Note also used in dweb-mirror
 };
 //https://archive.org/advancedsearch.php?q=mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:(fav-* OR what_cd OR cd OR vinyl OR librarygenesis OR bibalex OR movies OR audio OR texts OR software OR image OR data OR web OR additional_collections OR animationandcartoons OR artsandmusicvideos OR audio_bookspoetry OR audio_foreign OR audio_music OR audio_news OR audio_podcast OR audio_religion OR audio_tech OR computersandtechvideos OR coverartarchive OR culturalandacademicfilms OR ephemera OR gamevideos OR inlibrary OR moviesandfilms OR newsandpublicaffairs OR ourmedia OR radioprograms OR samples_only OR spiritualityandreligion OR stream_only OR television OR test_collection OR usgovfilms OR vlogs OR youth_media)&sort[]=-downloads&rows=10&output=json&save=yes&page=
-Util.homeSkipIdentifiers = ['what_cd','cd','vinyl','librarygenesis','bibalex',  // per alexis
+const homeSkipIdentifiers = ['what_cd','cd','vinyl','librarygenesis','bibalex',  // per alexis
         'movies','audio','texts','software','image','data','web', // per alexis/tracey
         'additional_collections','animationandcartoons','artsandmusicvideos','audio_bookspoetry',
         'audio_foreign','audio_music','audio_news','audio_podcast','audio_religion','audio_tech',
@@ -710,10 +706,10 @@ Util.homeSkipIdentifiers = ['what_cd','cd','vinyl','librarygenesis','bibalex',  
         'gamevideos','inlibrary','moviesandfilms','newsandpublicaffairs','ourmedia',
         'radioprograms','samples_only','spiritualityandreligion','stream_only',
         'television','test_collection','usgovfilms','vlogs','youth_media'];
-Util.homeQuery = `mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:fav-* AND NOT identifier:( ${Util.homeSkipIdentifiers.join(' OR ')})`;
+const homeQuery = `mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:fav-* AND NOT identifier:( ${homeSkipIdentifiers.join(' OR ')})`;
 
 // NOTE: copied _verbatim_ from  Details::$langList & Languages.inc until @hank and @ximm weigh in.. 8-)
-Util.languageMapping = {
+const languageMapping = {
     // short (marc) and long versions of language names
     // if a 'language' metadata element matches either version,
     // the long form will be displayed on the details
@@ -1058,19 +1054,20 @@ item_rules.repeatable_fields.push('thumbnaillinks');
 // Add fields that are missing in item_rules
 item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/metadata/GratefulDead/metadata/publisher
 
-Util.rules = {
+const rules = {
     item: item_rules,
     memberSearch: {
         repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks', "comments"],
         nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status", "updatedate", "downloaded", "crawl"],
-        required_fields: Util.gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
+        required_fields: gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
 };
-Object.fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
-Object.filter = (obj, f) => Object.fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
-Object.map = (obj, f) => Object.fromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
-Object.indexFrom = (arr, f) => Object.fromEntries( arr.map(o => [f(o), o]));
-Object.deeperAssign = (res, ...objs) => {
+Object_fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
+Object_filter = (obj, f) => Object_fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
+Object_map = (obj, f) => Object_fromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
+Object_forEach = (obj, f) => Object.entries(obj).forEach(kv=>f(kv[0], kv[1]));
+Object_indexFrom = (arr, f) => Object_fromEntries( arr.map(o => [f(o), o]));
+function Object_deeperAssign(res, ...objs) {
     /*
         return res the result of copying the objs into the existing res in order
         its a recursive copy, but not a full deep copy, i.e. if the field is an object, it will be copied, but not strings
@@ -1085,7 +1082,7 @@ Object.deeperAssign = (res, ...objs) => {
             const v = kv[1];
             if (typeof (v) === "object" && !Array.isArray(v)) {
                 // If its an object, then merge in newer one, creating place to merge it into if reqd.
-                res[k] = Object.deeperAssign(res[k] || {}, v); // Recurse
+                res[k] = Object_deeperAssign(res[k] || {}, v); // Recurse
             } else {
                 res[k] = v
             }
@@ -1093,48 +1090,22 @@ Object.deeperAssign = (res, ...objs) => {
     })
     return res;
 };
-Util.objectFrom = (jsonstring) =>
-    ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring);
 
-Util.asyncMap = (arr, f, cb) => {
-    // calls f(x, cb') in parallel for each element of x, calls cb(err) immediately on error or cb(null, arr) when last finished
-    // This is similar to npm module async/map
-    let i = 0;
-    let resarr = [];
-    let len = arr.length;
-    arr.forEach( o => {
-        const x = i++;
-        f(o, (err, res) => {
-            if (err) {
-                cb(err)
-            } else {
-                resarr[x] = res;
-                if (!--len) cb(null, resarr);
-            }})
-    });
-};
+function objectFrom(jsonstring) {
+    return ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring) };
+// THis is version that was in dweb-objects/objectFrom
+// if ((data instanceof Uint8Array) && !(data instanceof Buffer)) return utils.objectFrom(new Buffer(data));
+// return (typeof data === "string" || data instanceof Buffer || data instanceof Uint8Array) ? JSON.parse(data) : data;
 
-Util.forEach = (arr, f, cb) => {
-    // calls f(x) in parallel for each element of x, calls cb(err) immediately on error or cb(null, arr) when last finished
-    // This is similar to npm module async/map
-    let len = arr.length;
-    arr.forEach( o => {
-        f(o, (err) => {
-            if (err) {
-                cb(err)
-            } else {
-                if (!--len) cb(null);
-            }})
-    });
-};
-Util.parmsFrom = (queryobj) => {
+
+function parmsFrom (queryobj) {
     // Turn a object into the parameter portion of a URL, encoding where appropriate.
     return Object.entries(queryobj)
         .filter(kv => typeof kv[1] !== "undefined")
         .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
         .join('&');
 }
-Util._query = (queryobj, cb) => { // No opts currently
+function _query(queryobj, cb) { // No opts currently
     // rejects: TransportError or CodingError if no urls
     try {
         const urlparms = Object.entries(queryobj)
@@ -1142,14 +1113,14 @@ Util._query = (queryobj, cb) => { // No opts currently
             .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
             .join('&');
         // Note direct call to archive.org leads to CORS fail
-        const url = `${Util.gatewayServer()}${Util.gateway.url_advancedsearch}?${urlparms}`;
+        const url = `${gatewayServer()}${gateway.url_advancedsearch}?${urlparms}`;
         debug("Searching with %s", url);
-        Util.fetch_json(url, cb);
+        fetch_json(url, cb);
     } catch(err) {
-        console.error('Caught unhandled error in Util._query',err);
+        console.error('Caught unhandled error in _query',err);
         cb(err);
     }
 }
 
-
-exports = module.exports = Util;
+const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, Object_deeperAssign, Object_forEach, Object_fromEntries, Object_indexFrom, parmsFrom, rules, _query}; // Needed by archive.html to access gatewayServer
+exports = module.exports = ACUtil

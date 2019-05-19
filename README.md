@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.58 Refactor Utils to multi-export and handle home and local specially
 * v0.1.57 Remove unused dependency on dweb-transports and dweb-objects
 * v0.1.56 Support downloaded field and fix bugs in crawl indicator
 * v0.1.55 support for adding crawl objects; bugs in upstream checking & appending queries to small collections

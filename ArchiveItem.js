@@ -330,7 +330,8 @@ class ArchiveItem {
                             cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
                         });
                     } else { // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
-                        cb(null, undefined); // No results return undefined (which is also what the patch in dweb-mirror does if no collection instead of empty array)
+                        const newmembers = (this.members || []).slice((this.page - 1) * this.rows, this.page * this.rows);
+                        cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
                     }
                 } else {
                     const newmembers = this.members.slice((this.page - 1) * this.rows, this.page * this.rows);

@@ -2,6 +2,23 @@ const {enforceStringOrArray, gateway, rules, _query} = require("./Util");
 const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
 const {Object_indexFrom, Object_forEach} = require('./Util');
 
+const specialidentifiers = {
+    //"identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"
+    "home": {
+        identifier: "home",
+        title: "Internet Archive home",
+        collection: [],
+        mediatype: "collection",
+        publicdate: ""
+    },
+    "local":{
+        identifier: "local",
+        title: "Locally crawled",
+        collection: [],
+        mediatype: "collection",
+        publicdate: ""
+    }
+};
 class ArchiveMember {
     /*
         Not quite an item, a member is the result of either a search query or the ITEMID_members.json file.
@@ -80,11 +97,12 @@ class ArchiveMember {
 
             Pathway is ...  ArchiveItem._fetch_query > ArchiveMember.expand
         */
-        for (id in specialidentifiers)
-        if (ids && ids.length) {
+        const specialMembers = Object_map(specialidentifiers, (k,v) => [k, new ArchiveMember(v)]);
+        const expandableids = ids.filter(id => !Object.keys(specialidentifiers).includes(id)); // Strip out any handled specially
+        if (expandableids && expandableids.length) {
             _query({
                 output: "json",
-                q: 'identifier:('+ ids.join(' OR ') + ")", // Note it will be URLencoded, don't use "%20OR%20"
+                q: 'identifier:('+ expandableids.join(' OR ') + ")", // Note it will be URLencoded, don't use "%20OR%20"
                 rows: ids.length,
                 page: 1,
                 'sort[]': "identifier",
@@ -96,14 +114,18 @@ class ArchiveMember {
                 } else {
                     // Note some of these might still not be expanded if query partially or fully fails to expand
                     // index should only be the expanded ones
-                    const res = Object.indexFrom(j.response.docs.filter(o=>o.publicdate).map(o => new ArchiveMember(o)), as => as.identifier); // { id1: as; id2: as2 }
-                    cb(null, res);
+                    const res = Object_indexFrom(
+                            j.response.docs.filter(o=>o.publicdate) // Find results from query that look complete i.e. have publicdate
+                                .map(o => new ArchiveMember(o)),    // And turn into ArchiveMember
+                            as => as.identifier);                   // And build index of their identifiers { id1: as; id2: as2 }
+                    cb(null, Object.assign(res, specialMembers)); // Return with the specialidentifiers
                 }
             })
-        } else { // Short cut, no ids so dont need to do the query.
-            cb(null, {});
+        } else { // Short cut, no ids so dont need to do the query, jsut return the specialidentifiers.
+            cb(null, specialMembers);
         }
     }
 
 }
+
 exports = module.exports = ArchiveMember;

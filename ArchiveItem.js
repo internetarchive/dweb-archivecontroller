@@ -597,6 +597,6 @@ class ArchiveItem {
     };
 
 }
-ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "reviews", "server", "crawl" ];
+ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "reviews", "server", "crawl", "downloaded"];
 
 exports = module.exports = ArchiveItem;

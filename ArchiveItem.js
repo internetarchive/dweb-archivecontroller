@@ -297,11 +297,18 @@ class ArchiveItem {
             this._expandMembers((unusederr, self) => { // Always succeeds even if it fails it just leaves members unexpanded.
                 if ((typeof this.members === "undefined") || this.members.length < (Math.max(this.page,1)*this.rows)) {
                     // Either cant read file (cos yet cached), or it has a smaller set of results
-                    if (this.metadata && this.metadata.search_collection) { // Search will have !this.item example = "ElectricSheep"
-                        this.query = this.metadata.search_collection.replace('\"', '"');
-                    }
-                    if (!this.query && this.metadata && this.metadata.mediatype === "collection") {  //TODO-TEST its possible with this that dont need to define query in Collection classes (MirrorCollection, or dweb-archive)
-                        this.query = "collection:"+this.itemid
+
+                    if (!this.query) { // Check if query has been defined, and if not set it up
+                        this.query = [
+                            //TODO may want to turn this into a "member" query if running to mirror, then have mirror cache on item and run this algorithm
+                            // Catch any collections - note "collection: might need to be first to catch a pattern match in mirror
+                            this.itemid && this.metadata && this.metadata.mediatype === "collection" && "collection:" + this.itemid,
+                            // Now two kinds of simple lists, but also only on collections
+                            this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__items:" + this.itemid,
+                            this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__holdings:" + this.itemid,
+                            // Search will have !this.item example = "ElectricSheep"
+                            this.metadata && this.metadata.search_collection && this.metadata.search_collection.replace('\"', '"'),
+                        ].filter(f => !!f).join(" OR "); // OR any non empty ones
                     }
                     if (this.query) {   // If this is a "Search" then will come here.
                         const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here

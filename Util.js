@@ -1122,5 +1122,5 @@ function _query(queryobj, cb) { // No opts currently
     }
 }
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, Object_deeperAssign, Object_forEach, Object_fromEntries, Object_indexFrom, parmsFrom, rules, _query}; // Needed by archive.html to access gatewayServer
+const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, Object_deeperAssign, Object_filter, Object_forEach, Object_fromEntries, Object_indexFrom, parmsFrom, rules, _query}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

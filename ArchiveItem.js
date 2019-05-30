@@ -450,9 +450,7 @@ class ArchiveItem {
             tracks: [ ] // Not really tracks, its things like subtitles
          */
         // filename is because (some) of the files in the API are returned as root relative urls,
-        // and nasty bug in that the filename is URLencoded https://webarchive.jira.com/browse/PBOX-3309 expecting Tracey to fix to that
-        //function filename(rootrelativeurl) { returnrootrelativeurl.split('/').slice(3).join('/');}
-        function filename(rootrelativeurl) { return decodeURIComponent(rootrelativeurl.split('/').slice(3).join('/'));}
+        function filename(rootrelativeurl) { return rootrelativeurl.split('/').slice(3).join('/'); }
         function processTrack(t) {
             // Add some fields to the track to make it usable
             // Note old setPlaylist returned .original, callers have been changed to expect .orig

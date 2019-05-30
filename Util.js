@@ -3,15 +3,17 @@ const canonicaljson = require('@stratumn/canonicaljson');
 const debug = require('debug')('dweb-archivecontroller:Util');
 const item_rules = require('./item_rules.js');
 
-    function fetch_json(url, cb) { //TODO replace with httptools.p_GET
+    function fetch_json(url, cb) {
         /*
+
+        // TODO DEPRECATED - should be replaced with httptools.p_GET
         url:   to be fetched - construct CORS safe JSON enquiry.
         throws: TypeError if cant fetch
         throws: Error if fetch doesnt return JSON.
         throws: Error if fail to fetch
         returns Decoded json response via cb or promise
          */
-        debug("fetch_json: %s",url);
+        debug("DEPRECATED fetch_json: %s",url);
         const prom = fetch(new Request(url, // Throws TypeError on failed fetch
             {
                 method: 'GET',
@@ -101,7 +103,7 @@ It is incomplete, there does not appear to be any consistent usable tables in pe
 
 Each row of the array corresponds to a unique format, any field may be duplicated.
 
-The row is intentionally not exported, but could be if code needs to use it.
+The table is intentionally not exported, but could be if code needs to use it.
 
 format:         as used in file metadata
 ext:            file extension
@@ -1106,6 +1108,7 @@ function parmsFrom (queryobj) {
         .join('&');
 }
 function _query(queryobj, cb) { // No opts currently
+    // Deprecated but still use
     // rejects: TransportError or CodingError if no urls
     try {
         const urlparms = Object.entries(queryobj)
@@ -1114,7 +1117,7 @@ function _query(queryobj, cb) { // No opts currently
             .join('&');
         // Note direct call to archive.org leads to CORS fail
         const url = `${gatewayServer()}${gateway.url_advancedsearch}?${urlparms}`;
-        debug("Searching with %s", url);
+        debug("DEPRECATED _query Searching with %s", url);
         fetch_json(url, cb);
     } catch(err) {
         console.error('Caught unhandled error in _query',err);

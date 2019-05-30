@@ -72,7 +72,7 @@ class ArchiveMember {
         return !this.unexpanded;
     }
 
-    static expandMembers(members, cb) { //TODO-API
+    static expandMembers(members, cb) {
         /* Expand an array of ArchiveMember from a source that might not be giving all the fields (e.g. a favorites list) */
         const ids = members && members.filter(am=>am.mediatype !== "search").filter(am => !am.isExpanded()).map(am => am.identifier);
         if (ids) {

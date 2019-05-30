@@ -39,14 +39,17 @@ class ArchiveItem {
         this.query = query;
     }
 
+    /* Almost certainly OBSolete , though looks correct
     static fromMemberFav(m) {
         // Build an ArchiveItem from an entry in a favorites (i.e. a IDENTIFIER_member.json file).
+        // Almost certainly
         if (m.mediatype === "search") { // Handle weird saved searches,
             return new this({query: m.identifier});
         } else {
             return new this({itemid: m.identifier});
         }
     }
+    */
     exportFiles() {  // Note overridden in dweb-mirror.ArchiveItemPatched
         return this.files.map(f => f.metadata);
     }
@@ -384,6 +387,7 @@ class ArchiveItem {
     }
 
     async thumbnaillinks() {
+        //- maybe Obsolete as thumbnails usually shown from ArchiveMember
         await this.fetch_metadata();
         return this.metadata.thumbnaillinks; // Short cut since metadata changes may move this
     }
@@ -421,12 +425,6 @@ class ArchiveItem {
     }
     playableFile(type) {
         return this.files.find(fi => fi.playable(type));  // Can be undefined if none included
-    }
-
-    async itemid() {
-        console.assert(false, 'I dont this can ever get called, constructor will be overwriting it');
-        await this.fetch_metadata();
-        return this.metadata.identifier; // Short cut since metadata changes may move this
     }
 
     processPlaylist(rawplaylist) {
@@ -475,80 +473,6 @@ class ArchiveItem {
 
     setPlaylist(unusedtype) {
         console.assert(this.playlist); // Should be have been set during fetch_metadata > fetch_playlist
-        /* OBSOLETE
-        //TODO could order the playability and pick by preference
-        /-*
-        type:   "audio"
-        returns: [ { title
-            original: filename of original file
-            sources: [ {name, file, urls, type}]  # urls is singular ArchiveFile, type is last file extension (e.g. "jpg"
-            } ]
-
-        TODO-FJORDS: This gets a bit painful as there are so many different cases over a decade or more of "best practice"
-        Some cases to test for ...
-        gd73-02-15.sbd.hall.1580.sbeok.shnf  has no lengths on derived tracks, and original has length = "0"
-         *-/
-
-        // Note Video.js is currently using the .avs, while Audio is using this .playlist
-
-        // This is modelled on the structure passed to jw in the Audio on archive.org
-        // Differences: sources.urls=ArchiveFile, image=af instead of single URL, title is just title, prettyduration has duration
-        console.assert(this.files, "Should be running playlist after fetch_metadata has loaded .files");
-        type = {"video": "video", "audio": "audio", "movies": "video"}[type || this.metadata.mediatype];
-        const pl = this.files.reduce( (res, af) => {
-                const metadata = af.metadata;
-                if (["original","derivative"].includes(metadata.source)) {
-                    const original = ((metadata.source === "derivative") ? metadata.original : metadata.name );  // Filename of original
-                    if (!res[original]) {
-                        res[original] = { title: "UNKNOWN", original: original, sources: [] }; // Create place to push this file whether its original or derivative
-                    }
-                    const orig = res[original];
-                    if ((metadata.source === "original") || (orig.title==="UNKNOWN")) orig.title = metadata.title;
-                    let totalsecs;
-                    let pretty;
-                    if (metadata.length && (metadata.length !== "0")) {
-                        if (metadata.length.includes(':')) {
-                            const tt = metadata.length.split(':').map(t => parseInt(t));
-                            if (tt.length === 3) {
-                                totalsecs = ((tt[0] * 60) + tt[1]) * 60 + tt[2];
-                            } else if (tt.length === 2) {
-                                totalsecs = (tt[0] * 60 + tt[1]);
-                            } else if (tt.length === 1) {
-                                totalsecs = (tt[0]);
-                            }
-                            pretty = metadata.length;
-                        } else { // Probably of 123.45 form in seconds
-                            const secs = parseInt(metadata.length % 60);
-                            if (isNaN(secs)) { // Check we could parse it
-                                pretty = "";
-                                totalsecs = 0;
-                            } else {
-                                pretty = `${parseInt(metadata.length / 60)}:${secs < 10 ? "0" + secs : secs}`;
-                                totalsecs = metadata.length;  // In seconds
-                            }
-                        }
-                        if (totalsecs) { // dont store if we think its 0
-                            if (metadata.source === "original" || !orig.prettyduration) orig.prettyduration = pretty;
-                            if (metadata.source === "original" || !orig.duration) orig.duration = totalsecs;  // In seconds
-                        }
-                    }
-                    if (af.playable(type)) {
-                        res[original].sources.push({
-                            name: metadata.name,
-                            file: `http://dweb.archive.org/download/${this.itemid}/${metadata.name}`,
-                            urls: af,
-                            type: metadata.name.split('.').pop(),
-                        });
-                    } else if (af.playable("image")) {
-                        if (!res[original].image) res[original].image = af; // Currently loads with first playable one, Tracey is prepping an exposed service to get a prefered one in metadata
-                    }
-                }
-                return res;
-
-            }, {}
-        );
-        this.playlist = Object.values(pl).filter(p => p.sources.length > 0);
-        END OBSOLETE */
     }
 
     minimumForUI() {

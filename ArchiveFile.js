@@ -48,7 +48,6 @@ class ArchiveFile {
         return this.metadata.name;
     }
 
-    //TODO-API remove p_urls and make urls() cb or promise
     urls(cb) { //TODO-MIRROR fix this to make sense for _torrent.xml files which dont have sha1 and probably not IPFS
         /*
         cb(err, urls)   passed an array of urls that might be a good place to get this item
@@ -111,7 +110,9 @@ class ArchiveFile {
         return URL.createObjectURL(await this.blob());
     }
     async p_download(a, options) {
-        // noinspection UnnecessaryLocalVariableJS
+        //Weird workaround for a browser problem, download data as a blob,
+        // edit parameters of an anchor to open this file in a new window,
+        // and click it to perform the opening.
         let objectURL = await this.blobUrl();
         //browser.downloads.download({filename: this.metadata.name, url: objectURL});   //Doesnt work
         //Downloads.fetch(objectURL, this.metadata.name);   // Doesnt work

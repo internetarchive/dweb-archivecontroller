@@ -121,7 +121,7 @@ class ArchiveItem {
     }
 
 
-    async fetch() {
+    async fetch({noCache=undefined}={}) {   //TODO-API add noCache
         /* Fetch what we can about this item, it might be an item or something we have to search for.
             Fetch item metadata as JSON by talking to Metadata API
             Fetch collection info by an advanced search.
@@ -132,8 +132,8 @@ class ArchiveItem {
             resolves to: this
          */
         try {
-            await this.fetch_metadata();
-            await this.fetch_query(); // Should throw error if fails to fetch
+            await this.fetch_metadata({noCache});
+            await this.fetch_query({noCache}); // Should throw error if fails to fetch //TODO-RELOAD fetch_query ignores noCache currently
             return this;
         } catch(err) {
             throw(err); // Typically a failure to fetch
@@ -146,6 +146,10 @@ class ArchiveItem {
 
         This function is intended to be monkey-patched in dweb-mirror to define caching.
         Its monkeypatched because of all the places inside dweb-archive that call fetch_query
+
+        opts {
+            noCache     Set Cache-Control no-cache header. Note - in monkeypatched version in dweb-mirror this stops it reading the cache
+        }
         cb(err, this) or if undefined, returns a promise resolving to 'this'
          */
         if (typeof opts === "function") { cb = opts; // noinspection JSUnusedAssignment
@@ -162,7 +166,7 @@ class ArchiveItem {
             }
         }
     }
-    _fetch_metadata(opts, cb) {
+    _fetch_metadata({darkOk=undefined, noCache=undefined}={}, cb) {
         /*
         Fetch the metadata for this item - dont use directly, use fetch_metadata.
          */
@@ -171,13 +175,13 @@ class ArchiveItem {
         const name = `dweb:${gateway.url_metadata}${this.itemid}`;
         // Fetch using Transports as its multiurl and might not be HTTP urls
         // noinspection JSUnusedLocalSymbols
-        DwebTransports.fetch([name], {timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
+        DwebTransports.fetch([name], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
             if (err) {
                 cb(err);
             } else {
                 // noinspection ES6ModulesDependencies
                 const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
-                if (metaapi.is_dark && !opts.darkOk) { // Only some code handles dark metadata ok
+                if (metaapi.is_dark && !darkOk) { // Only some code handles dark metadata ok
                     this.is_dark = true; // Flagged so wont continuously try and call
                     cb(new Error(`Item ${this.itemid} is dark`));
                 } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
@@ -246,7 +250,7 @@ class ArchiveItem {
         if (cb) { return this._fetch_query(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
     }
 
-    more(opts, cb) { //TODO-API
+    more(opts, cb) {
         // Fetch next page of query
         // opts as defined in fetch_query
         // cb( err, [ ArchiveMember*] )

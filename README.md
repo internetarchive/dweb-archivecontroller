@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.61 Support for Reload; and crawl/download on related items
 * v0.1.60 Pass downloaded along; support simple-list/collection/search_collection
 * v0.1.59 bug fix in gatewayServer when not mirrored
 * v0.1.58 Refactor Utils to multi-export and handle home and local specially

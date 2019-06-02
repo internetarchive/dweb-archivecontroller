@@ -30,18 +30,18 @@ class ArchiveMember {
         // All this really does is turn o into an instance of class ArchiveMember
         // And copy into initial fields
         // Super class will have checked matches contract
-        const conforming = unexpanded ? o : ArchiveMember.processMetadataFjords(o, rules.memberSearch); // If claiming unexpanded dont check data
+        const conforming = unexpanded ? o : ArchiveMember.processMetadataFjords(o, rules.member); // If claiming unexpanded dont check data
         Object.keys(conforming).map(k => this[k] = conforming[k]);
         this.unexpanded = unexpanded;   // Flag so can tell whether needs expanding
     }
     static fromRel(rel) {
-        const o = {
-            identifier: rel._id,
-            creator: rel._source.creatorSorter, //TODO-IA ask Gio to give us creator as well
-        };
-        [ "collection", "description"].forEach(k => o[k] = rel._source[k]); // Arrays
-        ["publicdate", "title", "downloads","mediatype","item_count"].forEach(k => o[k] = (rel._source[k] ? rel._source[k][0] : undefined)); // Singles
-        return new ArchiveMember(o);
+        return new ArchiveMember(
+                Object.assign(
+                    rel._source,
+                    {
+                        identifier: rel._id,
+                        creator: rel._source.creatorSorter, //TODO-IA ask Gio to give us creator as well
+                    }) );
     }
     static fromIdentifier(identifier) {
         return new ArchiveMember({identifier}, {unexpanded: true});

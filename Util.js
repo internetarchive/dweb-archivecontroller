@@ -1058,7 +1058,7 @@ item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/meta
 
 const rules = {
     item: item_rules,
-    memberSearch: {
+    member: {
         repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks', "comments"],
         nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status", "updatedate", "downloaded", "crawl"],
         required_fields: gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))

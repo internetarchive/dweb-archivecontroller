@@ -191,7 +191,7 @@ class ArchiveItem {
                     if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
                         // Fetch and process a playlist (see processPlaylist for documentation of result)
                         const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
-                        DwebTransports.fetch([playlistUrl], (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
+                        DwebTransports.fetch([playlistUrl], {noCache}, (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
                             if (err) {
                                 cb(new Error("Unable to read playlist: "+ err.message));
                             } else {

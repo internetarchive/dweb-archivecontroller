@@ -1,6 +1,6 @@
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, fetch_json, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query} = require("./Util");
+const {enforceStringOrArray, fetch_json, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
@@ -167,9 +167,14 @@ class ArchiveItem {
         }
     }
     _fetch_metadata({darkOk=undefined, noCache=undefined}={}, cb) {
-        /*
-        Fetch the metadata for this item - dont use directly, use fetch_metadata.
-         */
+      /*
+      Fetch the metadata for this item - dont use directly, use fetch_metadata.
+       */
+      const special = specialidentifiers[this.itemid];
+      if (typeof special !== "undefined") {
+        this.loadFromMetadataAPI({ metadata: special});
+        cb(null, this);
+      } else {
         debug('getting metadata for %s', this.itemid);
         // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
         const name = `dweb:${gateway.url_metadata}${this.itemid}`;
@@ -207,6 +212,7 @@ class ArchiveItem {
                 }
             }
         });
+      }
     }
     fetch_bookreader(opts={}, cb) {
         if (cb) { return this._fetch_bookreader(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
@@ -358,7 +364,7 @@ class ArchiveItem {
         }
     }
 
-    relatedItems({wantStream = false, wantMembers = false} = {}, cb) {
+    relatedItems({wantStream = false, wantMembers = false, noCache = false} = {}, cb) { //TODO-RELOAD set this
         /* This is complex because handles three cases, where want a stream, the generic result of the query or the results expanded to Tile-able info
             returns either related items object, stream or array of ArchiveMember, via cb or Promise
 
@@ -379,13 +385,18 @@ class ArchiveItem {
             } else {
                 // TODO this should be using DwebTransports via Gun & Wolk as well
                 // Maybe problem if offline but I believe error propogates up
-                fetch_json(relatedUrl, (err, rels) => {
-                    if (!err && rels && wantMembers) {
-                        cb(err, rels.hits.hits.map(r=>ArchiveMember.fromRel(r)))
+                DwebTransports.fetch([relatedUrl], {noCache}, (err, res) => {
+                    if (err) {
+                        cb(err);
                     } else {
-                        cb(err, rels);
+                        try {
+                            const rels = objectFrom(res);
+                            cb(null, wantMembers ? rels.hits.hits.map(r=>ArchiveMember.fromRel(r)) : rels );
+                        } catch (err) {
+                            cb(err); // Usually bad json
+                        }
                     }
-                });
+                })
             }
         }
     }

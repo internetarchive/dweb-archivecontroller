@@ -1124,6 +1124,34 @@ function _query(queryobj, cb) { // No opts currently
         cb(err);
     }
 }
+const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-archive dweb-archivecontroller
+    //"identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"
+    "home": {
+        identifier: "home",
+        title: "Internet Archive home",
+        collection: [],
+        mediatype: "collection",
+        publicdate: "",
+        uploader: "",
+        search_collection: homeQuery,
+    },
+    "local":{
+        identifier: "local",
+        title: "Locally crawled",
+        collection: [],
+        mediatype: "collection",
+        publicdate: "",
+        uploader: ""
+    },
+    "settings": {
+        identifier: "settings",
+        title: "Settings",
+        collection: [],
+        mediatype: "collection",    // It isn't really, but this should be fine
+        publicdate: "",
+        uploader: ""
+    }
+};
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, Object_deeperAssign, Object_filter, Object_forEach, Object_fromEntries, Object_indexFrom, parmsFrom, rules, _query}; // Needed by archive.html to access gatewayServer
+const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, Object_deeperAssign, Object_filter, Object_forEach, Object_fromEntries, Object_indexFrom, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

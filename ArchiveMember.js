@@ -1,24 +1,7 @@
 const {enforceStringOrArray, gateway, rules, _query} = require("./Util");
 const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
-const {Object_indexFrom, Object_forEach} = require('./Util');
+const {Object_indexFrom, Object_forEach, specialidentifiers} = require('./Util');
 
-const specialidentifiers = {
-    //"identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"
-    "home": {
-        identifier: "home",
-        title: "Internet Archive home",
-        collection: [],
-        mediatype: "collection",
-        publicdate: ""
-    },
-    "local":{
-        identifier: "local",
-        title: "Locally crawled",
-        collection: [],
-        mediatype: "collection",
-        publicdate: ""
-    }
-};
 class ArchiveMember {
     /*
         Not quite an item, a member is the result of either a search query or the ITEMID_members.json file.

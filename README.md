@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.62 Align case Object_filter -> ObjectFilter etc
 * v0.1.62 Better support for special identifiers: home, local, settings
 * v0.1.61 Support for Reload; and crawl/download on related items
 * v0.1.60 Pass downloaded along; support simple-list/collection/search_collection

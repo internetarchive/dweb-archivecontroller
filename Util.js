@@ -1064,12 +1064,12 @@ const rules = {
         required_fields: gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
 };
-Object_fromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
-Object_filter = (obj, f) => Object_fromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
-Object_map = (obj, f) => Object_fromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
-Object_forEach = (obj, f) => Object.entries(obj).forEach(kv=>f(kv[0], kv[1]));
-Object_indexFrom = (arr, f) => Object_fromEntries( arr.map(o => [f(o), o]));
-function Object_deeperAssign(res, ...objs) {
+ObjectFromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
+ObjectFilter = (obj, f) => ObjectFromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
+ObjectMap = (obj, f) => ObjectFromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
+ObjectForEach = (obj, f) => Object.entries(obj).forEach(kv=>f(kv[0], kv[1]));
+ObjectIndexFrom = (arr, f) => ObjectFromEntries( arr.map(o => [f(o), o]));
+function ObjectDeeperAssign(res, ...objs) {
     /*
         return res the result of copying the objs into the existing res in order
         its a recursive copy, but not a full deep copy, i.e. if the field is an object, it will be copied, but not strings
@@ -1084,7 +1084,7 @@ function Object_deeperAssign(res, ...objs) {
             const v = kv[1];
             if (typeof (v) === "object" && !Array.isArray(v)) {
                 // If its an object, then merge in newer one, creating place to merge it into if reqd.
-                res[k] = Object_deeperAssign(res[k] || {}, v); // Recurse
+                res[k] = ObjectDeeperAssign(res[k] || {}, v); // Recurse
             } else {
                 res[k] = v
             }
@@ -1134,6 +1134,7 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
         publicdate: "",
         uploader: "",
         search_collection: homeQuery,
+        thumbnaillinks: "/archive/images/archivelogo246x246.jpg",
     },
     "local":{
         identifier: "local",
@@ -1141,7 +1142,8 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
         collection: [],
         mediatype: "collection",
         publicdate: "",
-        uploader: ""
+        uploader: "",
+        thumbnaillinks: "/archive/images/settings.svg", //TODO find a good icon for this, but note its not currently visible anywhere.
     },
     "settings": {
         identifier: "settings",
@@ -1149,9 +1151,10 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
         collection: [],
         mediatype: "collection",    // It isn't really, but this should be fine
         publicdate: "",
-        uploader: ""
+        uploader: "",
+        thumbnaillinks: "/archive/images/settings.svg",
     }
 };
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, Object_deeperAssign, Object_filter, Object_forEach, Object_fromEntries, Object_indexFrom, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
+const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, languageMapping, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

@@ -382,7 +382,7 @@ Map three letter (marc) codes to Longer names
     }
 }
 ```
-##### Object_deeperAssign(res, ...objs)
+##### ObjectDeeperAssign(res, ...objs)
 Like Object.assign but recursively assigns fields inside objects. 
 
 Note it will replace an array as there is no "right" solution to merge them.

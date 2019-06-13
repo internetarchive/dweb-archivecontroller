@@ -1111,10 +1111,7 @@ function _query(queryobj, cb) { // No opts currently
     // Deprecated but still use
     // rejects: TransportError or CodingError if no urls
     try {
-        const urlparms = Object.entries(queryobj)
-            .filter(kv => typeof kv[1] !== "undefined")
-            .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
-            .join('&');
+        const urlparms = parmsFrom(queryobj);
         // Note direct call to archive.org leads to CORS fail
         const url = `${gatewayServer()}${gateway.url_advancedsearch}?${urlparms}`;
         debug("DEPRECATED _query Searching with %s", url);

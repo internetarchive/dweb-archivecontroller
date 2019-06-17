@@ -16,6 +16,11 @@ class ArchiveFile {
 
     constructor({itemid = undefined, metadata = undefined}={}) {
         this.itemid = itemid;
+        if (typeof metadata.downloaded !== "undefined") {
+            // Support dweb-mirror which stores downloaded in metadata
+            this.downloaded = metadata.downloaded;
+            delete(metadata.downloaded);
+        }
         this.metadata = metadata;
     }
 

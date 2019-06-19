@@ -23,7 +23,7 @@ class ArchiveItem {
     This is just storage, the UI is in ArchiveBase and subclasses, theoretically this class could be used for a server or gateway app with no UI.
 
     Fields:
-    itemid: Archive.org reference for object
+    itemid|identifier: Archive.org reference for object (itemid is legacy - use identifier where possible)
     item:   Metadata decoded from JSON from metadata search.
     members:  Array of data from a search.
     files:  Will hold a list of files when its a single item
@@ -33,8 +33,8 @@ class ArchiveItem {
      */
 
 
-    constructor({itemid = undefined, query = undefined, metaapi = undefined}={}) {
-        this.itemid = itemid;
+    constructor({identifier=undefined, itemid = undefined, query = undefined, metaapi = undefined}={}) {
+        this.itemid = identifier || itemid;
         this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
         this.query = query;
     }
@@ -46,7 +46,7 @@ class ArchiveItem {
         if (m.mediatype === "search") { // Handle weird saved searches,
             return new this({query: m.identifier});
         } else {
-            return new this({itemid: m.identifier});
+            return new this({identifier: m.identifier});
         }
     }
     */

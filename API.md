@@ -121,7 +121,7 @@ Common Parameters:
  wantFullResp   true if want data wrapped in {response: { numFound, start, docs}} 
 ```
 
-##### new ArchiveItem({itemid, query, metaapi})
+##### new ArchiveItem({identifier, query, metaapi})
 
 Instantiate new ArchiveItem and load from metaapi call
 

@@ -61,7 +61,7 @@ class ArchiveItem {
                 collection_sort_order: this.collection_sort_order,
                 collection_titles: this.collection_titles,
                 crawl: this.crawl, // For dweb-mirror
-                downloaded: this.downloaded,
+                downloaded: this.downloaded,    // Complex object
                 is_dark: this.is_dark,
                 dir: this.dir,
                 server: this.server,

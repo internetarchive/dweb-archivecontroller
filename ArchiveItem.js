@@ -465,16 +465,16 @@ class ArchiveItem {
             tracks: [ ] // Not really tracks, its things like subtitles
          */
         // filename is because (some) of the files in the API are returned as root relative urls,
-        function filename(rootrelativeurl) { return rootrelativeurl.split('/').slice(3).join('/'); }
+        function filename(rootrelativeurl) { return rootrelativeurl ? rootrelativeurl.split('/').slice(3).join('/') : undefined; }
         function processTrack(t) {
             // Add some fields to the track to make it usable
             // Note old setPlaylist returned .original, callers have been changed to expect .orig
             t.imagename = filename(t.image);
-            t.imageurls = this.files.find(f => f.metadata.name === t.imagename);   // An ArchiveFile
+            t.imageurls = t.imagename ? this.files.find(f => f.metadata.name === t.imagename) : undefined;   // An ArchiveFile
             t.sources.forEach(s => {
                 // "file" is unusable root-relative URL but its not used by callers
                 s.name = filename(s.file);                       // Filename
-                s.urls = this.files.find(f => f.metadata.name === s.name);   // An ArchiveFile from which can get the urls
+                s.urls = s.name ? this.files.find(f => f.metadata.name === s.name) : undefined;   // An ArchiveFile from which can get the urls
             });
             const seconds = parseInt(t.duration);
             const secs = seconds % 60;

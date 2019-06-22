@@ -370,7 +370,7 @@ Configure identifiers not to be returned on home page even if they are popular.
 ##### homeQuery = string
 Query to use for the home page
 
-##### languageMapping = { MARC: "long" }
+##### languageMapping = { MARC: "long" } //TODO-API moved to ia-components/util.js
 Map three letter (marc) codes to Longer names
 
 ##### rules = { RULESET: RULES } 

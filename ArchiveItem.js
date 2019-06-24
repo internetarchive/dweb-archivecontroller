@@ -1,6 +1,6 @@
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, fetch_json, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
+const {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
@@ -17,6 +17,7 @@ const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 // Filter an array until f returns true.
 ArrayFilterTill = function(arr, f) { const res = []; for( let i in arr) { // noinspection JSUnfilteredForInLoop
     const x=arr[i]; if (f(x)) { return res } else { res.push(x)} }  return res; };
+
 class ArchiveItem {
     /*
     Base class representing an Item and/or a Search query (A Collection is both).
@@ -55,21 +56,21 @@ class ArchiveItem {
     }
     exportMetadataAPI({wantPlaylist=false}={}) {
         return Object.assign(
-            {
-                files: this.exportFiles(),
-                files_count: this.files_count,
-                collection_sort_order: this.collection_sort_order,
-                collection_titles: this.collection_titles,
-                crawl: this.crawl, // For dweb-mirror
-                downloaded: this.downloaded,    // Complex object
-                is_dark: this.is_dark,
-                dir: this.dir,
-                server: this.server,
-                members: this.members,
-                metadata: this.metadata,
-                reviews: this.reviews,
-            },
-            wantPlaylist ? { playlist: this.playlist} : { }
+          {
+              files: this.exportFiles(),
+              files_count: this.files_count,
+              collection_sort_order: this.collection_sort_order,
+              collection_titles: this.collection_titles,
+              crawl: this.crawl, // For dweb-mirror
+              downloaded: this.downloaded,    // Complex object
+              is_dark: this.is_dark,
+              dir: this.dir,
+              server: this.server,
+              members: this.membersFav,
+              metadata: this.metadata,
+              reviews: this.reviews,
+          },
+          wantPlaylist ? { playlist: this.playlist} : { }
         )
 
     }
@@ -82,8 +83,8 @@ class ArchiveItem {
         if (metaapi) {
             console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
             this.files = (metaapi && metaapi.files)
-                ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
-                : [];   // Default to empty, so usage simpler.
+              ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
+              : [];   // Default to empty, so usage simpler.
             if (metaapi.metadata) {
                 const meta = enforceStringOrArray(metaapi.metadata, rules.item); // Just processes the .metadata part
                 if (meta.mediatype === "education") {
@@ -99,7 +100,7 @@ class ArchiveItem {
                 this.metadata = meta;
             }
             //These will be unexpanded if comes from favorites, its expanded by fetch_query (either from cache or in _fetch_query>expandMembers)
-            this.members = metaapi.members && metaapi.members.map(o => ArchiveMember.fromFav(o));
+            this.membersFav = metaapi.members && metaapi.members.map(o => ArchiveMember.fromFav(o));
             ArchiveItem.extraFields.forEach(k => this[k] = metaapi[k]);
             if (metaapi.playlist) {
                 this.playlist = this.processPlaylist(metaapi.playlist);
@@ -158,7 +159,7 @@ class ArchiveItem {
         if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
         function f(cb) {
             // noinspection JSPotentiallyInvalidUsageOfClassThis
-            if (this.itemid && !(this.metadata || this.is_dark)) { // If havent already fetched (is_dark means no .metadata field)
+            if (this.itemid && !(this.metadata || this.is_dark)) { // If have not already fetched (is_dark means no .metadata field)
                 // noinspection JSPotentiallyInvalidUsageOfClassThis
                 this._fetch_metadata(opts, cb); // Processes Fjords & Loads .metadata .files etc
             } else {
@@ -167,52 +168,52 @@ class ArchiveItem {
         }
     }
     _fetch_metadata({darkOk=undefined, noCache=undefined}={}, cb) {
-      /*
-      Fetch the metadata for this item - dont use directly, use fetch_metadata.
-       */
-      const special = specialidentifiers[this.itemid];
-      if (typeof special !== "undefined") {
-        this.loadFromMetadataAPI({ metadata: special});
-        cb(null, this);
-      } else {
-        debug('getting metadata for %s', this.itemid);
-        // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
-        const name = `dweb:${gateway.url_metadata}${this.itemid}`;
-        // Fetch using Transports as its multiurl and might not be HTTP urls
-        // noinspection JSUnusedLocalSymbols
-        DwebTransports.fetch([name], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
-            if (err) {
-                cb(err);
-            } else {
-                // noinspection ES6ModulesDependencies
-                const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
-                if (metaapi.is_dark && !darkOk) { // Only some code handles dark metadata ok
-                    this.is_dark = true; // Flagged so wont continuously try and call
-                    cb(new Error(`Item ${this.itemid} is dark`));
-                } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
-                    cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
+        /*
+        Fetch the metadata for this item - dont use directly, use fetch_metadata.
+         */
+        const special = specialidentifiers[this.itemid];
+        if (typeof special !== "undefined") {
+            this.loadFromMetadataAPI({ metadata: special});
+            cb(null, this);
+        } else {
+            debug('getting metadata for %s', this.itemid);
+            // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
+            const name = `dweb:${gateway.url_metadata}${this.itemid}`;
+            // Fetch using Transports as its multiurl and might not be HTTP urls
+            // noinspection JSUnusedLocalSymbols
+            DwebTransports.fetch([name], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
+                if (err) {
+                    cb(err);
                 } else {
-                    debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
-                    if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
-                        // Fetch and process a playlist (see processPlaylist for documentation of result)
-                        const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
-                        DwebTransports.fetch([playlistUrl], {noCache}, (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
-                            if (err) {
-                                cb(new Error("Unable to read playlist: "+ err.message));
-                            } else {
-                                metaapi.playlist = res;
-                                this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
-                                cb(null, this);
-                            }
-                        });
-                    } else { // Dont need playlist and the embed code has a bug on other mediatypes.
-                        this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
-                        cb(null, this)
+                    // noinspection ES6ModulesDependencies
+                    const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
+                    if (metaapi.is_dark && !darkOk) { // Only some code handles dark metadata ok
+                        this.is_dark = true; // Flagged so wont continuously try and call
+                        cb(new Error(`Item ${this.itemid} is dark`));
+                    } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
+                        cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
+                    } else {
+                        debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
+                        if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
+                            // Fetch and process a playlist (see processPlaylist for documentation of result)
+                            const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
+                            DwebTransports.fetch([playlistUrl], {noCache}, (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
+                                if (err) {
+                                    cb(new Error("Unable to read playlist: "+ err.message));
+                                } else {
+                                    metaapi.playlist = res;
+                                    this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
+                                    cb(null, this);
+                                }
+                            });
+                        } else { // Dont need playlist and the embed code has a bug on other mediatypes.
+                            this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
+                            cb(null, this)
+                        }
                     }
                 }
-            }
-        });
-      }
+            });
+        }
     }
     fetch_bookreader(opts={}, cb) {
         if (cb) { return this._fetch_bookreader(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
@@ -224,7 +225,7 @@ class ArchiveItem {
         //TODO-BOOK this was requesting format=jsonp but seems to return json (which is what we want) anyway
         // See also configuration in dweb-archive/BookReaderWrapper.js
         const protocolServer = gatewayServer(this.server); // naming mismatch - gatewayServer is of form http[s]://foo.com
-        const [protocol, unused, server] = protocolServer.split('/');
+        const [unusedProtocol, unused, server] = protocolServer.split('/');
         const parms = parmsFrom({
             id: this.itemid,
             itemPath: this.dir,
@@ -267,27 +268,49 @@ class ArchiveItem {
         });
     }
 
-    _appendMembers(newmembers) {
-        if (!this.members) {
-            this.members = newmembers;
-        } else {
-            const oldids = this.members.map(am => am.identifier)
-            this.members = this.members.concat(
-                newmembers.filter(m => !oldids.includes(m.identifier))
-            );
-        }
-    }
-    _wrapMembersInResponse(members) {
-        return { response: { numFound: undefined, start: this.start, docs: members }}
+    currentPageOfMembers(wrapInResponse) {
+        return wrapInResponse
+          ? { response: { numFound: undefined, start: this.start, docs: this.currentPageOfMembers(false) }}   // Quick recurse
+          : this.membersFav.concat(this.membersSearch).slice((this.page - 1) * this.rows, this.page * this.rows);
     }
 
     _expandMembers(cb) {
-        ArchiveMember.expandMembers(this.members, (err, mm) => {
+        // Dont actually need to expand this.membersSearch, will be result of search, or cached and so expanded already
+        ArchiveMember.expandMembers(this.membersFav, (err, mm) => {
             if (!err) {
-                this.members = mm;
+                this.membersFav = mm;
             }
             cb(null, this);  // Dont pass error up, its ok not to be able to expand some or all of them
         });
+    }
+
+    _buildQuery() {
+        // Build a query if not already explicitly set
+        if (!this.query) { // Check if query has been defined, and if not set it up
+            this.query = [
+                //TODO may want to turn this into a "member" query if running to mirror, then have mirror cache on item and run this algorithm
+                // Catch any collections - note "collection: might need to be first to catch a pattern match in mirror
+                this.itemid && this.metadata && this.metadata.mediatype === "collection" && "collection:" + this.itemid,
+                // Now two kinds of simple lists, but also only on collections
+                this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__items:" + this.itemid,
+                this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__holdings:" + this.itemid,
+                // Search will have !this.item example = "ElectricSheep"
+                this.metadata && this.metadata.search_collection && this.metadata.search_collection.replace('\"', '"'),
+            ].filter(f => !!f).join(" OR "); // OR any non empty ones
+        }
+    }
+    _doQuery(cb) {
+        const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
+        _query( {
+            output: "json",
+            q: this.query,
+            rows: this.rows,
+            page: this.page,
+            'sort[]': sort,
+            'and[]': this.and,
+            'save': 'yes',
+            'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
+        }, cb);
     }
 
     _fetch_query({wantFullResp=false}={}, cb) { // No opts currently
@@ -304,59 +327,36 @@ class ArchiveItem {
         */
         // First we look for the fav-xyz type collection, where there is an explicit JSON of the members
         try {
-            // noinspection JSUnusedLocalSymbols
-            // noinspection JSUnusedLocalSymbols
-            this.page = this.page || 1; // Page starts at 1, sometimes set to 0, or left undefined.
+            // Make it easier rather than testing each time
+            if (!Array.isArray(this.membersFav)) this.membersFav = [];
+            if (!Array.isArray(this.membersSearch)) this.membersSearch = [];
             this._expandMembers((unusederr, self) => { // Always succeeds even if it fails it just leaves members unexpanded.
-                if ((typeof this.members === "undefined") || this.members.length < (Math.max(this.page,1)*this.rows)) {
+                if ((this.membersFav.length + this.membersSearch.length) < (Math.max(this.page,1)*this.rows)) {
                     // Either cant read file (cos yet cached), or it has a smaller set of results
-
-                    if (!this.query) { // Check if query has been defined, and if not set it up
-                        this.query = [
-                            //TODO may want to turn this into a "member" query if running to mirror, then have mirror cache on item and run this algorithm
-                            // Catch any collections - note "collection: might need to be first to catch a pattern match in mirror
-                            this.itemid && this.metadata && this.metadata.mediatype === "collection" && "collection:" + this.itemid,
-                            // Now two kinds of simple lists, but also only on collections
-                            this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__items:" + this.itemid,
-                            this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__holdings:" + this.itemid,
-                            // Search will have !this.item example = "ElectricSheep"
-                            this.metadata && this.metadata.search_collection && this.metadata.search_collection.replace('\"', '"'),
-                        ].filter(f => !!f).join(" OR "); // OR any non empty ones
-                    }
+                    this._buildQuery(); // Build query if not explicitly set
                     if (this.query) {   // If this is a "Search" then will come here.
-                        const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
-                        _query( {
-                            output: "json",
-                            q: this.query,
-                            rows: this.rows,
-                            page: this.page,
-                            'sort[]': sort,
-                            'and[]': this.and,
-                            'save': 'yes',
-                            'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
-                        }, (err, j) => {
+                        this._doQuery((err, j) => {
                             if (err) { // Will get error "failed to fetch" if fails
                                 debug("_fetch_query %s", err.message)
                                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
                             } else {
-                                const newmembers = j.response.docs.map(o => new ArchiveMember(o));
-                                this._appendMembers(newmembers);
+                                const oldids = this.membersSearch.map(am => am.identifier);
+                                this.membersSearch = this.membersSearch.concat(
+                                  j.response.docs.map(o => new ArchiveMember(o)).filter(m => !oldids.includes(m.identifier)) // Any new members in response
+                                );
                                 this.start = j.response.start;
                                 this.numFound = j.response.numFound;
                             }
                             //cb(null, wantFullResp ? j : newmembers);  // wantFullResp is used when proxying unmodified result
-                            const newmembers = (this.members || []).slice((this.page - 1) * this.rows, this.page * this.rows);
-                            cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
+                            cb(null, this.currentPageOfMembers(wantFullResp));
                         });
-                    } else { // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
-                        const newmembers = (this.members || []).slice((this.page - 1) * this.rows, this.page * this.rows);
-                        cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
+                        return; // Will cb above
                     }
-                } else {
-                    const newmembers = this.members.slice((this.page - 1) * this.rows, this.page * this.rows);
-                    cb(null, wantFullResp ? this._wrapMembersInResponse(newmembers) : newmembers);
+                    // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
                 }
+                // If did not do the query, just return what we've got
+                cb(null, this.currentPageOfMembers(wantFullResp));
             });
         } catch(err) {
             console.error('Caught unexpected error in ArchiveItem._fetch_query',err);
@@ -381,10 +381,11 @@ class ArchiveItem {
         function f(cb) {
             const relatedUrl = (((typeof DwebArchive  !== "undefined")  && DwebArchive.mirror)  ? (gatewayServer() + gateway.url_related_local) : gateway.url_related) + this.itemid;
             if (wantStream) { // Stream doesnt really make sense unless caching to file
+                // noinspection JSCheckFunctionSignatures
                 DwebTransports.createReadStream(relatedUrl, {}, cb);
             } else {
                 // TODO this should be using DwebTransports via Gun & Wolk as well
-                // Maybe problem if offline but I believe error propogates up
+                // Maybe problem if offline but I believe error propagates up
                 DwebTransports.fetch([relatedUrl], {noCache}, (err, res) => {
                     if (err) {
                         cb(err);
@@ -413,7 +414,7 @@ class ArchiveItem {
          */
         // New items should have __ia_thumb.jpg but older ones dont
         let af = this.files && this.files.find(af => af.metadata.name === "__ia_thumb.jpg"
-            || af.metadata.name.endsWith("_itemimage.jpg"));
+          || af.metadata.name.endsWith("_itemimage.jpg"));
         if (!af) {
             const metadata =  {
                 format: "JPEG Thumb",
@@ -498,8 +499,8 @@ class ArchiveItem {
         if (this.itemid) { // Exclude "search"
             console.assert(this.files, "minimumForUI assumes .files already set up");
             const thumbnailFiles = this.files.filter(af =>
-                af.metadata.name === "__ia_thumb.jpg"
-                || af.metadata.name.endsWith("_itemimage.jpg")
+              af.metadata.name === "__ia_thumb.jpg"
+              || af.metadata.name.endsWith("_itemimage.jpg")
             );
             // Note thumbnail is also explicitly saved by saveThumbnail
             minimumFiles.push(...thumbnailFiles);
@@ -534,7 +535,7 @@ class ArchiveItem {
                 case "account":
                     break;
                 default:
-                //TODO Not yet supporting software, zotero (0 items); data; web because rest of dweb-archive doesnt
+              //TODO Not yet supporting software, zotero (0 items); data; web because rest of dweb-archive doesnt
             }
         }
         return minimumFiles;

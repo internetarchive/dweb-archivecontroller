@@ -299,7 +299,8 @@ class ArchiveItem {
             ].filter(f => !!f).join(" OR "); // OR any non empty ones
         }
     }
-    _doQuery(cb) {
+    _doQuery(opts, cb) {
+        // For opts see dweb-transports.httptools.p_GET
         const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
         _query( {
             output: "json",
@@ -310,10 +311,10 @@ class ArchiveItem {
             'and[]': this.and,
             'save': 'yes',
             'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
-        }, cb);
+        }, opts, cb);
     }
 
-    _fetch_query({wantFullResp=false}={}, cb) { // No opts currently
+    _fetch_query({wantFullResp=false, noCache=false}={}, cb) { // No opts currently
         /*
             rejects: TransportError or CodingError if no urls
 
@@ -335,7 +336,7 @@ class ArchiveItem {
                     // Either cant read file (cos yet cached), or it has a smaller set of results
                     this._buildQuery(); // Build query if not explicitly set
                     if (this.query) {   // If this is a "Search" then will come here.
-                        this._doQuery((err, j) => {
+                        this._doQuery({noCache}, (err, j) => {
                             if (err) { // Will get error "failed to fetch" if fails
                                 debug("_fetch_query %s", err.message)
                                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline

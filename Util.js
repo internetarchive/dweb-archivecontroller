@@ -767,15 +767,17 @@ function parmsFrom (queryobj) {
         .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
         .join('&');
 }
-function _query(queryobj, cb) { // No opts currently
+function _query(queryobj, opts={}, cb) { // No opts curr// ently
     // Deprecated but still use
+    // Opts appropriate here for httptools.p_GET = {noCache, retries, wantstream}
     // rejects: TransportError or CodingError if no urls
+    if (typeof opts === "function") { cb = opts; opts = {}}
     try {
         const urlparms = parmsFrom(queryobj);
         // Note direct call to archive.org leads to CORS fail
+        //TODO would be good to move to DwebTransports
         const url = `${gatewayServer()}${gateway.url_advancedsearch}?${urlparms}`;
-        debug("DEPRECATED _query Searching with %s", url);
-        fetch_json(url, cb);
+        DwebTransports.httptools.p_GET(url, opts, cb);
     } catch(err) {
         console.error('Caught unhandled error in _query',err);
         cb(err);

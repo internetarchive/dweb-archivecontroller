@@ -196,7 +196,9 @@ class ArchiveItem {
                         debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
                         if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
                             // Fetch and process a playlist (see processPlaylist for documentation of result)
-                            const playlistUrl = (((typeof DwebArchive  !== "undefined") && DwebArchive.mirror) ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid) : `https://archive.org/embed/${this.itemid}?output=json`);
+                            const playlistUrl = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
+                              ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid)
+                              : `https://archive.org/embed/${this.itemid}?output=json`);
                             DwebTransports.fetch([playlistUrl], {noCache}, (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
                                 if (err) {
                                     cb(new Error("Unable to read playlist: "+ err.message));

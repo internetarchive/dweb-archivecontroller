@@ -172,7 +172,7 @@ class ArchiveItem {
         Fetch the metadata for this item - dont use directly, use fetch_metadata.
          */
         const special = specialidentifiers[this.itemid];
-        if (typeof special !== "undefined") {
+        if (!(typeof DwebArchive !== "undefined" && DwebArchive.mirror) && typeof special !== "undefined") {
             this.loadFromMetadataAPI({ metadata: special});
             cb(null, this);
         } else {
@@ -272,7 +272,7 @@ class ArchiveItem {
 
     currentPageOfMembers(wrapInResponse) {
         return wrapInResponse
-          ? { response: { numFound: undefined, start: this.start, docs: this.currentPageOfMembers(false) }}   // Quick recurse
+          ? { response: { numFound: this.numFound, start: this.start, docs: this.currentPageOfMembers(false) }}   // Quick recurse
           : this.membersFav.concat(this.membersSearch).slice((this.page - 1) * this.rows, this.page * this.rows);
     }
 
@@ -350,6 +350,7 @@ class ArchiveItem {
                                 );
                                 this.start = j.response.start;
                                 this.numFound = j.response.numFound;
+                                this.downloaded = j.response.downloaded;
                             }
                             //cb(null, wantFullResp ? j : newmembers);  // wantFullResp is used when proxying unmodified result
                             cb(null, this.currentPageOfMembers(wantFullResp));
@@ -545,6 +546,6 @@ class ArchiveItem {
     };
 
 }
-ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "reviews", "server", "crawl", "downloaded"];
+ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded"];
 
 exports = module.exports = ArchiveItem;

@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.67: Fix bug where reading back bad data for .downloaded in _extra.json
 * v0.1.66: LanguageMapping moved to IAUX; refactor members to membersFav and membersSearch; support noCache option to _query; download info on searches
 * v0.1.65 catch some bugs with certain playlists missing images
 * v0.1.64 Start adding support for identifier instead of itemid; support caching donwloaded on files; 

@@ -74,6 +74,17 @@ class ArchiveItem {
         )
 
     }
+    _mergeExtra(o) {
+        // Carefully merge extras into ArchiveItem,
+        // In particular this shouldn't merge downloaded:null which is in some corrupt data
+        // ai can be an ArchiveItem, or an Object intended to be one
+        if (o) {
+            ArchiveItem.extraFields.forEach(k => {
+                if (o[k]) this[k] = o[k];
+            });
+        }
+    }
+
     loadFromMetadataAPI(metaapi) {
         /*
         Apply the results of a metadata API or exportMetadataAPI() call to an ArchiveItem,
@@ -101,7 +112,7 @@ class ArchiveItem {
             }
             //These will be unexpanded if comes from favorites, its expanded by fetch_query (either from cache or in _fetch_query>expandMembers)
             this.membersFav = metaapi.members && metaapi.members.map(o => ArchiveMember.fromFav(o));
-            ArchiveItem.extraFields.forEach(k => this[k] = metaapi[k]);
+            this._mergeExtra(metaapi);
             if (metaapi.playlist) {
                 this.playlist = this.processPlaylist(metaapi.playlist);
             }

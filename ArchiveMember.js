@@ -81,7 +81,8 @@ class ArchiveMember {
             Pathway is ...  ArchiveItem._fetch_query > ArchiveMember.expand
         */
         const specialMembers = ObjectMap(specialidentifiers, (k,v) => [k, new ArchiveMember(v)]);
-        const expandableids = ids.filter(id => !Object.keys(specialidentifiers).includes(id)); // Strip out any handled specially
+        //const expandableids = ids.filter(id => !Object.keys(specialidentifiers).includes(id)); // Strip out any handled specially
+        const expandableids = ids; // Allow for special ids, mirror actually knows the answer better than browser does
         if (expandableids && expandableids.length) {
             _query({
                 output: "json",
@@ -98,10 +99,10 @@ class ArchiveMember {
                     // Note some of these might still not be expanded if query partially or fully fails to expand
                     // index should only be the expanded ones
                     const res = ObjectIndexFrom(
-                            j.response.docs.filter(o=>o.publicdate) // Find results from query that look complete i.e. have publicdate
+                            j.response.docs.filter(o=>!o.unexpanded) // Find results from query that look complete (was checking publicdate but that doesnt work on home|settings|local)
                                 .map(o => new ArchiveMember(o)),    // And turn into ArchiveMember
                             as => as.identifier);                   // And build index of their identifiers { id1: as; id2: as2 }
-                    cb(null, Object.assign(res, specialMembers)); // Return with the specialidentifiers
+                    cb(null, Object.assign({}, specialMembers, res)); // Return with the specialidentifiers overridden by result
                 }
             })
         } else { // Short cut, no ids so dont need to do the query, jsut return the specialidentifiers.

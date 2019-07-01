@@ -24,7 +24,7 @@ class ArchiveFile {
         this.metadata = metadata;
     }
 
-    static new({archiveitem=undefined, filename=undefined}={}, cb) {
+    static new({archiveitem=undefined, filename=undefined, copyDirectory=undefined}={}, cb) {
         /*
          Asynchronously create a new ArchiveFile instance and load its metadata.
 
@@ -32,6 +32,7 @@ class ArchiveFile {
          itemid:        Identifier of item (only used if archiveitem not defined)
          metadata:      If defined is the result of a metadata API call for loading in AF.metadata
          filename:      Name of an existing file, (may be multipart e.g. foo/bar)
+         copyDirectory  Where to store any data cached, (if running in DwebMirror)
          cb(err, archivefile): passed Archive File
          resolves to:   archivefile if no cb
           errors:        FileNotFound or errors from ArchiveFile() or fetch_metadata()
@@ -39,7 +40,7 @@ class ArchiveFile {
         if (cb) { return f.call(this, cb) } else { return new Promise((resolve, reject) => f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
         function f(cb) {
             if (!archiveitem.metadata) {
-                archiveitem.fetch_metadata((err, ai) => { // Note will load from cache if available and load ai.metadata and ai.files
+                archiveitem.fetch_metadata({copyDirectory}, (err, ai) => { // Note will load from cache if available and load ai.metadata and ai.files
                     if (err)  { cb(err) } else { this.new({archiveitem: ai, filename}, cb); } })
             } else {
                 const af = archiveitem.files.find(af => af.metadata.name === filename); // af, (undefined if not found)

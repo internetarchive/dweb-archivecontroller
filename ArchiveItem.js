@@ -133,7 +133,7 @@ class ArchiveItem {
     }
 
 
-    async fetch({noCache=undefined}={}) {   //TODO-API add noCache
+    async fetch({noCache=undefined, copyDirectory=undefined}={}) {   //TODO-API add noCache and copyDirectory
         /* Fetch what we can about this item, it might be an item or something we have to search for.
             Fetch item metadata as JSON by talking to Metadata API
             Fetch collection info by an advanced search.
@@ -144,8 +144,8 @@ class ArchiveItem {
             resolves to: this
          */
         try {
-            await this.fetch_metadata({noCache});
-            await this.fetch_query({noCache}); // Should throw error if fails to fetch //TODO-RELOAD fetch_query ignores noCache currently
+            await this.fetch_metadata({noCache, copyDirectory});
+            await this.fetch_query({noCache, copyDirectory}); // Should throw error if fails to fetch //TODO-RELOAD fetch_query ignores noCache currently
             return this;
         } catch(err) {
             throw(err); // Typically a failure to fetch
@@ -417,9 +417,9 @@ class ArchiveItem {
         }
     }
 
-    async thumbnaillinks() {
+    async thumbnaillinks(opts={}) {
         //- maybe Obsolete as thumbnails usually shown from ArchiveMember
-        await this.fetch_metadata();
+        await this.fetch_metadata(opts);
         return this.metadata.thumbnaillinks; // Short cut since metadata changes may move this
     }
 

@@ -512,6 +512,7 @@ class ArchiveItem {
         /*
          returns: [ ArchiveFile* ]  minimum files required to play this item
         */
+        //TODO-CAROUSEL
         // This will be tuned for different mediatype etc}
         // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
         const minimumFiles = [];
@@ -528,8 +529,11 @@ class ArchiveItem {
                     break;
                 case "collection": //TODO-THUMBNAILS
                     break;
-                case "texts": //TODO-THUMBNAILS for text - texts use the Text Reader anyway so dont know which files needed
-                    break;
+                case "texts": //TODO-THUMBNAILS
+                  if (this.subtype() === "carousel") {
+                      minimumFiles.push(...this.files4carousel());
+                  }
+                  break; // for texts subtype=bookreader  use the Text Reader anyway so dont know which files needed - done in pages
                 case "image":
                     minimumFiles.push(this.files.find(fi => fi.playable("image"))); // First playable image is all we need
                     break;
@@ -559,7 +563,25 @@ class ArchiveItem {
         }
         return minimumFiles;
     };
-
+    subtype() {
+        // Heuristic to figure out what kind of texts we have, this will evolve as @tracey gradually releases more info :-)
+        // Return a subtype used by different mechanisms to make decisions
+        console.assert(this.metadata && this.files,"Setup metadata and files before subtype which is synchronous");
+        switch (this.metadata.mediatype) {
+            case 'texts':
+                const hasPDF = this.files.find(f => f.metadata.format.endsWith("PDF"));
+                return hasPDF
+                  ? "bookreader"
+                  : "carousel";     // e.g. thetaleofpeterra14838gut
+            default:
+                return undefined;
+        }
+    }
+    files4carousel() {
+        // Convert the files into slides in an array. Next step would be to process for carousel
+        // This algorithm works for thetaleofpeterra14838gut its probably not universal
+        return this.files.filter(f => f.metadata.format === "JPEG").sort((a,b) => a.metadata.name < b.metadata.name ? -1 : a.metadata.name > b.metadata.name ? 1 : 0)
+    }
 }
 ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded"];
 

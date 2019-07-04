@@ -33,11 +33,11 @@ class ArchiveItem {
     _urls:  Will be list of places to retrieve this data (not quite a metadata call)
      */
 
-
-    constructor({identifier=undefined, itemid = undefined, query = undefined, metaapi = undefined}={}) {
+    constructor({identifier=undefined, itemid = undefined, query = undefined, sort=[], metaapi = undefined}={}) { //TODO-API sort
         this.itemid = identifier || itemid;
         this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
         this.query = query;
+        this.sort = Array.isArray(sort) ? sort : sort ? [sort] : []; // Always an array here
     }
 
     /* Almost certainly OBSolete , though looks correct
@@ -314,7 +314,11 @@ class ArchiveItem {
     }
     _doQuery(opts, cb) {
         // For opts see dweb-transports.httptools.p_GET
-        const sort = this.collection_sort_order || this.sort || "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
+        const sort = this.collection_sort_order
+          ? this.collection_sort_order
+          : this.sort.length
+            ? this.sort
+            : "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
         _query( {
             output: "json",
             q: this.query,

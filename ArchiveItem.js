@@ -205,7 +205,7 @@ class ArchiveItem {
                         cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
                     } else {
                         debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
-                        if (['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
+                        if ((!metaapi.is_dark) && ['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
                             // Fetch and process a playlist (see processPlaylist for documentation of result)
                             const playlistUrl = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
                               ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid)
@@ -424,7 +424,7 @@ class ArchiveItem {
     async thumbnaillinks(opts={}) {
         //- maybe Obsolete as thumbnails usually shown from ArchiveMember
         await this.fetch_metadata(opts);
-        return this.metadata.thumbnaillinks; // Short cut since metadata changes may move this
+        return this.metadata ? this.metadata.thumbnaillinks : [] ; // Short cut since metadata changes may move this
     }
 
     thumbnailFile() {
@@ -504,17 +504,16 @@ class ArchiveItem {
         return ArrayFilterTill(rawplaylist, t => t.autoplay === false).map(t=>processTrack.call(this,t));
     }
 
-    setPlaylist(unusedtype) {
-        console.assert(this.playlist); // Should be have been set during fetch_metadata > fetch_playlist
-    }
-
     minimumForUI() {
         /*
-         returns: [ ArchiveFile* ]  minimum files required to play this item
+         assumes metadata fetched
+         returns: [ ArchiveFile* ]  minimum files required to play this item or undefined if is_dark
         */
         //TODO-CAROUSEL
         // This will be tuned for different mediatype etc}
         // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
+        console.assert(this.metadata || this.is_dark)
+        if (this.is_dark) { return undefined; }
         const minimumFiles = [];
         if (this.itemid) { // Exclude "search"
             console.assert(this.files, "minimumForUI assumes .files already set up");
@@ -539,17 +538,13 @@ class ArchiveItem {
                     break;
                 case "audio":  //TODO-THUMBNAILS check that it can find the image for the thumbnail with the way the UI is done. Maybe make ReactFake handle ArchiveItem as teh <img>
                 case "etree":   // Generally treated same as audio, at least for now
-                    if (!this.playlist) { // noinspection JSUnresolvedFunction
-                        this.setPlaylist();
-                    }
+                    console.assert(this.playlist);
                     // Almost same logic for video & audio
                     minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
                     // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://dweb.me/thumbnail/itemid which should get canonicalized
                     break;
                 case "movies":
-                    if (!this.playlist) { // noinspection JSUnresolvedFunction
-                        this.setPlaylist();
-                    }
+                    console.assert(this.playlist);
                     // Almost same logic for video & audio
                     minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
                     // noinspection JSUnresolvedFunction

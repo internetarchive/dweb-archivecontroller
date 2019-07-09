@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.70 is_dark fixed
 * v0.1.69 Sort on searches; Carousel subtype on mediatype=texts; update formatarr;
 * v0.1.68 Local & Home queries go upstream, support copyDirectory refactor in dweb-mirror
 * v0.1.67 Fix bug where reading back bad data for .downloaded in _extra.json

@@ -282,9 +282,10 @@ class ArchiveItem {
     }
 
     currentPageOfMembers(wrapInResponse) {
+      // Return current page of results, note that page 1 is the 0th..rows-1 items, and page 0 is same as page 1.
         return wrapInResponse
           ? { response: { numFound: this.numFound, start: this.start, docs: this.currentPageOfMembers(false) }}   // Quick recurse
-          : this.membersFav.concat(this.membersSearch).slice((this.page - 1) * this.rows, this.page * this.rows);
+          : this.membersFav.concat(this.membersSearch).slice((Math.max(1,this.page) - 1) * this.rows, this.page * this.rows);
     }
 
     _expandMembers(cb) {

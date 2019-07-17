@@ -51,9 +51,11 @@ class ArchiveItem {
         }
     }
     */
-    exportFiles() {  // Note overridden in dweb-mirror.ArchiveItemPatched
-        return this.files.map(f => f.metadata);
-    }
+  exportFiles() {
+    // Note we are storing as AF.downloaded.metadata as only store that, but reading back in AF.constructor converted to AF.downloade
+    return this.files.map(f => Object.assign({downloaded: f.downloaded}, f.metadata));
+  };
+
     exportMetadataAPI({wantPlaylist=false}={}) {
         return Object.assign(
           {

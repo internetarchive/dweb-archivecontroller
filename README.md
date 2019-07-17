@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.72 bug fixes bookreader heuristic, download flag 
 * v0.1.71 bug fix to ObjectMap and page=0
 * v0.1.70 is_dark fixed
 * v0.1.69 Sort on searches; Carousel subtype on mediatype=texts; update formatarr;

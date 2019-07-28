@@ -133,10 +133,12 @@ class ArchiveFile {
     }
     sizePretty() {
         try {
-            return prettierBytes(parseInt(this.metadata.size));
-        } catch(err) {
-            console.error("Couldnt get prettierBytes for",this);
-            return "???";
+            return this.metadata.size
+              ? prettierBytes(parseInt(this.metadata.size))
+              : ""; // For example files.xml has no size field
+        } catch (err) {
+            debug("ERROR - cant get size for %s/%s", this.itemid, this.metadata.name)
+            return "";
         }
     }
     istype(type) {

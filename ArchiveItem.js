@@ -28,6 +28,7 @@ class ArchiveItem {
   item:   Metadata decoded from JSON from metadata search.
   members:  Array of data from a search.
   files:  Will hold a list of files when its a single item
+  query:  Either a string e.g. "bananas" or a an object like {collection: "mitratest", description: "bananas"}
 
   Once subclass SmartDict
   _urls:  Will be list of places to retrieve this data (not quite a metadata call)
@@ -202,7 +203,8 @@ class ArchiveItem {
           const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
           if (metaapi.is_dark && !darkOk) { // Only some code handles dark metadata ok
             this.is_dark = true; // Flagged so wont continuously try and call
-            cb(new Error(`Item ${this.itemid} is dark`));
+            //TODO the \n here is ignored, need the DetailsError to convert to <BR> or handle a real linebreak same way
+            cb(new Error(`This item is no longer available. \nItems may be taken down for various reasons, including by decision of the uploader or due to a violation of our Terms of Use.`))
           } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
             cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
           } else {
@@ -515,7 +517,7 @@ class ArchiveItem {
     //TODO-CAROUSEL
     // This will be tuned for different mediatype etc}
     // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
-    console.assert(this.metadata || this.is_dark)
+    console.assert(this.metadata || this.is_dark, "Should either be metadata or is_dark")
     if (this.is_dark) { return undefined; }
     const minimumFiles = [];
     if (this.itemid) { // Exclude "search"
@@ -541,13 +543,13 @@ class ArchiveItem {
           break;
         case "audio":  //TODO-THUMBNAILS check that it can find the image for the thumbnail with the way the UI is done. Maybe make ReactFake handle ArchiveItem as teh <img>
         case "etree":   // Generally treated same as audio, at least for now
-          console.assert(this.playlist);
+          console.assert(this.playlist, "minimumforUI expects playlist");
           // Almost same logic for video & audio
           minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
           // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://dweb.me/thumbnail/itemid which should get canonicalized
           break;
         case "movies":
-          console.assert(this.playlist);
+          console.assert(this.playlist, "minimumforUI expects playlist");
           // Almost same logic for video & audio
           minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
           // noinspection JSUnresolvedFunction

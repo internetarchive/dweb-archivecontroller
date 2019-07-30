@@ -460,11 +460,23 @@ class ArchiveItem {
     // Heuristic is to select the 2nd thumbnail from the thumbs/ directory (first is often a blank screen)
     console.assert(this.files, "videoThumbnaillinks: assumes setup .files before");
     console.assert(this.metadata.mediatype === "movies", "videoThumbnaillinks only valid for movies");
-    const videothumbnailurls = this.files.filter(fi => (fi.metadata.name.includes(`${this.itemid}.thumbs/`))); // Array of ArchiveFile
-    return videothumbnailurls[Math.min(videothumbnailurls.length-1,1)];
+    if (this.playlist[0] && this.playlist[0].imageurls) {
+      return this.playlist[0].imageurls;
+    } else {
+      const videoThumbnailUrls = this.files.filter(fi => (fi.metadata.name.includes(`${this.itemid}.thumbs/`))); // Array of ArchiveFile
+      // TODO - use this.playlist[0].image but it needs to be a ArchiveFile
+      return videoThumbnailUrls.length
+        ? videoThumbnailUrls[Math.min(videoThumbnailUrls.length - 1, 1)]
+        : this.thumbnailFile(); // If none then return ordinary thumbnail
+    }
   }
   playableFile(type) {
     return this.files.find(fi => fi.playable(type));  // Can be undefined if none included
+  }
+
+  fileFromFilename(filename) { //TODO-API
+    // Convert a filename to a ArchiveFile, can be undefined
+    return filename ? this.files.find(f => f.metadata.name === filename) : undefined
   }
 
   processPlaylist(rawplaylist) {
@@ -495,11 +507,11 @@ class ArchiveItem {
       // Add some fields to the track to make it usable
       // Note old setPlaylist returned .original, callers have been changed to expect .orig
       t.imagename = filename(t.image);
-      t.imageurls = t.imagename ? this.files.find(f => f.metadata.name === t.imagename) : undefined;   // An ArchiveFile
+      t.imageurls = this.fileFromFilename(t.imagename);   // An ArchiveFile
       t.sources.forEach(s => {
         // "file" is unusable root-relative URL but its not used by callers
         s.name = filename(s.file);                       // Filename
-        s.urls = s.name ? this.files.find(f => f.metadata.name === s.name) : undefined;   // An ArchiveFile from which can get the urls
+        s.urls = this.fileFromFilename(s.name);   // An ArchiveFile from which can get the urls
       });
       const seconds = parseInt(t.duration);
       const secs = seconds % 60;

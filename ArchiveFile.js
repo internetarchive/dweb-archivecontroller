@@ -99,15 +99,20 @@ class ArchiveFile {
         }
         return  (typeof f === "undefined") ? undefined : f.mimetype;
     }
-    data(cb) { // Not timedout currently as only used in .blob which could be slow on big files
-        // Fetch data, normally you shoud probably be streaming instead.
-        // cb(data)
-        // Throws TransportError (or poss CodingError) if urls empty or cant fetch
-        //TODO-PROMISIFY need cb version of p_rawfetch then use promisify pattern here
-        return this.urls()
-            .then(urls => DwebTransports.p_rawfetch(urls))
-            .then(res => { if (cb) { cb(null, res); return undefined; } else {return res; } })
-            .catch(err => { if (cb) { cb(err); return undefined; } else { throw(err); } } )
+    data(cb) {
+      /**
+       * Fetch data, normally you shoud probably be streaming instead.
+       * Returns data via Promise or cb
+       * Errors TransportError (or poss CodingError) if urls empty or cant fetch (via Promise or cb)
+       * Not timed-out currently as only used in .blob which could be slow on big files
+       */
+      if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
+      function f(cb) {
+        waterfall([
+          this.urls,
+          (res, cb2) => DwebTransports.fetch(res, {}, cb2),
+        ], cb)
+      }
     }
     async blob() { // Not timedout currently as only used in .blobUrl which could be slow on big files
         return new Blob([await this.data()], {type: this.mimetype()} );

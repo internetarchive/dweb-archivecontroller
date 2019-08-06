@@ -1,10 +1,10 @@
 import ArchiveFile from "./ArchiveFile.js";
 import ArchiveMember from "./ArchiveMember.js";
 import {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} from "./Util.js";
-import Debug from 'debug';
+// import Debug from 'debug';
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 // const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
-const debug = Debug('dweb-archivecontroller:ArchiveItem');
+// const debug = Debug('dweb-archivecontroller:ArchiveItem');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 //const DwebObjects = require('@internetarchive/dweb-objects'); //Not "required" because available as window.DwebObjects by separate import
 //TODO-NAMING url could be a name
@@ -16,7 +16,7 @@ const debug = Debug('dweb-archivecontroller:ArchiveItem');
 
 // General purpose utility functions
 // Filter an array until f returns true.
-ArrayFilterTill = function(arr, f) { const res = []; for( let i in arr) { // noinspection JSUnfilteredForInLoop
+function ArrayFilterTill(arr, f) { const res = []; for( let i in arr) { // noinspection JSUnfilteredForInLoop
   const x=arr[i]; if (f(x)) { return res } else { res.push(x)} }  return res; };
 
 class ArchiveItem {
@@ -110,7 +110,7 @@ class ArchiveItem {
             meta.mediatype = "texts";
           else if (this.files.find(af => af.playable("image")))
             meta.mediatype = "image";
-          debug('Metadata Fjords - switched mediatype on %s from "education" to %s', meta.identifier, meta.mediatype);
+          // debug('Metadata Fjords - switched mediatype on %s from "education" to %s', meta.identifier, meta.mediatype);
         }
         this.metadata = meta;
       }
@@ -191,7 +191,7 @@ class ArchiveItem {
       this.loadFromMetadataAPI({ metadata: special});
       cb(null, this);
     } else {
-      debug('getting metadata for %s', this.itemid);
+      // debug('getting metadata for %s', this.itemid);
       // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
       const name = `dweb:${gateway.url_metadata}${this.itemid}`;
       // Fetch using Transports as its multiurl and might not be HTTP urls
@@ -209,7 +209,7 @@ class ArchiveItem {
           } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
             cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
           } else {
-            debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
+            // debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
             if ((!metaapi.is_dark) && ['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
               const playlistUrl = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
@@ -361,7 +361,7 @@ class ArchiveItem {
           if (this.query) {   // If this is a "Search" then will come here.
             this._doQuery({noCache}, (err, j) => {
               if (err) { // Will get error "failed to fetch" if fails
-                debug("_fetch_query %s", err.message)
+                // debug("_fetch_query %s", err.message)
                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
               } else {
@@ -603,4 +603,5 @@ class ArchiveItem {
 }
 ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded"];
 
-exports = module.exports = ArchiveItem;
+// exports = module.exports = ArchiveItem;
+export default ArchiveItem;

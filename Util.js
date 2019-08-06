@@ -1,8 +1,9 @@
 //require('babel-core/register')({presets: ['env', 'react']}); // ES6 JS below!
 
-import Debug from 'debug';
-const debug = Debug('dweb-archivecontroller:Util');
-import canonicaljson from '@stratumn/canonicaljson';
+// import Debug from 'debug';
+// const debug = Debug('dweb-archivecontroller:Util');
+// import canonicaljson from '@stratumn/canonicaljson';
+import { parse, stringify } from '@stratumn/canonicaljson';
 import item_rules from './item_rules.js';
 
 // const canonicaljson = require('@stratumn/canonicaljson');
@@ -19,7 +20,7 @@ import item_rules from './item_rules.js';
         throws: Error if fail to fetch
         returns Decoded json response via cb or promise
          */
-        debug("DEPRECATED fetch_json: %s",url);
+        // debug("DEPRECATED fetch_json: %s",url);
         const prom = fetch(new Request(url, // Throws TypeError on failed fetch
             {
                 method: 'GET',
@@ -74,7 +75,7 @@ import item_rules from './item_rules.js';
             if (rules.nonrepeatable_fields.includes(f)) {
                 if (Array.isArray(meta[f])) {
                     if (meta[f].length > 1) {
-                        debug("WARNING: Metadata Fjords - multi item in non-repeating field %s on %s, choosing first", f, meta.identifier);
+                        // debug("WARNING: Metadata Fjords - multi item in non-repeating field %s on %s, choosing first", f, meta.identifier);
                     }
                     res[f] = (meta[f].length > 0) ? meta[f][0] : "";
                         // Old standard would have it undefined if not in singletons else "" - can do that if we test for undefined anywhere
@@ -92,7 +93,7 @@ import item_rules from './item_rules.js';
         });
         rules.required_fields.filter(f=>(typeof res[f] === "undefined"))
             .forEach(f => {
-                debug("WARNING: Metadata Fjords - required field %s missing from %s", f, meta.identifier);
+                // debug("WARNING: Metadata Fjords - required field %s missing from %s", f, meta.identifier);
                 res[f] = rules.nonrepeatable_fields.includes(f) ? "" : []
             });
         return res;
@@ -732,11 +733,11 @@ const rules = {
         required_fields: gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },
 };
-ObjectFromEntries = (arr) => arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{});
-ObjectFilter = (obj, f) => ObjectFromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1])));
-ObjectMap = (obj, f) => ObjectFromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1])));
-ObjectForEach = (obj, f) => Object.entries(obj).forEach(kv=>f(kv[0], kv[1]));
-ObjectIndexFrom = (arr, f) => ObjectFromEntries( arr.map(o => [f(o), o]));
+function ObjectFromEntries(arr) { arr.reduce((res,kv)=>(res[kv[0]]=kv[1],res),{}); }
+function ObjectFilter(obj, f) { ObjectFromEntries( Object.entries(obj).filter(kv=>f(kv[0], kv[1]))); }
+function ObjectMap(obj, f) { ObjectFromEntries( Object.entries(obj).map(kv=>f(kv[0], kv[1]))); }
+function ObjectForEach(obj, f) { Object.entries(obj).forEach(kv=>f(kv[0], kv[1])); }
+function ObjectIndexFrom(arr, f) { ObjectFromEntries( arr.map(o => [f(o), o])); }
 function ObjectDeeperAssign(res, ...objs) {
     /*
         return res the result of copying the objs into the existing res in order
@@ -762,7 +763,7 @@ function ObjectDeeperAssign(res, ...objs) {
 };
 
 function objectFrom(jsonstring) {
-    return ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring) };
+    return ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? parse(jsonstring) : jsonstring) };
 // THis is version that was in dweb-objects/objectFrom
 // if ((data instanceof Uint8Array) && !(data instanceof Buffer)) return utils.objectFrom(new Buffer(data));
 // return (typeof data === "string" || data instanceof Buffer || data instanceof Uint8Array) ? JSON.parse(data) : data;
@@ -823,5 +824,7 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
     }
 };
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
-exports = module.exports = ACUtil
+// const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
+// exports = module.exports = ACUtil
+
+export { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers};

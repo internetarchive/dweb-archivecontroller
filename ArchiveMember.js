@@ -1,6 +1,6 @@
-import {enforceStringOrArray, gateway, rules, _query, ObjectIndexFrom, ObjectForEach, specialidentifiers} = from "./Util.js";
-import Debug from 'debug';
-const debug = Debug('dweb-archivecontroller:ArchiveMember');
+import {enforceStringOrArray, gateway, rules, _query, ObjectIndexFrom, ObjectForEach, specialidentifiers} from "./Util.js";
+// import Debug from 'debug';
+// const debug = Debug('dweb-archivecontroller:ArchiveMember');
 
 // const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
 // import {ObjectIndexFrom, ObjectForEach, specialidentifiers} from './Util.js';
@@ -96,7 +96,7 @@ class ArchiveMember {
                 'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
             }, (err, j) => {
                 if (err) {
-                    debug("Unable to expand ids for %s %s", this.itemid, err.message);
+                    // debug("Unable to expand ids for %s %s", this.itemid, err.message);
                     cb(err);
                 } else {
                     // Note some of these might still not be expanded if query partially or fully fails to expand
@@ -115,4 +115,5 @@ class ArchiveMember {
 
 }
 
-exports = module.exports = ArchiveMember;
+// exports = module.exports = ArchiveMember;
+export default ArchiveMember;

@@ -1,6 +1,6 @@
 // From https://git.archive.org/arthur/ia-validate TODO manually update from time to time
 //TODO-IAUX rework metadata process to use nonrepeatable_fields instead of repeatable_fields
-item_rules = {
+const item_rules = {
     "required_fields": ["identifier", "mediatype", "publicdate", "title", "uploader"],
     "repeatable_fields": ["boxid", "collection", "creator", "description", "external-identifier", "isbn", "language", "lccn", "oclc-id", "openlibrary_author", "openlibrary_subject", "public-format", "related-external-id", "subject", "updated", "updatedate", "updater"],
     "nonrepeatable_fields": ["search_collection", "access-restricted", "aspect_ratio", "audio_sample_rate", "betterpdf",
@@ -63,4 +63,6 @@ item_rules = {
     "files_rules": {"length": "is_not_length_zero()"}
 }
 
-exports = module.exports = item_rules;
+// exports = module.exports = item_rules;
+
+export default item_rules;

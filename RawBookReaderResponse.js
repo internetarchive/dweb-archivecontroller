@@ -1,8 +1,8 @@
-import Debug from 'debug';
-const debug = Debug('dweb-archivecontroller:RawBookReaderResponse');
+// import * as Debug from 'debug';
+// const debug = Debug('dweb-archivecontroller:RawBookReaderResponse');
 // const debug = require('debug')('RawBookReaderResponse');
 
-class RawBookReaderResponse {
+export default class RawBookReaderResponse {
     /*
     Exactly the data structure returned from BookReaderJSIA.php
     { data { data, brOptions, lendingInfo, metadata }
@@ -48,4 +48,5 @@ class RawBookReaderResponse {
         return this.data;
     }
 }
-exports = module.exports = RawBookReaderResponse;
+// exports = module.exports = RawBookReaderResponse;
+// export { RawBookReaderResponse };

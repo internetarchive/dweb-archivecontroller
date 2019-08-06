@@ -1,4 +1,25 @@
 {
+  "_from": "git+https://github.com/internetarchive/dweb-archivecontroller.git#es6-module-compatibility",
+  "_id": "@internetarchive/dweb-archivecontroller@0.1.73",
+  "_inBundle": false,
+  "_integrity": "",
+  "_location": "/@internetarchive/dweb-archivecontroller",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "git",
+    "raw": "git+https://github.com/internetarchive/dweb-archivecontroller.git#es6-module-compatibility",
+    "rawSpec": "git+https://github.com/internetarchive/dweb-archivecontroller.git#es6-module-compatibility",
+    "saveSpec": "git+https://github.com/internetarchive/dweb-archivecontroller.git#es6-module-compatibility",
+    "fetchSpec": "https://github.com/internetarchive/dweb-archivecontroller.git",
+    "gitCommittish": "es6-module-compatibility"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "git+https://github.com/internetarchive/dweb-archivecontroller.git#fb0455ef72c186b444f38e2864748483f41c99d4",
+  "_spec": "git+https://github.com/internetarchive/dweb-archivecontroller.git#es6-module-compatibility",
+  "_where": "/Users/jason/Documents/Projects/radioplayer",
   "author": {
     "name": "Mitra Ardron",
     "email": "mitra@mitra.biz",
@@ -7,7 +28,7 @@
   "bugs": {
     "url": "https://github.com/internetarchive/dweb-archivecontroller/issues"
   },
-  "description": "Archive UI to run in Browser",
+  "bundleDependencies": false,
   "dependencies": {
     "@babel/core": "^7.2.2",
     "@stratumn/canonicaljson": "^1.0.2",
@@ -16,6 +37,8 @@
     "es2015": "^0.0.0",
     "prettier-bytes": "^1.0.4"
   },
+  "deprecated": false,
+  "description": "Archive UI to run in Browser",
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",

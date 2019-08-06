@@ -1,6 +1,6 @@
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 import {fetch_json, gatewayServer, gateway, formats, } from './Util.js';
-import prettierBytes from "prettier-bytes";
+// import prettierBytes from "prettier-bytes";
 import waterfall from 'async-es/waterfall';
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 
@@ -139,7 +139,7 @@ class ArchiveFile {
     sizePretty() {
         try {
             return this.metadata.size
-              ? prettierBytes(parseInt(this.metadata.size))
+              ? "blah" // prettierBytes(parseInt(this.metadata.size))
               : ""; // For example files.xml has no size field
         } catch (err) {
             debug("ERROR - cant get size for %s/%s", this.itemid, this.metadata.name)
@@ -162,4 +162,6 @@ class ArchiveFile {
     }
 
 }
-exports = module.exports = ArchiveFile;
+// exports = module.exports = ArchiveFile;
+
+export default ArchiveFile;

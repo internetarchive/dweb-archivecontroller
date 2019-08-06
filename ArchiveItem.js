@@ -1,9 +1,10 @@
-const ArchiveFile = require("./ArchiveFile");
-const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
-
+import ArchiveFile from "./ArchiveFile.js";
+import ArchiveMember from "./ArchiveMember.js";
+import {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} from "./Util.js";
+import Debug from 'debug';
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
-const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
+// const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
+const debug = Debug('dweb-archivecontroller:ArchiveItem');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 //const DwebObjects = require('@internetarchive/dweb-objects'); //Not "required" because available as window.DwebObjects by separate import
 //TODO-NAMING url could be a name

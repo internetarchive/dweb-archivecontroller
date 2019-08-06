@@ -1,7 +1,13 @@
 //require('babel-core/register')({presets: ['env', 'react']}); // ES6 JS below!
-const canonicaljson = require('@stratumn/canonicaljson');
-const debug = require('debug')('dweb-archivecontroller:Util');
-const item_rules = require('./item_rules.js');
+
+import Debug from 'debug';
+const debug = Debug('dweb-archivecontroller:Util');
+import canonicaljson from '@stratumn/canonicaljson';
+import item_rules from './item_rules.js';
+
+// const canonicaljson = require('@stratumn/canonicaljson');
+// const debug = require('debug')('dweb-archivecontroller:Util');
+// const item_rules = require('./item_rules.js');
 
     function fetch_json(url, cb) {
         /*

@@ -1,6 +1,9 @@
-const {enforceStringOrArray, gateway, rules, _query} = require("./Util");
-const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
-const {ObjectIndexFrom, ObjectForEach, specialidentifiers} = require('./Util');
+import {enforceStringOrArray, gateway, rules, _query, ObjectIndexFrom, ObjectForEach, specialidentifiers} = from "./Util.js";
+import Debug from 'debug';
+const debug = Debug('dweb-archivecontroller:ArchiveMember');
+
+// const debug = require('debug')('dweb-archivecontroller:ArchiveMember');
+// import {ObjectIndexFrom, ObjectForEach, specialidentifiers} from './Util.js';
 
 class ArchiveMember {
     /*

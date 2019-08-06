@@ -1,4 +1,6 @@
-const debug = require('debug')('RawBookReaderResponse');
+import Debug from 'debug';
+const debug = Debug('dweb-archivecontroller:RawBookReaderResponse');
+// const debug = require('debug')('RawBookReaderResponse');
 
 class RawBookReaderResponse {
     /*

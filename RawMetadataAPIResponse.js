@@ -1,4 +1,5 @@
-const ArchiveItem = require('./ArchiveItem'); // May have to be careful of loops - AI might need this
+import ArchiveItem from './ArchiveItem.js';
+// const ArchiveItem = require('./ArchiveItem'); // May have to be careful of loops - AI might need this
 
 class RawMetadataAPIResponse {
     /*

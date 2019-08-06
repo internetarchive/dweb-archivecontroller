@@ -1,7 +1,7 @@
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
-const {fetch_json, gatewayServer, gateway, formats, } = require( './Util');
-const prettierBytes = require( "prettier-bytes");
-const waterfall = require('async/waterfall');
+import {fetch_json, gatewayServer, gateway, formats, } from './Util.js';
+import prettierBytes from "prettier-bytes";
+import waterfall from 'async-es/waterfall';
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 
 class ArchiveFile {

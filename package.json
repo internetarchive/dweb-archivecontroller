@@ -35,7 +35,8 @@
     "async-es": "^2.6.3",
     "debug": "^4.1.1",
     "es2015": "^0.0.0",
-    "prettier-bytes": "^1.0.4"
+    "prettier-bytes": "^1.0.4",
+    "readable-stream": "^3.4.0"
   },
   "deprecated": false,
   "description": "Archive UI to run in Browser",

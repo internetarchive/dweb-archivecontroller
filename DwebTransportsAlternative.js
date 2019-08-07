@@ -6,10 +6,12 @@
  * c) Incorporate the cache as a module
  * d) dweb-archivecontroller should probably not use names
  */
-//TODO -handle name, or better dont use them.
+//TODO-ES6 -handle name, or better dont use them.
 
 import httptools from './httptools.js';
+/* TODO-ES6 - cant figure out how to import this
 import stream from 'readable-stream';
+*/
 
 function _httpurl(urls) {
   if (!Array.isArray(urls)) {
@@ -28,6 +30,7 @@ class DwebTransports {
       httptools.p_GET(_httpurl(urls), opts, cb);
   }
 
+  /* TODO-ES6 this is dependent on readable-stream
   static _createReadStream(url, opts) {
     /*
     The function, encapsulated and inside another function by p_f_createReadStream (see docs)
@@ -36,7 +39,7 @@ class DwebTransports {
     :param file:    Webtorrent "file" as returned by webtorrentfindfile
     :param opts: { start: byte to start from; end: optional end byte }
     :returns stream: The readable stream - it is returned immediately, though won't be sending data until the http completes
-     */
+     *-/
     // This breaks in browsers ... as 's' doesn't have .pipe but has .pipeTo and .pipeThrough neither of which work with stream.PassThrough
     // TODO See https://github.com/nodejs/readable-stream/issues/406 in case its fixed in which case enable createReadStream in constructor above.
     debug("createreadstream %s %o", Url.parse(url).href, opts);
@@ -66,6 +69,7 @@ class DwebTransports {
   static createReadStream(urls, opts, cb) {
       cb(null, this._createReadStream(_httpurl(urls), opts));
   }
+  */
 }
 DwebTransports.httptools = httptools; // Plug it where ArchiveItem and consumers of this repo expect to find it
 window.DwebTransports = DwebTransports;

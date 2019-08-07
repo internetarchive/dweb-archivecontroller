@@ -195,7 +195,7 @@ class ArchiveItem {
       // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
       //TODO-ES6: using straight forward URL till get names working or abandon them.
       // const name = `dweb:${gateway.url_metadata}${this.itemid}`;
-      const name = 'http://archive.org/metadata/${this.itemid}';
+      const name = `http://archive.org/metadata/${this.itemid}`;
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
       DwebTransports.fetch([name], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)

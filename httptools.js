@@ -15,7 +15,9 @@ class TransportError extends Error {
 }
 //const debug = require('debug')('dweb-transports:httptools');
 function debug(args) { console.log(args); } // Not perfect but should work - ideally would do sprintf on args, else get debug working
+/* TODO-ES6 solve import of async
 const queue = require('async/queue');
+*/
 
 //var fetch,Headers,Request;
 //if (typeof(Window) === "undefined") {
@@ -35,7 +37,9 @@ if (typeof(fetch) === "undefined") {
 //TODO-HTTP to work on Safari or mobile will require a polyfill, see https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch for comment
 
 
-httptools = {};
+const httptools = {};
+
+/* TODO-ES6 requires async
 let httpTaskQueue;
 
 function queueSetup({concurrency}) {
@@ -62,7 +66,7 @@ function queueSetup({concurrency}) {
                       let timeout = task.ms;
                       task.ms = Math.floor(task.ms*(1+Math.random())); // Spread out delays incase all requesting same time
                       setTimeout(() => { httpTaskQueue.push(task);}, timeout);
-                       */
+                       *-/
                   } else {
                       debug("Requeued fetch of %s failed: %s", task.what, err.message);
                       task.cb(err);
@@ -87,7 +91,7 @@ function queuedFetch(req, ms, count, what) {
         });
     });
 }
-
+*/
 async function loopfetch(req, ms, count, what) {
     /*
     A workaround for a nasty Chrome issue which fails if there is a (cross-origin?) fetch of more than 6 files.  See other WORKAROUND-CHROME-CROSSORIGINFETCH
@@ -225,4 +229,4 @@ httptools.p_POST = function(httpurl, opts={}, cb) {
 }
 
 
-exports = module.exports = httptools;
+export default httptools;

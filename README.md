@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.74 update format array
 * v0.1.73 bugs empty size of files; is_dark error message; missing thumbnails; 
 * v0.1.72 bug fixes bookreader heuristic, download flag 
 * v0.1.71 bug fix to ObjectMap and page=0

@@ -433,12 +433,17 @@ class ArchiveItem {
   }
 
   thumbnailFile() {
-    /*
-    Return the thumbnailfile for an item, this should handle the case of whether the item has had metadata fetched or not, and must be synchronous as stored in <img src=> (the resolution is asynchronous)
+    /**
+     * Find the file to use for the thumbnail
+     * returns: ArchiveFile or undefined
+     *
+     * this should handle the case of whether the item has had metadata fetched or not,
+     * and must be synchronous as stored in <img src=> (the resolution is asynchronous)
      */
     // New items should have __ia_thumb.jpg but older ones dont
     let af = this.files && this.files.find(af => af.metadata.name === "__ia_thumb.jpg"
       || af.metadata.name.endsWith("_itemimage.jpg"));
+    /* explicitly building this isn't that useful, if doesn't exist in files than __ia_thumb.jpg will redirect to /images/notfound.png anyway
     if (!af) {
       const metadata =  {
         format: "JPEG Thumb",
@@ -451,13 +456,18 @@ class ArchiveItem {
       af = new ArchiveFile({itemid: this.itemid, metadata });
       this.files.push(af); // So found by next call for thumbnailFile - if haven't loaded metadata no point in doing this
     }
+    */
     return af;
   }
 
   videoThumbnailFile() {
-    // Get a thumbnail for a video - may extend to other types, return the ArchiveFile
-    // This is used to select the file for display and also in dweb-mirror to cache it
-    // Heuristic is to select the 2nd thumbnail from the thumbs/ directory (first is often a blank screen)
+    /**
+     * Get a thumbnail for a video - may extend to other types, return the ArchiveFile
+     * This is used to select the file for display and also in dweb-mirror to cache it
+     * Heuristic is to select the 2nd thumbnail from the thumbs/ directory (first is often a blank screen)
+     *
+     * returns: ArchiveFile or undefined
+     */
     console.assert(this.files, "videoThumbnaillinks: assumes setup .files before");
     console.assert(this.metadata.mediatype === "movies", "videoThumbnaillinks only valid for movies");
     if (this.playlist[0] && this.playlist[0].imageurls) {
@@ -467,7 +477,7 @@ class ArchiveItem {
       // TODO - use this.playlist[0].image but it needs to be a ArchiveFile
       return videoThumbnailUrls.length
         ? videoThumbnailUrls[Math.min(videoThumbnailUrls.length - 1, 1)]
-        : this.thumbnailFile(); // If none then return ordinary thumbnail
+        : this.thumbnailFile(); // If none then return ordinary thumbnail, or undefined if no thumbnail for item either
     }
   }
   playableFile(type) {
@@ -565,7 +575,8 @@ class ArchiveItem {
           // Almost same logic for video & audio
           minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
           // noinspection JSUnresolvedFunction
-          minimumFiles.push(this.videoThumbnailFile());
+          const v = this.videoThumbnailFile();
+          if (v) minimumFiles.push(v);
           break;
         case "account":
           break;

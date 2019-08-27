@@ -360,9 +360,10 @@ class ArchiveItem {
           if (this.query) {   // If this is a "Search" then will come here.
             this._doQuery({noCache}, (err, j) => {
               if (err) { // Will get error "failed to fetch" if fails
-                debug("_fetch_query %s", err.message)
+                debug("ERROR _fetch_query %s", err.message)
                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
+                //TODO 2019-08-27 see https://github.com/internetarchive/dweb-mirror/issues/248 want ability to see error and requeue
               } else {
                 const oldids = this.membersSearch.map(am => am.identifier);
                 this.membersSearch = this.membersSearch.concat(

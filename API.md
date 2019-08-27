@@ -80,17 +80,9 @@ Return mimetype found by mapping metadata.format via the `formats` table
 
 Fetch and return data (normally should use streaming rather than this)
 
-##### async blob(cb)
-
-Fetch data but return as a blob suitable for a browser
-
-##### async blobUrl() 
+##### async blobUrl(cb) 
 
 Fetch data but return as a blob URL suitable for a browser
-
-##### async p_download(a, options)
-
-Weird workaround for a browser problem, download data as a blob, edit parameters of an anchor to open this file in a new window, and click it to perform the opening. 
 
 ##### sizePretty()
 Return a 'pretty' size for a file

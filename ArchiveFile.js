@@ -101,7 +101,7 @@ class ArchiveFile {
     }
     data(cb) {
       /**
-       * Fetch data, normally you shoud probably be streaming instead.
+       * Fetch data, normally you should probably be streaming instead.
        * Returns data via Promise or cb
        * Errors TransportError (or poss CodingError) if urls empty or cant fetch (via Promise or cb)
        * Not timed-out currently as only used in .blob which could be slow on big files
@@ -109,33 +109,22 @@ class ArchiveFile {
       if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
       function f(cb) {
         waterfall([
-          this.urls,
-          (res, cb2) => DwebTransports.fetch(res, {}, cb2),
+            (cb) => this.urls(cb),
+            (res, cb2) => DwebTransports.fetch(res, {}, cb2),
         ], cb)
       }
     }
-    async blob() { // Not timedout currently as only used in .blobUrl which could be slow on big files
-        return new Blob([await this.data()], {type: this.mimetype()} );
+    blobUrl(cb) {  // Not timedout currently as could be slow on big files
+        this.data((err, data) => {
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, URL.createObjectURL(
+                  new Blob([data], {type: this.mimetype()})));
+            }
+        })
     }
-    async blobUrl() { // Not timedout currently as could be slow on big files
-        return URL.createObjectURL(await this.blob());
-    }
-    async p_download(a, options) {
-        //Weird workaround for a browser problem, download data as a blob,
-        // edit parameters of an anchor to open this file in a new window,
-        // and click it to perform the opening.
-        let objectURL = await this.blobUrl();
-        //browser.downloads.download({filename: this.metadata.name, url: objectURL});   //Doesnt work
-        //Downloads.fetch(objectURL, this.metadata.name);   // Doesnt work
-        a.href = objectURL;
-        a.target= (options && options.target) || "_blank";                      // Open in new window by default
-        a.onclick = undefined;
-        a.download = this.metadata.name;
-        a.click();
-        //URL.revokeObjectURL(objectURL)    //TODO figure out when can do this - maybe last one, or maybe dont care?
 
-
-    }
     sizePretty() {
         try {
             return this.metadata.size

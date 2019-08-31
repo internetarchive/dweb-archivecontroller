@@ -314,16 +314,21 @@ class ArchiveItem {
         this.itemid && this.metadata && this.metadata.mediatype === "collection" && this.itemid && "simplelists__holdings:" + this.itemid,
         // Search will have !this.item example = "ElectricSheep"
         this.metadata && this.metadata.search_collection && this.metadata.search_collection.replace('\"', '"'),
+        this.metadata && this.metadata.mediatype === "account" && "uploader:"+this.metadata.uploader,
       ].filter(f => !!f).join(" OR "); // OR any non empty ones
     }
   }
+
+
   _doQuery(opts, cb) {
     // For opts see dweb-transports.httptools.p_GET
     const sort = this.collection_sort_order
       ? this.collection_sort_order
       : this.sort.length
-        ? this.sort
-        : "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
+      ? this.sort
+      : (this.metadata && this.metadata.mediatype === "acount")
+      ? "-publicdate"
+      : "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
     _query( {
       output: "json",
       q: this.query,

@@ -115,6 +115,14 @@ class ArchiveItem {
       }
       //These will be unexpanded if comes from favorites, its expanded by fetch_query (either from cache or in _fetch_query>expandMembers)
       this.membersFav = metaapi.members && metaapi.members.map(o => ArchiveMember.fromFav(o));
+      if (this.metadata.mediatype === "texts" && this.files.find(af => af.metadata.format === "Abbyy GZ")) {
+        // We have one of these fake Epub files that for reasons unclear aren't derived and stored, but built/cached on demand, fake it
+        //TODO-EPUB get size and downloaded from file in DM when already cached
+        this.files.push(new ArchiveFile({
+          itemid: this.itemid, metadata: { name: this.itemid + ".epub", format: "Epub" }}));
+        this.files.push(new ArchiveFile({
+          itemid: this.itemid, metadata: { name: this.itemid + ".mobi", format: "Kindle" }}));
+      }
       this._mergeExtra(metaapi);
       if (metaapi.playlist) {
         this.playlist = this.processPlaylist(metaapi.playlist);

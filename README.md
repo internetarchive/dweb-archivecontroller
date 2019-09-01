@@ -59,6 +59,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.76 blob handling refactor for download links; account query issue; partial add epub and kindle
 * v0.1.75 handle missing thumbnails; add EPUB & KINDLE
 * v0.1.74 update format array
 * v0.1.73 bugs empty size of files; is_dark error message; missing thumbnails; 

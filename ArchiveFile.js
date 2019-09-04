@@ -66,7 +66,8 @@ class ArchiveFile {
                 (cb) => DwebTransports.p_connectedNames(cb),
                 (connectedNames, cb) => { // Decide if need to get file-specific metadata because missing dweb urls
                     if  (  (!this.metadata.ipfs && connectedNames.includes("IPFS"))
-                        || (!this.metadata.magnetlink && !(this.metadata.name === "__ia_thumb.jpg")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
+                        // TODO set magnetlink when build ArchiveFile based on it being on item, not needed here at all.
+                        || (!this.metadata.magnetlink && !(this.metadata.name === "__ia_thumb.jpg") && connectedNames.includes("WEBTORRENT")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
                      // || !this.metadata.contenthash // Dont do another roundtrip just to get contenthash
                         ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
                         let name = this.metadata.name.replace('?', '%3F');  // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it

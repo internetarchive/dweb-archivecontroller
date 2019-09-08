@@ -768,10 +768,6 @@ function ObjectDeeperAssign(res, ...objs) {
 
 function objectFrom(jsonstring) {
     return ((typeof jsonstring === 'string' || jsonstring instanceof Uint8Array) ? canonicaljson.parse(jsonstring) : jsonstring) };
-// THis is version that was in dweb-objects/objectFrom
-// if ((data instanceof Uint8Array) && !(data instanceof Buffer)) return utils.objectFrom(new Buffer(data));
-// return (typeof data === "string" || data instanceof Buffer || data instanceof Uint8Array) ? JSON.parse(data) : data;
-
 
 function parmsFrom (queryobj) {
     // Turn a object into the parameter portion of a URL, encoding where appropriate.

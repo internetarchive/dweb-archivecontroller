@@ -1,6 +1,6 @@
 # dweb-archivecontroller
 Classes to controll Archive objects
-Builds on dweb-transports and dweb-objects.
+Builds on dweb-transports.
 
 ## Background
 This library is part of a general project at the Internet Archive (archive.org)
@@ -23,7 +23,6 @@ npm install
 
 # NOTE:
 # dweb-transports - will be provided to client using window.DwebTransports in a separate import
-# dweb-objects - will be provided to client using window.DwebObjects in a separate import
 
 ```
 

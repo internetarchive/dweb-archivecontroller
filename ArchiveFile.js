@@ -11,7 +11,6 @@ class ArchiveFile {
 
     Fields:
     metadata: metadata of item - (note will be a pointer into a Detail or Search's metadata so treat as read-only)
-    sd: pointer to SmartDict created with Urls (see how did it with Academic)
     */
 
     constructor({itemid = undefined, metadata = undefined}={}) {

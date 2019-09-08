@@ -5,7 +5,6 @@ const {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rule
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
-//const DwebObjects = require('@internetarchive/dweb-objects'); //Not "required" because available as window.DwebObjects by separate import
 //TODO-NAMING url could be a name
 
 /* Note for Bookreader
@@ -29,9 +28,6 @@ class ArchiveItem {
   members:  Array of data from a search.
   files:  Will hold a list of files when its a single item
   query:  Either a string e.g. "bananas" or a an object like {collection: "mitratest", description: "bananas"}
-
-  Once subclass SmartDict
-  _urls:  Will be list of places to retrieve this data (not quite a metadata call)
    */
 
   constructor({identifier=undefined, itemid = undefined, query = undefined, sort=[], metaapi = undefined}={}) { //TODO-API sort
@@ -114,10 +110,12 @@ class ArchiveItem {
         if (meta.mediatype === "texts" && this.files.find(af => af.metadata.format === "Abbyy GZ")) {
           // We have one of these fake Epub files that for reasons unclear aren't derived and stored, but built/cached on demand, fake it
           //TODO-EPUB get size and downloaded from file in DM when already cached
-          this.files.push(new ArchiveFile({
-            itemid: this.itemid, metadata: { name: this.itemid + ".epub", format: "Epub" }}));
-          this.files.push(new ArchiveFile({
-            itemid: this.itemid, metadata: { name: this.itemid + ".mobi", format: "Kindle" }}));
+          if (!this.files.find(af => af.metadata.format === "Epub"))
+            this.files.push(new ArchiveFile({
+              itemid: this.itemid, metadata: { name: this.itemid + ".epub", format: "Epub" }}));
+          if (!this.files.find(af => af.metadata.format === "Kindle"))
+            this.files.push(new ArchiveFile({
+              itemid: this.itemid, metadata: { name: this.itemid + ".mobi", format: "Kindle" }}));
         }
         this.metadata = meta;
       }
@@ -216,7 +214,7 @@ class ArchiveItem {
           } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
             cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
           } else {
-            debug("metadata for %s fetched successfully %s", metaapi.itemid, this.is_dark ? "BUT ITS DARK" : "");
+            debug("metadata for %s fetched successfully %s", this.itemid, this.is_dark ? "BUT ITS DARK" : "");
             if ((!metaapi.is_dark) && ['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
               const playlistUrl = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)

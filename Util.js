@@ -134,8 +134,8 @@ const _formatarr = [
   {format: '128Kbps MP3',  ext: undefined, type: "audio",    mimetype: "audio/mpeg3",          playable: false, downloadable: "128KBPS MP3" },
   {format: '64Kbps MP3',  ext: undefined, type: "audio",    mimetype: "audio/mpeg3",          playable: false, downloadable: "64KBPS MP3" },
   {format: 'LibriVox Apple Audiobook', type: "audio", mimetype: "application/octet-stream", playable: false, downloadable: "LIBRIVOX APPLE AUDIOBOOK" },
-  {format: 'JPEG',  ext: undefined, type: "image",    mimetype: "image/jpeg",           playable: true,  downloadable: "JPEG" },
-  {format: 'PNG',  ext: undefined, type: "image",    mimetype: "image/png",            playable: true,  downloadable: "PNG"},
+  {format: 'JPEG',  ext: ".png", type: "image",    mimetype: "image/jpeg",           playable: true,  downloadable: "JPEG" },
+  {format: 'PNG',  ext: ".png", type: "image",    mimetype: "image/png",            playable: true,  downloadable: "PNG"},
   {format: 'Animated GIF',  ext: '.gif', type: "image",    mimetype: "image/gif",            playable: true,  downloadable: "Animated GIF" },
   {format: 'JPEG Thumb',  ext: undefined, type: "image",    mimetype: "image/jpeg",           playable: false, downloadable: undefined },
   {format: 'JPEG 250px Thumb',  ext: undefined, type: "image",    mimetype: "image/jpeg",           playable: false, downloadable: 'JPEG 250PX THUMB' },
@@ -143,13 +143,13 @@ const _formatarr = [
   {format: 'Spectrogram',  ext: undefined, type: "image",    mimetype: "image/png",            playable: false, downloadable: "SPECTROGRAM" },
   {format: 'Item Image',  ext: undefined, type: "image",    mimetype: "image/jpeg",           playable: true,  downloadable: "JPEG" }, // Note we might be lying about the type - at least some are JPG
   {format: 'Thumbnail',  ext: undefined, type: "image",    mimetype: "image/jpeg",           playable: true,  downloadable: "JPEG" }, // Note we might be lying about the type - at least some are JPG
-  {format: 'PDF',  ext: undefined, type: "text",     mimetype: "application/pdf",      playable: true,  downloadable: "PDF" },
+  {format: 'PDF',  ext: ".pdf", type: "text",     mimetype: "application/pdf",      playable: true,  downloadable: "PDF" },
   {format: 'HTML',  ext: '.html', type: "text",     mimetype: "text/html",            playable: false, downloadable: "HTML" },
   {format: 'HTML',  ext: '.htm', type: "text",     mimetype: "text/html",            playable: false, downloadable: "HTML" },
   {format: 'Hypertext',  ext: '.htm', type: "text",     mimetype: "text/html",            playable: false, downloadable: "HYPERTEXT" },
   {format: 'HTML',  ext: '.shtml', type: "text",     mimetype: "text/html",            playable: false, downloadable: "HTML" },
   {format: 'DjVuTXT',  ext: undefined, type: "text",     mimetype: "text/plain",           playable: false, downloadable: "FULL TEXT" },
-  {format: 'Text PDF',  ext: undefined, type: "text",     mimetype: "application/pdf",      playable: true,  downloadable: "PDF" },
+  {format: 'Text PDF',  ext: ".pdf", type: "text",     mimetype: "application/pdf",      playable: true,  downloadable: "PDF" },
   {format: 'h.264',  ext: undefined, type: "video",    mimetype: "video/mp4",            playable: true,  downloadable: "H.264" },
   {format: '512Kb MPEG4',  ext: undefined, type: "video",    mimetype: "video/mp4",            playable: true,  downloadable: "512KB MPEG" },
   {format: '256Kb MPEG4',  ext: undefined, type: "video",    mimetype: "video/mp4",            playable: true,  downloadable: "256KB MPEG" },
@@ -158,7 +158,7 @@ const _formatarr = [
   {format: 'MPEG2', ext: '.mpeg', type: 'video', mimetype: 'video/mpeg', playable: false, downloadable: "MPEG2" },
   {format: 'MPEG1',  ext: undefined, type: "video",    mimetype: "video/mpeg",           playable: false, downloadable: "MPEG1" },
   {format: 'Ogg Video',  ext: '.ogv', type: "video",    mimetype: "video/ogg",            playable: false,  downloadable: "OGG VIDEO" },
-  {format: 'Archive BitTorrent',  ext: undefined, type: "other",    mimetype: "application/x-bittorrent", playable: false, downloadable: 'TORRENT' },
+  {format: 'Archive BitTorrent',  ext: ".torrent", type: "other",    mimetype: "application/x-bittorrent", playable: false, downloadable: 'TORRENT' },
   {format: 'Unknown',  ext: undefined, type: "unknown",  mimetype: "unknown",              playable: false, downloadable:  undefined },
   {format: 'Abbyy GZ',  ext: undefined, type: "other",    mimetype: "application/octet-stream", playable: false, downloadable: "ABBYY GZ" },
   {format: 'Djvu XML',  ext: undefined, type: "other",    mimetype: "text/xml",             playable: false, downloadable: undefined },
@@ -633,7 +633,6 @@ const _formatarr = [
   {format: undefined, ext: '.tk', type: 'application', mimetype: 'application/x-tcl', playable: undefined, downloadable: undefined },
   {format: undefined, ext:'.tk', type: 'text', mimetype: 'text/x-tcl', playable: undefined, downloadable: undefined },
   {format: undefined, ext:'.tm', type: 'text', mimetype: 'text/texmacs', playable: undefined, downloadable: undefined },
-  {format: undefined, ext:'.torrent', type: 'application', mimetype: 'application/x-bittorrent', playable: undefined, downloadable: undefined },
   {format: undefined, ext:'.tr', type: 'application', mimetype: 'application/x-troff', playable: undefined, downloadable: undefined },
   {format: undefined, ext:'.ts', type: 'video', mimetype: 'video/MP2T', playable: undefined, downloadable: undefined },
   {format: undefined, ext:'.tsp', type: 'application', mimetype: 'application/dsptype', playable: undefined, downloadable: undefined },
@@ -824,5 +823,5 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
     }
 };
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
+const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

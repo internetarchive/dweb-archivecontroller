@@ -141,7 +141,7 @@ class ArchiveItem {
     return undefined;
   }
 
-
+  /*OBSOLETE - always does fetch_metadata and fetch_query directly in former consumers of this
   async fetch({noCache=undefined, copyDirectory=undefined}={}) {   //TODO-API add noCache and copyDirectory
     /* Fetch what we can about this item, it might be an item or something we have to search for.
         Fetch item metadata as JSON by talking to Metadata API
@@ -151,7 +151,7 @@ class ArchiveItem {
         this.itemid Archive Item identifier
         throws: TypeError or Error if fails esp Unable to resolve name
         resolves to: this
-     */
+     *-/
     try {
       await this.fetch_metadata({noCache, copyDirectory});
       await this.fetch_query({noCache, copyDirectory}); // Should throw error if fails to fetch //TODO-RELOAD fetch_query ignores noCache currently
@@ -160,6 +160,7 @@ class ArchiveItem {
       throw(err); // Typically a failure to fetch
     }
   }
+   */
 
   fetch_metadata(opts={}, cb) {
     /*
@@ -187,6 +188,15 @@ class ArchiveItem {
       }
     }
   }
+  hasPlaylist(metaapi) {
+    // Encapsulate the heuristic as to whether this has a playlist
+    return (
+      (!metaapi.is_dark)
+      && ['audio', 'etree', 'movies'].includes(metaapi.metadata.mediatype)
+      && ! metaapi.metadata.collection.some(c => ["tvnews", "tvarchive"].includes(c)) // See also this heuristic in subtype()
+    );
+  }
+
   _fetch_metadata({darkOk=undefined, noCache=undefined}={}, cb) {
     /*
     Fetch the metadata for this item - dont use directly, use fetch_metadata.
@@ -215,7 +225,7 @@ class ArchiveItem {
             cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
           } else {
             debug("metadata for %s fetched successfully %s", this.itemid, this.is_dark ? "BUT ITS DARK" : "");
-            if ((!metaapi.is_dark) && ['audio','etree','movies'].includes(metaapi.metadata.mediatype)) {
+            if (this.hasPlaylist(metaapi)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
               const playlistUrl = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
                 ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid)
@@ -383,6 +393,7 @@ class ArchiveItem {
                 this.start = j.response.start;
                 this.numFound = j.response.numFound;
                 this.downloaded = j.response.downloaded;
+                if (j.response.crawl) this.crawl = j.response.crawl;
               }
               //cb(null, wantFullResp ? j : newmembers);  // wantFullResp is used when proxying unmodified result
               cb(null, this.currentPageOfMembers(wantFullResp));
@@ -583,12 +594,16 @@ class ArchiveItem {
           // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://dweb.me/thumbnail/itemid which should get canonicalized
           break;
         case "movies":
-          console.assert(this.playlist, "minimumforUI expects playlist");
-          // Almost same logic for video & audio
-          minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
-          // noinspection JSUnresolvedFunction
-          const v = this.videoThumbnailFile();
-          if (v) minimumFiles.push(v);
+          if (this.subtype === "tv") {
+            return undefined; // We don't know how to display TV so there are no minimumForUI
+          } else {
+            console.assert(this.playlist, "minimumforUI expects playlist");
+            // Almost same logic for video & audio
+            minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
+            // noinspection JSUnresolvedFunction
+            const v = this.videoThumbnailFile();
+            if (v) minimumFiles.push(v);
+          }
           break;
         case "account":
           break;
@@ -598,7 +613,7 @@ class ArchiveItem {
     }
     return minimumFiles;
   };
-  subtype() {
+  subtype(metadata=undefined) {
     // Heuristic to figure out what kind of texts we have, this will evolve as @tracey gradually releases more info :-)
     // Return a subtype used by different mechanisms to make decisions
     // From @hank in slack.bookreader-libre 2019-07-16 i believe it needs at least an image stack (i.e., a file whose format begins with
@@ -613,6 +628,10 @@ class ArchiveItem {
         return (hasSPP && hasScandata)
           ? "bookreader"
           : "carousel";     // e.g. thetaleofpeterra14838gut
+      case "movies":
+        return this.metadata.collection.some( c => ["tvnews", "tvarchive"].includes(c)) // See same heuristic in hasPlaylist()
+        ? "tv"
+        : undefined;
       default:
         return undefined;
     }

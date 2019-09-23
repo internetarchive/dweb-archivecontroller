@@ -188,8 +188,9 @@ class ArchiveItem {
       }
     }
   }
-  hasPlaylist(metaapi) {
+  hasPlaylist(optionalMetaapi) {
     // Encapsulate the heuristic as to whether this has a playlist
+    const metaapi = optionalMetaapi || this;
     return (
       (!metaapi.is_dark)
       && ['audio', 'etree', 'movies'].includes(metaapi.metadata.mediatype)
@@ -618,6 +619,8 @@ class ArchiveItem {
     // Return a subtype used by different mechanisms to make decisions
     // From @hank in slack.bookreader-libre 2019-07-16 i believe it needs at least an image stack (i.e., a file whose format begins with
     // `Single Page Processed...`) and a scandata file (i.e., a file whose format is either `Scandata` or `Scribe Scandata ZIP`).
+    if (!this.itemid)
+      return undefined ; // Not applicable if identifier not defined.
     console.assert(this.metadata && this.files,"Setup metadata and files before subtype which is synchronous");
     switch (this.metadata.mediatype) {
       case 'texts':

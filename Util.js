@@ -785,7 +785,7 @@ function _query(queryobj, opts={}, cb) { // No opts curr// ently
         // Note direct call to archive.org leads to CORS fail
         //TODO would be good to move to DwebTransports
         const url = `${gatewayServer()}${gateway.url_advancedsearch}?${urlparms}`;
-        DwebTransports.httptools.p_GET(url, opts, cb);
+        DwebTransports.fetch([url], opts, cb);
     } catch(err) {
         console.error('Caught unhandled error in _query',err);
         cb(err);

@@ -81,8 +81,9 @@ class ArchiveMember {
             Pathway is ...  ArchiveItem._fetch_query > ArchiveMember.expand
         */
         const specialMembers = ObjectMap(specialidentifiers, (k,v) => [k, new ArchiveMember(v)]);
-        //const expandableids = ids.filter(id => !Object.keys(specialidentifiers).includes(id)); // Strip out any handled specially
-        const expandableids = ids; // Allow for special ids, mirror actually knows the answer better than browser does
+        // Was Allowing for special ids, since mirror actually knows the answer better than browser does but can cause unneccessary failures and request for "home"
+        //const expandableids = ids;
+        const expandableids = ids.filter(id => !Object.keys(specialidentifiers).includes(id)); // Strip out any handled specially
         if (expandableids && expandableids.length) {
             _query({
                 output: "json",
@@ -93,7 +94,7 @@ class ArchiveMember {
                 'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
             }, (err, j) => {
                 if (err) {
-                    debug("Unable to expand ids for %s %s", this.itemid, err.message);
+                    debug("Unable to expand ids identifier=%s ids=%s err= %s", this.itemid ||"", ids.join(', '), err.message);
                     cb(err);
                 } else {
                     // Note some of these might still not be expanded if query partially or fully fails to expand

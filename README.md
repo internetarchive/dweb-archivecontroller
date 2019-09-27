@@ -58,6 +58,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.79 workaround bug in embed playlist API; some cases for search in local; _query use DT.fetch; speedup in expand
 * v0.1.78 fix bugs in Epub, Kindle and update some other formats
 * v0.1.77 fix bug with /local introduced in .76; dont fetch metadata for files unless IPFS||WEBTORRENT
 * v0.1.76 blob handling refactor for download links; account query issue; partial add epub and kindle

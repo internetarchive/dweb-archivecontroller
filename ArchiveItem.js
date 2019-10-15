@@ -17,19 +17,27 @@ const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 ArrayFilterTill = function(arr, f) { const res = []; for( let i in arr) { // noinspection JSUnfilteredForInLoop
   const x=arr[i]; if (f(x)) { return res } else { res.push(x)} }  return res; };
 
+/**
+ * Base class representing an Item and/or a Search query (A Collection is both).
+ * This is just storage, the UI is in dweb-archive, this class is also used by dweb-mirror to encapsulate access to IA APIs
+ *
+ * Fields:
+ * itemid|identifier: Archive.org reference for object (itemid is legacy - use identifier where possible)
+ * item:   Metadata decoded from JSON from metadata search.
+ * members:  Array of data from a search.
+ * files:  Will hold a list of files when its a single item
+ * query:  Either a string e.g. "bananas" or a an object like {collection: "mitratest", description: "bananas"}
+ */
 class ArchiveItem {
-  /*
-  Base class representing an Item and/or a Search query (A Collection is both).
-  This is just storage, the UI is in ArchiveBase and subclasses, theoretically this class could be used for a server or gateway app with no UI.
 
-  Fields:
-  itemid|identifier: Archive.org reference for object (itemid is legacy - use identifier where possible)
-  item:   Metadata decoded from JSON from metadata search.
-  members:  Array of data from a search.
-  files:  Will hold a list of files when its a single item
-  query:  Either a string e.g. "bananas" or a an object like {collection: "mitratest", description: "bananas"}
+  /**
+   *
+   * @param identifier IDENTIFIER (optional)
+   * @param itemid     IDENTIFIER deprecated
+   * @param query      search string e.g. "foo" or "creator:foo"
+   * @param sort string  e.g. "title" or "-downloads", only relevant to a query
+   * @param metaapi    the result of a call to the metadata API (optional)
    */
-
   constructor({identifier=undefined, itemid = undefined, query = undefined, sort=[], metaapi = undefined}={}) { //TODO-API sort
     this.itemid = identifier || itemid;
     this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
@@ -37,22 +45,19 @@ class ArchiveItem {
     this.sort = Array.isArray(sort) ? sort : sort ? [sort] : []; // Always an array here
   }
 
-  /* Almost certainly OBSolete , though looks correct
-  static fromMemberFav(m) {
-      // Build an ArchiveItem from an entry in a favorites (i.e. a IDENTIFIER_member.json file).
-      // Almost certainly
-      if (m.mediatype === "search") { // Handle weird saved searches,
-          return new this({query: m.identifier});
-      } else {
-          return new this({identifier: m.identifier});
-      }
-  }
-  */
+  /**
+   * @returns [ { } ] returns the file metadata with addition of downloaded field, suitable for storing in a cache
+   */
   exportFiles() {
     // Note we are storing as AF.downloaded.metadata as only store that, but reading back in AF.constructor converted to AF.downloade
     return this.files.map(f => Object.assign({downloaded: f.downloaded}, f.metadata));
   };
 
+  /**
+   * Export data in form received from metadata API call (suitable for caching, or passing to a query)
+   * @param wantPlaylist boolean  True if want to include the playlist:[] in the results
+   * @returns {metadata: {}, ... }  In
+   */
   exportMetadataAPI({wantPlaylist=false}={}) {
     return Object.assign(
       {
@@ -84,12 +89,11 @@ class ArchiveItem {
     }
   }
 
+  /**
+   * Imports API data and lodas fields, it process some of the Fjords (endless edge cases)
+   * @param metaapi {metadata:{}, ...}  Passed something either from Metadata API call, or faked to look like it
+   */
   loadFromMetadataAPI(metaapi) {
-    /*
-    Apply the results of a metadata API or exportMetadataAPI() call to an ArchiveItem,
-    meta:   { metadata, files, reviews, members, and other stuff }
-     */
-    //TODO - I think this is skipping reviews which should be stored
     if (metaapi) {
       console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
       this.files = (metaapi && metaapi.files)
@@ -126,54 +130,36 @@ class ArchiveItem {
         this.playlist = this.processPlaylist(metaapi.playlist);
       }
     }
-    //return metaapi;// Broken but unused
-    return undefined;
   }
+
+  /**
+   *
+   * Apply the results of a bookreader API or exportBookreaderAPI() call to an ArchiveItem, (see notes at page top on which structure is where)
+   * @param bookapi       Result of call to bookreader API
+   * @returns {undefined}
+   */
   loadFromBookreaderAPI(bookapi) {
-    /*
-    Apply the results of a bookreader API or exportBookreaderAPI() call to an ArchiveItem, (see notes at page top on which structure is where)
-     */
     if (bookapi) {
       console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
       delete(bookapi.data.metadata);  // Dont keep  metadata as its just a duplicate
       this.bookreader = bookapi.data;
     }
-    return undefined;
   }
 
-  /*OBSOLETE - always does fetch_metadata and fetch_query directly in former consumers of this
-  async fetch({noCache=undefined, copyDirectory=undefined}={}) {   //TODO-API add noCache and copyDirectory
-    /* Fetch what we can about this item, it might be an item or something we have to search for.
-        Fetch item metadata as JSON by talking to Metadata API
-        Fetch collection info by an advanced search.
-        Goes through gateway.dweb.me so that we can work around a CORS issue (general approach & security questions confirmed with Sam!)
-
-        this.itemid Archive Item identifier
-        throws: TypeError or Error if fails esp Unable to resolve name
-        resolves to: this
-     *-/
-    try {
-      await this.fetch_metadata({noCache, copyDirectory});
-      await this.fetch_query({noCache, copyDirectory}); // Should throw error if fails to fetch //TODO-RELOAD fetch_query ignores noCache currently
-      return this;
-    } catch(err) {
-      throw(err); // Typically a failure to fetch
-    }
-  }
+  /**
+   *
+   * Fetch the metadata for this item if it hasn't already been.
+   * This function is intended to be monkey-patched in dweb-mirror to define caching.
+   * Its monkeypatched because of all the places inside dweb-archive that call fetch_query
+   *
+   * @param opts {
+   *          noCache Set Cache-Control no-cache header (note in dweb-mirror version this stops it reading the cache)
+   *          darkOK bool True if a dark item is ok, return empty, otherwise a dark item will throw an error
+   *          }
+   * @param cb(err, this)
+   * @returns {Promise<ARCHIVEITEM> if no cb passed}
    */
-
   fetch_metadata(opts={}, cb) {
-    /*
-    Fetch the metadata for this item if it hasn't already been.
-
-    This function is intended to be monkey-patched in dweb-mirror to define caching.
-    Its monkeypatched because of all the places inside dweb-archive that call fetch_query
-
-    opts {
-        noCache     Set Cache-Control no-cache header. Note - in monkeypatched version in dweb-mirror this stops it reading the cache
-    }
-    cb(err, this) or if undefined, returns a promise resolving to 'this'
-     */
     if (typeof opts === "function") { cb = opts; // noinspection JSUnusedAssignment
       opts = {}; } // Allow opts parameter to be skipped
 
@@ -188,6 +174,12 @@ class ArchiveItem {
       }
     }
   }
+
+  /**
+   *
+   * @param optionalMetaapi   result of Metadata API call (optional)
+   * @returns {boolean}       true if item (or optionalMetaapi if passed) has a playlist
+   */
   hasPlaylist(optionalMetaapi) {
     // Encapsulate the heuristic as to whether this has a playlist
     const metaapi = optionalMetaapi || this;
@@ -249,6 +241,13 @@ class ArchiveItem {
       });
     }
   }
+
+  /**
+   * Fetch and store data from bookreader API
+   * @param opts { page }  doesnt appear to be used
+   * @param cb(err, ARCHIVEITEM)
+   * @returns {Promise<ARCHIVEITEM>|void} if no cb passed
+   */
   fetch_bookreader(opts={}, cb) {
     if (cb) { return this._fetch_bookreader(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
   }
@@ -277,24 +276,33 @@ class ArchiveItem {
       cb(err, this)
     });
   }
-  fetch_query(opts={}, cb) { // opts = {wantFullResp=false}
-    /*  Action a query, return the array of docs found and store the accumulated search on .members
-        Subclassed in Account.js since dont know the query till the metadata is fetched
 
-        This function is intended to be monkey-patched in dweb-mirror to define caching.
-        Its monkeypatched because of all the places inside dweb-archive that call fetch_query
-        Patch will call _fetch_query
-        Returns a promise or calls cb(err, [ArchiveMember*]);
-        Errs include if failed to fetch
-        wantFullResp set to true if want to get the result of the search query (because proxying) rather than just the docs
-    */
+  /**
+   *
+   * Action a query, return the array of docs found and store the accumulated search on .members
+   * Subclassed in Account.js since dont know the query till the metadata is fetched
+   *
+   * This function is intended to be monkey-patched in dweb-mirror to define caching.
+   * Its monkeypatched because of all the places inside dweb-archive that call fetch_query
+   * Patch will call _fetch_query
+   * Errs include if failed to fetch
+   *
+   * @param opts {
+   *    wantFullResp,  set to true if want to get the result of the search query (because proxying) rather than just the docs
+   *    noCache}
+   * @param cb(err. [ARCHIVEMEMBER])
+   * @returns {Promise<[ARCHIVEMEMBER]>|void} (if no cb passed)
+   */
+  fetch_query(opts={}, cb) { // opts = {wantFullResp=false}
     if (cb) { return this._fetch_query(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
   }
 
+  /**
+   * Fetch next page of query
+   * @param opts (see feth_query)
+   * @param cb(err, [ARCHIVEMEMBER])
+   */
   more(opts, cb) {
-    // Fetch next page of query
-    // opts as defined in fetch_query
-    // cb( err, [ ArchiveMember*] )
     this.page++;
     this.fetch_query(opts, (err, newmembers) => {
       if (err) { this.page--; } // Decrement page back if error
@@ -302,8 +310,13 @@ class ArchiveItem {
     });
   }
 
+  /**
+   *
+   * Return current page of results, note that page 1 is the 0th..rows-1 items, and page 0 is same as page 1.
+   * @param wrapInResponse  TRUE if want it to look like an advancedsearch.php response
+   * @returns [ARCHIVEMEMBER]
+   */
   currentPageOfMembers(wrapInResponse) {
-    // Return current page of results, note that page 1 is the 0th..rows-1 items, and page 0 is same as page 1.
     return wrapInResponse
       ? { response: { numFound: this.numFound, start: this.start, docs: this.currentPageOfMembers(false) }}   // Quick recurse
       : this.membersFav.concat(this.membersSearch).slice((Math.max(1,this.page) - 1) * this.rows, this.page * this.rows);
@@ -412,6 +425,14 @@ class ArchiveItem {
     }
   }
 
+  /**
+   *
+   * @param wantStream boolean    TRUE if want result as a stream (for the http server)
+   * @param wantMembers           TRUE if want results converted to an array of ArchiveMember
+   * @param noCache               TRUE to send cache skipping headers
+   * @param cb(err, [ARCHIVEMEMBER] || {hits: {hits: [{}]}}
+   * @returns {Promise<unknown>}   If no cb passed
+   */
   relatedItems({wantStream = false, wantMembers = false, noCache = false} = {}, cb) { //TODO-RELOAD set this
     /* This is complex because handles three cases, where want a stream, the generic result of the query or the results expanded to Tile-able info
         returns either related items object, stream or array of ArchiveMember, via cb or Promise
@@ -450,48 +471,39 @@ class ArchiveItem {
     }
   }
 
+  /**
+   *
+   * maybe Obsolete as thumbnails usually shown from ArchiveMember (TODO search for usages)
+   * @param opts {noCache}
+   * @returns {Promise<[URL]>}
+   */
   async thumbnaillinks(opts={}) {
-    //- maybe Obsolete as thumbnails usually shown from ArchiveMember
     await this.fetch_metadata(opts);
     return this.metadata ? this.metadata.thumbnaillinks : [] ; // Short cut since metadata changes may move this
   }
 
+  /**
+   * Find the file to use for the thumbnail
+   * this should handle the case of whether the item has had metadata fetched or not,
+   * and must be synchronous as stored in <img src=> (the resolution is asynchronous)
+   *
+   * @returns {ARCHIVEFILE || undefined}
+   */
   thumbnailFile() {
-    /**
-     * Find the file to use for the thumbnail
-     * returns: ArchiveFile or undefined
-     *
-     * this should handle the case of whether the item has had metadata fetched or not,
-     * and must be synchronous as stored in <img src=> (the resolution is asynchronous)
-     */
     // New items should have __ia_thumb.jpg but older ones dont
     let af = this.files && this.files.find(af => af.metadata.name === "__ia_thumb.jpg"
       || af.metadata.name.endsWith("_itemimage.jpg"));
-    /* explicitly building this isn't that useful, if doesn't exist in files than __ia_thumb.jpg will redirect to /images/notfound.png anyway
-    if (!af) {
-      const metadata =  {
-        format: "JPEG Thumb",
-        name:   "__ia_thumb.jpg",
-        // Could also set source:"original",rotation:"0",
-      };
-      // noinspection JSUnresolvedVariable
-      const ipfs = this.metadata && this.metadata.thumbnaillinks.find(f=>f.startsWith("ipfs:")); // Will be empty if no thumbnaillinks
-      if (ipfs) metadata.ipfs = ipfs;
-      af = new ArchiveFile({itemid: this.itemid, metadata });
-      this.files.push(af); // So found by next call for thumbnailFile - if haven't loaded metadata no point in doing this
-    }
-    */
     return af;
   }
 
+  /**
+   * Get a thumbnail for a video - may extend to other types, return the ArchiveFile
+   * This is used to select the file for display and also in dweb-mirror to cache it
+   * Heuristic is to select the 2nd thumbnail from the thumbs/ directory (first is often a blank screen)
+   *
+   * @returns ARCHIVEFILE || undefined
+   */
   videoThumbnailFile() {
-    /**
-     * Get a thumbnail for a video - may extend to other types, return the ArchiveFile
-     * This is used to select the file for display and also in dweb-mirror to cache it
-     * Heuristic is to select the 2nd thumbnail from the thumbs/ directory (first is often a blank screen)
-     *
-     * returns: ArchiveFile or undefined
-     */
     console.assert(this.files, "videoThumbnaillinks: assumes setup .files before");
     console.assert(this.metadata.mediatype === "movies", "videoThumbnaillinks only valid for movies");
     if (this.playlist[0] && this.playlist[0].imageurls) {
@@ -504,20 +516,30 @@ class ArchiveItem {
         : this.thumbnailFile(); // If none then return ordinary thumbnail, or undefined if no thumbnail for item either
     }
   }
+
+  /**
+   * Find the first file that can be played
+   * @param type string Type of file to play from range in format field of util._formatarr e.g. "PDF" or "JPEG Thumb"
+   * @returns ARCHIVEFILE|undefined
+   */
   playableFile(type) {
     return this.files.find(fi => fi.playable(type));  // Can be undefined if none included
   }
 
+  /**
+   * Convert a filename to a ArchiveFile, can be undefined
+   * @param filename
+   * @returns ARCHIVEFILE|undefined
+   */
   fileFromFilename(filename) { //TODO-API
-    // Convert a filename to a ArchiveFile, can be undefined
     return filename ? this.files.find(f => f.metadata.name === filename) : undefined
   }
 
-  processPlaylist(rawplaylist) {
-    /* Process the rawplaylist and add fields to make it into something usable.
-    this must have files read before calling this.
-    rawplaylist:    As returned by API - or an already cooked processed version
-    returns: [ {
+  /**
+   * Process the rawplaylist and add fields to make it into something usable.
+   * this must have files read before calling this.
+   * @param rawplaylist  As returned by API - or an already cooked processed version
+   * @returns [ {
         title,
         autoplay,
         duration    (secs),
@@ -534,7 +556,8 @@ class ArchiveItem {
             height,
             width }  ]
         tracks: [ ] // Not really tracks, its things like subtitles
-     */
+   */
+  processPlaylist(rawplaylist) {
     // filename is because (some) of the files in the API are returned as root relative urls,
     function filename(rootrelativeurl) { return rootrelativeurl ? rootrelativeurl.split('/').slice(3).join('/') : undefined; }
     function processTrack(t) {
@@ -555,11 +578,11 @@ class ArchiveItem {
     return ArrayFilterTill(rawplaylist, t => t.autoplay === false).map(t=>processTrack.call(this,t));
   }
 
+  /**
+   * Find the mimimum set of files needed to display a details page, includes for example a version of a video that can be played and its thumbnail
+   * @returns [ARCHIVEFILE] | undefined
+   */
   minimumForUI() {
-    /*
-     assumes metadata fetched
-     returns: [ ArchiveFile* ]  minimum files required to play this item or undefined if is_dark
-    */
     //TODO-CAROUSEL
     // This will be tuned for different mediatype etc}
     // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
@@ -614,7 +637,12 @@ class ArchiveItem {
     }
     return minimumFiles;
   };
-  subtype(metadata=undefined) {
+
+  /**
+   * Find what kind of text or what kind of movie, used to pick the appropriate UX
+   * @returns {string|undefined|*}
+   */
+  subtype() {
     // Heuristic to figure out what kind of texts we have, this will evolve as @tracey gradually releases more info :-)
     // Return a subtype used by different mechanisms to make decisions
     // From @hank in slack.bookreader-libre 2019-07-16 i believe it needs at least an image stack (i.e., a file whose format begins with
@@ -639,12 +667,21 @@ class ArchiveItem {
         return undefined;
     }
   }
+
+  /**
+   * Convert the files into slides in an array. Next step would be to process for carousel
+   * This algorithm works for thetaleofpeterra14838gut its probably not universal
+   * @returns [ARCHIVEFILE]
+   */
   files4carousel() {
-    // Convert the files into slides in an array. Next step would be to process for carousel
-    // This algorithm works for thetaleofpeterra14838gut its probably not universal
     return this.files.filter(f => f.metadata.format === "JPEG").sort((a,b) => a.metadata.name < b.metadata.name ? -1 : a.metadata.name > b.metadata.name ? 1 : 0)
   }
 }
+
+/**
+ * Array of fields that are added to the top level of the raw metadata API for dweb-archive and dweb-mirror
+ * @type {*[]}
+ */
 ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded"];
 
 exports = module.exports = ArchiveItem;

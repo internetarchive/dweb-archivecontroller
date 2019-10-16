@@ -45,16 +45,38 @@ const item_rules = require('./item_rules.js');
         return first ? (ff.length ? ff[0] : undefined) : ff;
     }
 
+/**
+ * Interim function to help with https://github.com/internetarchive/dweb-mirror/issues/242
+ * Each has to handle three cases ...
+ * Typically three cases
+ *    browser via mirror: direct DA defined, Mirror defined -> mirror
+ *    DM server: DA not, Mirror not -> archive.org direct (because if want to go via dweb.me will be using older gatewayServer() function
+ *    browser direct: DA define, Mirror not -> dweb.me because need CORS
+ */
+function upstreamPrefix(type) {
+  return (
+    (typeof DwebArchive === "undefined") ? "https://archive.org"  // dweb-mirror going direct - not via dweb.me
+      : (DwebArchive.mirror !== null) ? DwebArchive.mirror          // Browser via mirror - use the mirror
+      : "https://dweb.me/arc/archive.org"                           // Browser direct, use dweb.me for CORS protection
+  );
+}
+
     /*
     Return a string suitable for prepending to root relative URLs choosing between normal, Dweb, and dweb-mirror scenarios
 
     Note copy of this in dweb-archivecontroller/Util.js and ia-components/util.js
      */
     function gatewayServer(server=undefined) {
-        // Return location for http calls to a gateway server that understands canonical addresses like /arc/archive.. or /ipfs/Q...
-        // Has to be a function rather than constant because searchparams is defined after this library is loaded
-        // Note that for example where Util.js is included from dweb-mirror that currently (this may change) DwebArchive is not defined
-        // If server is supplied will use that rather than dweb.me, this is (possibly temporary) for bookreader //TODO-BOOK
+        /*
+         Return location for http calls to a gateway server that understands canonical addresses like /arc/archive.. or /ipfs/Q...
+         Has to be a function rather than constant because searchparams is defined after this library is loaded
+         Note that for example where Util.js is included from dweb-mirror that currently (this may change) DwebArchive is not defined
+         If server is supplied will use that rather than dweb.me, this is (possibly temporary) for bookreader //TODO-BOOK
+         Typically three cases
+         * browser via mirror: direct DA defined, Mirror defined -> mirror
+         * DM server: DA not, Mirror not -> dweb.me
+         * browser direct: DA define, Mirror not -> dweb.me  .... See
+         */
         return ((typeof DwebArchive !== "undefined") && (DwebArchive.mirror !== null)) ? DwebArchive.mirror
                 : server ? "https://"+server
                 : "https://dweb.me"
@@ -700,7 +722,7 @@ const _formatarr = [
     'x-ms-wmv'  => 'Windows Media',
 */
 const gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
-    "urlDownload": "/arc/archive.org/download",
+    "urlDownload": "/arc/archive.org/download", //OBSOLETING - see https://github.com/internetarchive/dweb-mirror/issues/242
     "url_servicesimg": "/arc/archive.org/thumbnail/",
     "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
     "url_metadata": "/arc/archive.org/metadata/",
@@ -823,5 +845,5 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
     }
 };
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
+const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, upstreamPrefix, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

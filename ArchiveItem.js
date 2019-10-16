@@ -580,9 +580,10 @@ class ArchiveItem {
 
   /**
    * Find the mimimum set of files needed to display a details page, includes for example a version of a video that can be played and its thumbnail
+   * @param config (optional) { experimental: { epubdownload}}  if true enables epubs so they are crawled
    * @returns [ARCHIVEFILE] | undefined
    */
-  minimumForUI() {
+  minimumForUI({crawlEpubs=undefined}) {
     //TODO-CAROUSEL
     // This will be tuned for different mediatype etc}
     // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
@@ -606,7 +607,11 @@ class ArchiveItem {
           if (this.subtype() === "carousel") {
             minimumFiles.push(...this.files4carousel());
           }
-          break; // for texts subtype=bookreader  use the Text Reader anyway so dont know which files needed - done in pages
+          if (crawlEpubs) {
+            const epub = this.files.find(af => af.metadata.format === "Epub"); // First Epub, which will only be there if possible, unlikely to be more than one
+            if (epub) minimumFiles.push(epub);
+          }
+          break; // for texts subtype=bookreader  use the Text Reader anyway so dont know which files needed - done in pages handling in crawler
         case "image":
           minimumFiles.push(this.files.find(fi => fi.playable("image"))); // First playable image is all we need
           break;

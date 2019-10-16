@@ -1,4 +1,4 @@
-const {fetch_json, gatewayServer, gateway, formats, } = require( './Util');
+const {fetch_json, upstreamPrefix, gatewayServer, gateway, formats, } = require( './Util');
 const prettierBytes = require( "prettier-bytes");
 const waterfall = require('async/waterfall');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
@@ -67,9 +67,9 @@ class ArchiveFile {
           if  (  (!this.metadata.ipfs && connectedNames.includes("IPFS"))
             // TODO set magnetlink when build ArchiveFile based on it being on item, not needed here at all.
             || (!this.metadata.magnetlink && !(this.metadata.name === "__ia_thumb.jpg") && connectedNames.includes("WEBTORRENT")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
-          // || !this.metadata.contenthash // Dont do another roundtrip just to get contenthash
           ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
-            let name = this.metadata.name.replace('?', '%3F');  // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
+            // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
+            let name = this.metadata.name.replace('?', '%3F');
             // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
             // maybe problem offline but above test should catch cases where no IPFS so not useful
             fetch_json(`${gatewayServer()}${gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`, (err, res)=>{
@@ -88,10 +88,14 @@ class ArchiveFile {
   }
 
   /**
+   * Find a HTTP URL - three cases:
+   * on browser direct: want dweb.me as need CORS protection
+   * on dweb-mirror: want archive.org as no benefit going through dweb.me (see https://github.com/internetarchive/dweb-mirror/issues/242)
+   * on browser to DM: want localhost (which gatewayServer will return
    * @returns {URL} http URL - typically on dweb.me or localhost:4244
    */
   httpUrl() {
-    return `${gatewayServer()}${gateway.urlDownload}/${this.itemid}/${this.metadata.name}`;
+    return [ upstreamPrefix(), "download", this.itemid, this.metadata.name].join('/');
   }
 
   /**

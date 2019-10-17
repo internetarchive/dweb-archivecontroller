@@ -58,6 +58,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.80 Processor for metadata field report; downloads direct from archive.org (reqd for epub); 
 * v0.1.79 workaround bug in embed playlist API; some cases for search in local; _query use DT.fetch; speedup in expand
 * v0.1.78 fix bugs in Epub, Kindle and update some other formats
 * v0.1.77 fix bug with /local introduced in .76; dont fetch metadata for files unless IPFS||WEBTORRENT

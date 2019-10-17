@@ -583,7 +583,7 @@ class ArchiveItem {
    * @param config (optional) { experimental: { epubdownload}}  if true enables epubs so they are crawled
    * @returns [ARCHIVEFILE] | undefined
    */
-  minimumForUI({crawlEpubs=undefined}) {
+  minimumForUI({crawlEpubs=undefined}={}) {
     //TODO-CAROUSEL
     // This will be tuned for different mediatype etc}
     // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"

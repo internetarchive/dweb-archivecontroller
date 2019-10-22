@@ -1,3 +1,4 @@
+/* global DwebTransports */
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
 const {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} = require("./Util");

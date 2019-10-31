@@ -61,6 +61,7 @@ class ArchiveItem {
    */
   exportMetadataAPI({wantPlaylist=false}={}) {
     return Object.assign(
+      // SEE-OTHER-ADD-METADATA-API-TOP-LEVEL in dweb-mirror and dweb-archivecontroller
       {
         files: this.exportFiles(),
         files_count: this.files_count,
@@ -74,6 +75,7 @@ class ArchiveItem {
         members: this.membersFav,
         metadata: this.metadata,
         reviews: this.reviews,
+        speech_vs_music_asr: this.speech_vs_music_asr,
       },
       wantPlaylist ? { playlist: this.playlist} : { }
     )
@@ -657,6 +659,7 @@ class ArchiveItem {
       return undefined ; // Not applicable if identifier not defined.
     console.assert(this.metadata && this.files,"Setup metadata and files before subtype which is synchronous");
     switch (this.metadata.mediatype) {
+      // If add subtypes for a new mediatype (other than texts, audio, movies) then needed also in Page.jsx
       case 'texts':
         //const hasPDF = this.files.find(f => f.metadata.format.endsWith("PDF"));
         const hasSPP = this.files.find(f => f.metadata.format.startsWith("Single Page Processed")
@@ -668,6 +671,10 @@ class ArchiveItem {
       case "movies":
         return this.metadata.collection.some( c => ["tvnews", "tvarchive"].includes(c)) // See same heuristic in hasPlaylist()
         ? "tv"
+        : undefined;
+      case "audio":
+        return this.files.find(af => af.metadata.format === 'JSON SRT')
+        ? "radio"
         : undefined;
       default:
         return undefined;
@@ -688,6 +695,6 @@ class ArchiveItem {
  * Array of fields that are added to the top level of the raw metadata API for dweb-archive and dweb-mirror
  * @type {*[]}
  */
-ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded"];
+ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded", "speech_vs_music_asr"];
 
 exports = module.exports = ArchiveItem;

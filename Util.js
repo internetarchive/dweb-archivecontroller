@@ -846,5 +846,7 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
     }
 };
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, upstreamPrefix, gatewayServer, gateway, homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap, parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
+const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, upstreamPrefix, gatewayServer, gateway,
+  homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap,
+  parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

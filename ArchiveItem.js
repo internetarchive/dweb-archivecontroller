@@ -675,6 +675,8 @@ class ArchiveItem {
       case "audio":
         return this.files.find(af => af.metadata.format === 'JSON SRT')
         ? "radio"
+        : [ 'acdc', 'samples_only', 'meridamexico'].some(c => this.metadata.collection.includes(c))
+        ? "album"
         : undefined;
       default:
         return undefined;

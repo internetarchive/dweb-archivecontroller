@@ -725,7 +725,7 @@ const _formatarr = [
 const gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
     "urlDownload": "/arc/archive.org/download", //OBSOLETING - see https://github.com/internetarchive/dweb-mirror/issues/242
     "url_servicesimg": "/arc/archive.org/thumbnail/",
-    "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
+    //UNUSED "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
     "url_metadata": "/arc/archive.org/metadata/",
     "url_advancedsearch": "/arc/archive.org/advancedsearch",
     "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues

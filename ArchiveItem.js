@@ -247,7 +247,7 @@ class ArchiveItem {
 
   /**
    * Fetch and store data from bookreader API
-   * @param opts { page }  doesnt appear to be used
+   * @param opts { page }        doesnt appear to be used
    * @param cb(err, ARCHIVEITEM)
    * @returns {Promise<ARCHIVEITEM>|void} if no cb passed
    */
@@ -263,8 +263,9 @@ class ArchiveItem {
     const protocolServer = gatewayServer(this.server); // naming mismatch - gatewayServer is of form http[s]://foo.com
     const [unusedProtocol, unused, server] = protocolServer.split('/');
     const subPrefixFile = this.files.find(f => f.metadata.format.startsWith("Single Page Processed"))
-    const subPrefix = subPrefixFile.metadata.name.slice(0,subPrefixFile.metadata.name.lastIndexOf("_"))
+    const subPrefix = subPrefixFile ? subPrefixFile.metadata.name.slice(0,subPrefixFile.metadata.name.lastIndexOf("_")) : undefined
     const parms = parmsFrom({ subPrefix, server,
+      audioLinerNotes: this.metadata.mediatype === "audio" ? 1 : 0,
       id: this.itemid,
       itemPath: this.dir,
       format: "json",

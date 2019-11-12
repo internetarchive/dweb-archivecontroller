@@ -63,9 +63,12 @@ class ArchiveFile {
       // noinspection JSUnresolvedFunction
       waterfall([
         (cb) => DwebTransports.p_connectedNames(cb),
+        // TODO-TORRENT think through returning dweb-torrent URL esp for _torrent.xml
         (connectedNames, cb) => { // Decide if need to get file-specific metadata because missing dweb urls
           if  (  (!this.metadata.ipfs && connectedNames.includes("IPFS"))
-            // TODO set magnetlink when build ArchiveFile based on it being on item, not needed here at all.
+            // TODO-TORRENT move magnetlink to this rather than this.metadata
+            // TODO-TORRENT add a service that does JUST the files metadata with IPFS and Torrent
+            // TODO-TORRENT add a service that does /metadata/foo that includes magnet link - see https://git.archive.org/www/dweb-metadata make sure used by ArchiveItem to get metadata
             || (!this.metadata.magnetlink && !(this.metadata.name === "__ia_thumb.jpg") && connectedNames.includes("WEBTORRENT")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
           ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
             // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
@@ -79,6 +82,7 @@ class ArchiveFile {
             cb(null);
           }},
         (cb) => {
+          // TODO-TORRENT move magnetlink to this rather than this.metadata
           const res = [this.metadata.ipfs, this.metadata.magnetlink, this.metadata.contenthash].filter(f => !!f);   // Multiple potential sources eliminate any empty
           res.push(this.httpUrl()); // HTTP link to file (note this was added Oct2018 and might not be correct)
           cb(null, res);

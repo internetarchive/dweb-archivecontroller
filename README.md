@@ -58,6 +58,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.83 move magnetlink up one level
 * v0.1.82 Add index.html; support enhanced Media player and torrent upgrades
 * v0.1.81 Support "radio" subtype
 * v0.1.80 Processor for metadata field report; downloads direct from archive.org (reqd for epub); 

@@ -1,7 +1,7 @@
 /* global DwebTransports */
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, gateway, gatewayServer, objectFrom, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
+const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntries, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
@@ -64,19 +64,11 @@ class ArchiveItem {
       // SEE-OTHER-ADD-METADATA-API-TOP-LEVEL in dweb-mirror and dweb-archivecontroller
       {
         files: this.exportFiles(),
-        files_count: this.files_count,
-        collection_sort_order: this.collection_sort_order,
-        collection_titles: this.collection_titles,
-        crawl: this.crawl, // For dweb-mirror
-        downloaded: this.downloaded,    // Complex object
-        is_dark: this.is_dark,
-        dir: this.dir,
-        server: this.server,
         members: this.membersFav,
         metadata: this.metadata,
         reviews: this.reviews,
-        speech_vs_music_asr: this.speech_vs_music_asr,
       },
+      ObjectFromEntries(ArchiveItem.extraFields.map(k => [k, this[k]])),
       wantPlaylist ? { playlist: this.playlist} : { }
     )
 
@@ -100,7 +92,7 @@ class ArchiveItem {
     if (metaapi) {
       console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
       this.files = (metaapi && metaapi.files)
-        ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, metadata: f}))
+        ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, magnetlink: this.magenetlink, metadata: f}))
         : [];   // Default to empty, so usage simpler.
       if (metaapi.metadata) {
         const meta = enforceStringOrArray(metaapi.metadata, rules.item); // Just processes the .metadata part
@@ -118,10 +110,10 @@ class ArchiveItem {
           // We have one of these fake Epub files that for reasons unclear aren't derived and stored, but built/cached on demand, fake it
           //TODO-EPUB get size and downloaded from file in DM when already cached
           if (!this.files.find(af => af.metadata.format === "Epub"))
-            this.files.push(new ArchiveFile({
+            this.files.push(new ArchiveFile({ // Intentionally not passing magnetlink its not in the torrent
               itemid: this.itemid, metadata: { name: this.itemid + ".epub", format: "Epub" }}));
           if (!this.files.find(af => af.metadata.format === "Kindle"))
-            this.files.push(new ArchiveFile({
+            this.files.push(new ArchiveFile({ // Intentionally not passing magnetlink its not in the torrent
               itemid: this.itemid, metadata: { name: this.itemid + ".mobi", format: "Kindle" }}));
         }
         this.metadata = meta;
@@ -204,12 +196,13 @@ class ArchiveItem {
     } else {
       debug('getting metadata for %s', this.itemid);
       // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
+      // TODO-TORRENT rewrite this to use dweb-metadata service
       const name = `dweb:${gateway.url_metadata}${this.itemid}`;
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
       DwebTransports.fetch([name], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
         if (err) {
-          cb(err);
+          cb(new Error(`Unable to fetch metadata for ${this.itemid}\n ${err.message}`));
         } else {
           // noinspection ES6ModulesDependencies
           const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
@@ -698,6 +691,7 @@ class ArchiveItem {
  * Array of fields that are added to the top level of the raw metadata API for dweb-archive and dweb-mirror
  * @type {*[]}
  */
-ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "dir", "files_count", "is_dark", "numFound", "reviews", "server", "crawl", "downloaded", "speech_vs_music_asr"];
+ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "crawl", "downloaded", "dir", "files_count",
+  "is_dark", "magnetlink", "numFound", "reviews", "server", "speech_vs_music_asr"];
 
 exports = module.exports = ArchiveItem;

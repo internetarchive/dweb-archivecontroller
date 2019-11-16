@@ -726,8 +726,7 @@ const _formatarr = [
 const gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
     "urlDownload": "/arc/archive.org/download", //OBSOLETING - see https://github.com/internetarchive/dweb-mirror/issues/242
     "url_servicesimg": "/arc/archive.org/thumbnail/",
-    //UNUSED "url_torrent": "/arc/archive.org/torrent/", //TODO-MIRROR support this (actually, not quite sure what this command means, maybe making sure we get rewritten torrents)
-    "url_metadata": "/arc/archive.org/metadata/",
+    "url_metadata": "/arc/archive.org/metadata/", // TODO-TORRENT this should be obsoleted - used in AF.urls and AI._fetch_metadata currently
     "url_advancedsearch": "/arc/archive.org/advancedsearch",
     "url_related": "https://be-api.us.archive.org/mds/v1/get_related/all/",   // Direct, no CORS issues
     "url_related_local": "/arc/archive.org/mds/v1/get_related/all/",  // Direct, no CORS issues
@@ -847,7 +846,23 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
     }
 };
 
+const torrentRejectList = [ // Baked into torrentmaker at in petabox/sw/bin/ia_make_torrent.py  # See Archive/inTorrent()
+  "_archive.torrent", // Torrent file isnt in itself !
+  "_files.xml",
+  "_reviews.xml",
+  "_all.torrent",     // aborted abuie torrent-izing
+  "_64kb_mp3.zip",    // old packaged streamable mp3s for etree
+  "_256kb_mp3.zip",
+  "_vbr_mp3.zip",
+  "_meta.txt",        // s3 upload turds
+  "_raw_jp2.zip",     // scribe nodes
+  "_orig_cr2.tar",
+  "_orig_jp2.tar",
+  "_raw_jpg.tar",     // could exclude scandata.zip too maybe...
+  "_meta.xml"         // Always written after the torrent so cant be in it
+];
+
 const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, upstreamPrefix, gatewayServer, gateway,
   homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap,
-  parmsFrom, rules, _query, specialidentifiers}; // Needed by archive.html to access gatewayServer
+  parmsFrom, rules, _query, specialidentifiers, torrentRejectList}; // Needed by archive.html to access gatewayServer
 exports = module.exports = ACUtil

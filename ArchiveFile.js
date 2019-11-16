@@ -1,4 +1,4 @@
-const {fetch_json, upstreamPrefix, gatewayServer, gateway, formats, } = require( './Util');
+const {fetch_json, upstreamPrefix, gatewayServer, gateway, formats, torrentRejectList } = require( './Util');
 const prettierBytes = require( "prettier-bytes");
 const waterfall = require('async/waterfall');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
@@ -8,18 +8,25 @@ const waterfall = require('async/waterfall');
  * of file e.g. images used in the UI
  *
  * Fields:
+ * magnetlink: is magnet link of parent
  * metadata: metadata of item - (note will be a pointer into a Detail or Search's metadata so treat as read-only)
  *
  */
 class ArchiveFile {
-  constructor({itemid = undefined, metadata = undefined}={}) {
+  constructor({itemid = undefined, magnetlink = undefined, metadata = undefined}={}) {
     this.itemid = itemid;
+    this.magnetlink = magnetlink;
     if (typeof metadata.downloaded !== "undefined") {
       // Support dweb-mirror which stores downloaded as AF.metadata.downloaded but needs it as AF.downloaded
       this.downloaded = metadata.downloaded;
       delete(metadata.downloaded);
     }
     this.metadata = metadata;
+    if (this.metadata.name.endsWith("_archive.torrent")) {
+      // Dont trust the files info for _archive.torrent as will fetch via dweb-torrent service which modifies both.
+      this.metadata.sha1 = undefined;
+      this.metadata.size = undefined;
+    }
   }
 
   /**
@@ -35,7 +42,7 @@ class ArchiveFile {
     function f(cb) {
       if (!archiveitem.metadata) {
         archiveitem.fetch_metadata({copyDirectory}, (err, ai) => { // Note will load from cache if available and load ai.metadata and ai.files
-          if (err)  { cb(err) } else { this.new({archiveitem: ai, filename}, cb); } })
+          if (err)  { cb(err) } else { this.new({itemid: ai.itemid, magnetlink: ai.magnetlink, filename}, cb); } })
       } else {
         const af = archiveitem.files.find(af => af.metadata.name === filename); // af, (undefined if not found)
         return af ? cb(null, af) : cb(new Error(`${archiveitem.itemid}/${filename} not found`));
@@ -52,42 +59,73 @@ class ArchiveFile {
   }
 
   /**
+   * @returns: true if expect file to be in torrent
+   */
+  inTorrent() {
+    /* Not checking the following things which require access to item, but in all cases this should result
+      in there being no magnetlink anyway.
+      - !item.metadata.noarchivetorrent
+      - collections doesnt include loggedin || georestricted, ditto
+      - item_size < 80530636800 (75GB) || any collection doesnt start with open_ and size < 250GB
+      Also not checking mtime < item....torrentfile....mtime as dont have access to that here, which means could attempt
+      to read old file from torrent.   Torrents are typically out of date if ...
+      Known bug in Traceys code as of 13Nov2018 where doesnt update torrent when writing __ia_thumb.jpg
+      Large torrents can be behind on updates
+      If files count is large there is a bug with some part of the tools process Aaron let me know about, setting to 20k as a guess
+      TODO In python code this was taken from we checked this, and reported errors, could add here
+     */
+    return !torrentRejectList.some(ext => this.metadata.name.endsWirth(ext));
+  }
+  /**
    *
    * @param cb(err, [URL])  Array of urls that might be a good place to get this item
    * @returns {Promise<[URL]>} if no cb
    * @errors if fetch_json doesn't succeed, or retrieves something other than JSON
    */
+  // TODO-TORRENT make consumer pass in magnetlink or maybe utem if has it
   urls(cb) { //TODO-MIRROR fix this to make sense for _torrent.xml files which dont have sha1 and probably not IPFS
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cbout) {
       // noinspection JSUnresolvedFunction
-      waterfall([
-        (cb) => DwebTransports.p_connectedNames(cb),
-        // TODO-TORRENT think through returning dweb-torrent URL esp for _torrent.xml
-        (connectedNames, cb) => { // Decide if need to get file-specific metadata because missing dweb urls
-          if  (  (!this.metadata.ipfs && connectedNames.includes("IPFS"))
-            // TODO-TORRENT move magnetlink to this rather than this.metadata
-            // TODO-TORRENT add a service that does JUST the files metadata with IPFS and Torrent
-            // TODO-TORRENT add a service that does /metadata/foo that includes magnet link - see https://git.archive.org/www/dweb-metadata make sure used by ArchiveItem to get metadata
-            || (!this.magnetlink && !this.metadata.magnetlink && !(this.metadata.name === "__ia_thumb.jpg") && connectedNames.includes("WEBTORRENT")) // Want magnetlink, but not if its a thumbnail as causes too many webtorrent downloads
-          ) {   // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
-            // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
-            let name = this.metadata.name.replace('?', '%3F');
-            // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
-            // maybe problem offline but above test should catch cases where no IPFS so not useful
-            fetch_json(`${gatewayServer()}${gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`, (err, res)=>{
-              if (!err) this.metadata = res;
-              cb(err); });
-          } else {
-            cb(null);
-          }},
-        (cb) => {
-          // TODO-TORRENT move magnetlink to this rather than this.metadata
-          const res = [this.metadata.ipfs, this.metadata.magnetlink, this.magnetlink, this.metadata.contenthash].filter(f => !!f);   // Multiple potential sources eliminate any empty
-          res.push(this.httpUrl()); // HTTP link to file (note this was added Oct2018 and might not be correct)
-          cb(null, res);
-        }
-      ], cbout);
+      const res = [];
+      if (this.metadata.name.endsWith("_archive.torrent")) {
+        cbout(null,
+          // Either mirror URL or to torrent service
+          (((typeof DwebArchive !== "undefined") && ( typeof DwebArchive.mirror !== "undefined") )
+            ? [DwebArchive.mirror, 'download', this.itemid].join('/')
+            : 'http://www-dweb-torrent.dev.archive.org'
+          ) +  "/" + this.metadata.name);
+      } else {
+        waterfall([
+          (cb) => DwebTransports.p_connectedNames(cb),
+          (connectedNames, cb) => { // Look whether should add magnet link
+            if (connectedNames.includes("WEBTORRENT") && this.magnetlink && this.inTorrent()) {
+              // TODO-TORRENT needs to do "inTorrent" work from Archive.py and also exclude __ia_thumb.jpg
+              res.push([this.magnetlink, this.metadata.name].join('/'));
+            }
+            cb(null, connectedNames);
+          },
+          // TODO-TORRENT think through returning dweb-torrent URL esp for _torrent.xml
+          (connectedNames, cb) => { // Decide if need to get file-specific metadata because missing dweb urls
+            if  (!this.metadata.ipfs && connectedNames.includes("IPFS")) {
+              // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
+              // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
+              let name = this.metadata.name.replace('?', '%3F');
+              // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
+              // maybe problem offline but above test should catch cases where no IPFS so not useful
+              fetch_json(`${gatewayServer()}${gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`,
+                (err, fileMeta)=>{
+                  if (!err) {
+                    if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
+                    if (fileMeta.contenthash) { res.push(fileMeta.contenthash); }
+                  }
+                  cb(err, res);
+              });
+            } else {
+              cb(null, res);
+            }},
+        ], cbout);
+      }
     }
   }
 

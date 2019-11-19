@@ -32,8 +32,7 @@ Just do the "All" case above
 
 ## See related:
 
-* [Archive.org](https://dweb.archive.org/details) bootstrap into the Archive's page
-* [Examples](https://dweb.me/examples) examples
+* [Archive.org](https://dweb.archive.org) bootstrap into the Archive's page
 
 ### Repos:
 * *dweb-transports:* Common API to underlying transports (http, webtorrent, ipfs, yjs)
@@ -50,6 +49,7 @@ Just do the "All" case above
 * Util - a collection of tools, short functions, and dictionaries of use in multiple places
 
 ## API of key subclassed function
+See [API.md](./API.md)
 
 ## See also
 See [Dweb document index](https://github.com/internetarchive/dweb-transports/blob/master/DOCUMENTINDEX.md) for a list of the repos that make up the Internet Archive's Dweb project, and an index of other documents. 

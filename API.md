@@ -70,7 +70,7 @@ Expand metadata to urls could pass to DwebTransports,
 cb(err, urls)
 ```
 ##### httpUrl()
-Return URL to file on a http server, typically dweb.me or local gateway
+Return URL to file on a http server, typically dweb.archive.org or local gateway
 
 ##### mimetype()
  
@@ -281,7 +281,7 @@ Typical no-mirror scenario
 
 Typical mirror scenario
 * browser calls fetch_bookreader which forwards to localhost with server=localhost:4244
-* Mirror catches this, calls fetch_bookreader which fetches from datanode or dweb.me with server=DATANODE
+* Mirror catches this, calls fetch_bookreader which fetches from datanode or dweb.archive.org with server=DATANODE
 * datanode returns with server=DATANODE and urls https://DATANODE... which is what gets cached
 * Mirror cooks (in mirrorHttp) based on browser's server= when returning to browser
 * Browser uses cooked url to request page from mirror

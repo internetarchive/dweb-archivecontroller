@@ -7,9 +7,9 @@ const ArchiveItem = require('./ArchiveItem');
 const ArchiveMember = require('./ArchiveMember');
 const RawBookReaderResponse = require('./RawBookReaderResponse');
 // Add specific cases here as used elsewhere.
-const { torrentConfigDefault, dwebMagnetLinkFrom } = require('./mungeTorrent');
-//const { } = require('./Util');
+const { torrentConfigDefault, dwebMagnetLinkFrom, dwebTorrentObjectFrom } = require('./mungeTorrent');
+const { formats, gatewayServer, upstreamPrefix } = require('./Util');
 
 exports = module.exports = { ArchiveFile, ArchiveItem, ArchiveMember, RawBookReaderResponse,
-  torrentConfigDefault, dwebMagnetLinkFrom
+  dwebMagnetLinkFrom, dwebTorrentObjectFrom, formats, gatewayServer, torrentConfigDefault, upstreamPrefix
 }

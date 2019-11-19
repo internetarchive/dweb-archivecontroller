@@ -87,7 +87,7 @@ class ArchiveFile {
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cbout) {
       // noinspection JSUnresolvedFunction
-      const res = [];
+      const res = [this.httpUrl()];
       if (this.metadata.name.endsWith("_archive.torrent")) {
         cbout(null,
           // Either mirror URL or to torrent service
@@ -113,7 +113,7 @@ class ArchiveFile {
               let name = this.metadata.name.replace('?', '%3F');
               // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
               // maybe problem offline but above test should catch cases where no IPFS so not useful
-              fetch_json(`${gatewayServer()}${gateway.url_metadata}${this.itemid}/${encodeURIComponent(name)}`,
+              fetch_json(`${gatewayServer()}/metadata/${this.itemid}/${encodeURIComponent(name)}`,
                 (err, fileMeta)=>{
                   if (!err) {
                     if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
@@ -131,10 +131,10 @@ class ArchiveFile {
 
   /**
    * Find a HTTP URL - three cases:
-   * on browser direct: want dweb.me as need CORS protection
-   * on dweb-mirror: want archive.org as no benefit going through dweb.me (see https://github.com/internetarchive/dweb-mirror/issues/242)
+   * on browser direct: want dweb.archive.org as need CORS protection
+   * on dweb-mirror: want archive.org as no benefit going through dweb.archive.org (see https://github.com/internetarchive/dweb-mirror/issues/242)
    * on browser to DM: want localhost (which gatewayServer will return
-   * @returns {URL} http URL - typically on dweb.me or localhost:4244
+   * @returns {URL} http URL - typically on dweb.archive.org or localhost:4244
    */
   httpUrl() {
     return [ upstreamPrefix(), "download", this.itemid, this.metadata.name].join('/');

@@ -1,7 +1,7 @@
 /* global DwebTransports */
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntries, parmsFrom, rules, _query, specialidentifiers} = require("./Util");
+const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntries, parmsFrom, rules, upstreamPrefix, _query, specialidentifiers} = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
@@ -178,10 +178,12 @@ class ArchiveItem {
   hasPlaylist(optionalMetaapi) {
     // Encapsulate the heuristic as to whether this has a playlist
     const metaapi = optionalMetaapi || this;
+    // This is run in _fetch_metadata before metadata gets cleaned up (after which collection is always an array)
+    const collection = Array.isArray(metaapi.metadata.collection) ? metaapi.metadata.collection : [ metaapi.metadata.collection ];
     return (
       (!metaapi.is_dark)
       && ['audio', 'etree', 'movies'].includes(metaapi.metadata.mediatype)
-      && ! metaapi.metadata.collection.some(c => ["tvnews", "tvarchive"].includes(c)) // See also this heuristic in subtype()
+      && ! collection.some(c => ["tvnews", "tvarchive"].includes(c)) // See also this heuristic in subtype()
     );
   }
 
@@ -189,18 +191,18 @@ class ArchiveItem {
     /*
     Fetch the metadata for this item - dont use directly, use fetch_metadata.
      */
+    // If the itemid is one of the special ids and we arent talking to a mirror then load the predefined "special" metadata
     const special = specialidentifiers[this.itemid];
     if (!(typeof DwebArchive !== "undefined" && DwebArchive.mirror) && typeof special !== "undefined") {
       this.loadFromMetadataAPI({ metadata: special});
       cb(null, this);
     } else {
       debug('getting metadata for %s', this.itemid);
-      // Fetch via Domain record - the dweb:/arc/archive.org/metadata resolves into a table that is dynamic on gateway.dweb.me
-      // TODO-TORRENT rewrite this to use dweb-metadata service
-      const name = `dweb:${gateway.url_metadata}${this.itemid}`;
+      // Note dweb-transports/Naming.js resolver will direct this to Gun, dweb-metadata service etc
+      const url = [upstreamPrefix(), 'metadata', this.itemid].join('/')
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
-      DwebTransports.fetch([name], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
+      DwebTransports.fetch([url], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
         if (err) {
           cb(new Error(`Unable to fetch metadata for ${this.itemid}\n ${err.message}`));
         } else {
@@ -216,9 +218,10 @@ class ArchiveItem {
             debug("metadata for %s fetched successfully %s", this.itemid, this.is_dark ? "BUT ITS DARK" : "");
             if (this.hasPlaylist(metaapi)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
-              const playlistUrl = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror)
-                ? (gatewayServer() + gateway.url_playlist_local + "/" + this.itemid)
-                : `https://archive.org/embed/${this.itemid}?output=json`);
+              const protocolServer = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror) ? gatewayServer() : 'https://archive.org')
+              const playlistUrl = `${protocolServer}/embed/${this.itemid}?output=json`;
+                //OBS ? `${gatewayServer() + gateway.url_playlist_local + "/" + this.itemid)
+                //OBS : `https://archive.org/embed/${this.itemid}?output=json`);
               DwebTransports.fetch([playlistUrl], {noCache}, (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
                 if (err) {
                   cb(new Error("Unable to read playlist: "+ err.message));
@@ -249,7 +252,7 @@ class ArchiveItem {
   }
   _fetch_bookreader({page=undefined}={}, cb) {
     console.assert(this.server, "fetch_bookreader must be called after fetch_metadata because it requires specific IA server");
-    //TODO-BOOK use naming to redirect to dweb.me and (when gun has hijacker) to GUN
+    //TODO-BOOK use naming to redirect to dweb.archive.org and (when gun has hijacker) to GUN
     //TODO-BOOK should be going thru the local server where appropriate
     //TODO-BOOK this was requesting format=jsonp but seems to return json (which is what we want) anyway
     // See also configuration in dweb-archive/BookReaderWrapper.js
@@ -445,7 +448,8 @@ class ArchiveItem {
     */
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cb) {
-      const relatedUrl = (((typeof DwebArchive  !== "undefined")  && DwebArchive.mirror)  ? (gatewayServer() + gateway.url_related_local) : gateway.url_related) + this.itemid;
+      const protocolServer = ((typeof DwebArchive  !== "undefined")  && DwebArchive.mirror) ? gatewayServer() : 'https://be-api.us.archive.org';
+      const relatedUrl = `${protocolServer}/mds/v1/get_related/all/${this.itemid}`;
       if (wantStream) { // Stream doesnt really make sense unless caching to file
         // noinspection JSCheckFunctionSignatures
         DwebTransports.createReadStream(relatedUrl, {}, cb);
@@ -617,7 +621,7 @@ class ArchiveItem {
           console.assert(this.playlist, "minimumforUI expects playlist");
           // Almost same logic for video & audio
           minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
-          // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://dweb.me/thumbnail/itemid which should get canonicalized
+          // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://dweb.archive.org/services/img/itemid which should get canonicalized
           break;
         case "movies":
           if (this.subtype === "tv") {
@@ -692,6 +696,6 @@ class ArchiveItem {
  * @type {*[]}
  */
 ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "crawl", "downloaded", "dir", "files_count",
-  "is_dark", "magnetlink", "numFound", "reviews", "server", "speech_vs_music_asr"];
+  "is_dark", "magnetlink", "numFound", "server"];
 
 exports = module.exports = ArchiveItem;

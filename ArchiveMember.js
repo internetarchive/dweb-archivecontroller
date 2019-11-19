@@ -38,7 +38,7 @@ class ArchiveMember {
         return enforceStringOrArray(meta, rules);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
     }
     httpUrl() {
-        return `${gatewayServer()}${gateway.url_servicesimg}${this.identifier}`;  // Supported by dweb-mirror & gateway as well
+        return `${gatewayServer()}/services/img/${this.identifier}`;  // Supported by dweb-mirror & gateway as well
     }
     urls() {
         // Return single or array of urls

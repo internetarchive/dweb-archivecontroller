@@ -108,12 +108,13 @@ Common Parameters:
                 (note gradually code is changing to use "identifier" especially as it touches the IAUX library)
  query          Query string such as "collection: foo"
  metaapi        Result of a metadata API call (includes files, reviews etc)
+ sort           Array of strings for sorting query
  wantStream     true if prefer a result as a stream
  wantMembers    true if want results converted to ArchiveMember
  wantFullResp   true if want data wrapped in {response: { numFound, start, docs}} 
 ```
 
-##### new ArchiveItem({identifier, query, metaapi})
+##### new ArchiveItem({identifier, query, sort, metaapi})
 
 Instantiate new ArchiveItem and load from metaapi call
 
@@ -169,6 +170,9 @@ Applies a different heuristic to find appropriate thumbnail for a vide.
 
 ##### playableFile(type)
 Find a single playable file, typically replaced by the playlist functionality. 
+
+##### fileFromFilename(filename)
+Find file in .files, undefined if not found
 
 ##### processPlaylist(rawplaylist)
 Process results of raw playlist call, adding fields to make it more usable. 

@@ -1,4 +1,4 @@
-/* global DwebTransports */
+/* global DwebTransports, DwebArchive */
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
 const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntries, parmsFrom, rules, upstreamPrefix, _query, specialidentifiers} = require("./Util");
@@ -6,7 +6,6 @@ const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntri
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
-//TODO-NAMING url could be a name
 
 /* Note for Bookreader
     API = RawBookReaderResponse = AI.exportBookReader() = { data: { data, brOptions, lendingInfo, metadata }
@@ -39,8 +38,8 @@ class ArchiveItem {
    * @param sort string  e.g. "title" or "-downloads", only relevant to a query
    * @param metaapi    the result of a call to the metadata API (optional)
    */
-  constructor({identifier=undefined, itemid = undefined, query = undefined, sort=[], metaapi = undefined}={}) { //TODO-API sort
-    this.itemid = identifier || itemid;
+  constructor({identifier=undefined, itemid = undefined, query = undefined, sort=[], metaapi = undefined}={}) {
+    this.itemid = identifier || itemid; // Legacy itemid parameter
     this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
     this.query = query;
     this.sort = Array.isArray(sort) ? sort : sort ? [sort] : []; // Always an array here
@@ -50,7 +49,7 @@ class ArchiveItem {
    * @returns [ { } ] returns the file metadata with addition of downloaded field, suitable for storing in a cache
    */
   exportFiles() {
-    // Note we are storing as AF.downloaded.metadata as only store that, but reading back in AF.constructor converted to AF.downloade
+    // Note we are storing as AF.downloaded.metadata as only store that, but reading back in AF.constructor converted to AF.downloaded
     return this.files.map(f => Object.assign({downloaded: f.downloaded}, f.metadata));
   };
 
@@ -85,14 +84,14 @@ class ArchiveItem {
   }
 
   /**
-   * Imports API data and lodas fields, it process some of the Fjords (endless edge cases)
+   * Imports API data and loads fields, it process some of the Fjords (endless edge cases)
    * @param metaapi {metadata:{}, ...}  Passed something either from Metadata API call, or faked to look like it
    */
   loadFromMetadataAPI(metaapi) {
     if (metaapi) {
       console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
       this.files = (metaapi && metaapi.files)
-        ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, magnetlink: this.magenetlink, metadata: f}))
+        ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, magnetlink: this.magnetlink, metadata: f}))
         : [];   // Default to empty, so usage simpler.
       if (metaapi.metadata) {
         const meta = enforceStringOrArray(metaapi.metadata, rules.item); // Just processes the .metadata part
@@ -191,7 +190,7 @@ class ArchiveItem {
     /*
     Fetch the metadata for this item - dont use directly, use fetch_metadata.
      */
-    // If the itemid is one of the special ids and we arent talking to a mirror then load the predefined "special" metadata
+    // If the itemid is one of the special ids and we are not talking to a mirror then load the predefined "special" metadata
     const special = specialidentifiers[this.itemid];
     if (!(typeof DwebArchive !== "undefined" && DwebArchive.mirror) && typeof special !== "undefined") {
       this.loadFromMetadataAPI({ metadata: special});
@@ -199,7 +198,7 @@ class ArchiveItem {
     } else {
       debug('getting metadata for %s', this.itemid);
       // Note dweb-transports/Naming.js resolver will direct this to Gun, dweb-metadata service etc
-      const url = [upstreamPrefix(), 'metadata', this.itemid].join('/')
+      const url = [upstreamPrefix(), 'metadata', this.itemid].join('/');
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
       DwebTransports.fetch([url], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
@@ -218,7 +217,7 @@ class ArchiveItem {
             debug("metadata for %s fetched successfully %s", this.itemid, this.is_dark ? "BUT ITS DARK" : "");
             if (this.hasPlaylist(metaapi)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
-              const protocolServer = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror) ? gatewayServer() : 'https://archive.org')
+              const protocolServer = (((typeof DwebArchive !== "undefined") && DwebArchive.mirror) ? gatewayServer() : 'https://archive.org');
               const playlistUrl = `${protocolServer}/embed/${this.itemid}?output=json`;
                 //OBS ? `${gatewayServer() + gateway.url_playlist_local + "/" + this.itemid)
                 //OBS : `https://archive.org/embed/${this.itemid}?output=json`);
@@ -227,12 +226,12 @@ class ArchiveItem {
                   cb(new Error("Unable to read playlist: "+ err.message));
                 } else {
                   metaapi.playlist = res;
-                  this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
+                  this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields
                   cb(null, this);
                 }
               });
             } else { // Dont need playlist and the embed code has a bug on other mediatypes.
-              this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields //TODO-PLAYLIST move to after fetched playlist
+              this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields
               cb(null, this)
             }
           }
@@ -258,8 +257,8 @@ class ArchiveItem {
     // See also configuration in dweb-archive/BookReaderWrapper.js
     const protocolServer = gatewayServer(this.server); // naming mismatch - gatewayServer is of form http[s]://foo.com
     const [unusedProtocol, unused, server] = protocolServer.split('/');
-    const subPrefixFile = this.files.find(f => f.metadata.format.startsWith("Single Page Processed"))
-    const subPrefix = subPrefixFile ? subPrefixFile.metadata.name.slice(0,subPrefixFile.metadata.name.lastIndexOf("_")) : undefined
+    const subPrefixFile = this.files.find(f => f.metadata.format.startsWith("Single Page Processed"));
+    const subPrefix = subPrefixFile ? subPrefixFile.metadata.name.slice(0,subPrefixFile.metadata.name.lastIndexOf("_")) : undefined;
     const parms = parmsFrom({ subPrefix, server,
       audioLinerNotes: this.metadata.mediatype === "audio" ? 1 : 0,
       id: this.itemid,
@@ -299,7 +298,7 @@ class ArchiveItem {
 
   /**
    * Fetch next page of query
-   * @param opts (see feth_query)
+   * @param opts (see fetch_query)
    * @param cb(err, [ARCHIVEMEMBER])
    */
   more(opts, cb) {
@@ -356,9 +355,9 @@ class ArchiveItem {
       ? this.collection_sort_order
       : this.sort.length
       ? this.sort
-      : (this.metadata && this.metadata.mediatype === "acount")
+      : (this.metadata && this.metadata.mediatype === "account")
       ? "-publicdate"
-      : "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
+      : "-downloads";
     _query( {
       output: "json",
       q: this.query,
@@ -388,7 +387,7 @@ class ArchiveItem {
       // Make it easier rather than testing each time
       if (!Array.isArray(this.membersFav)) this.membersFav = [];
       if (!Array.isArray(this.membersSearch)) this.membersSearch = [];
-      this._expandMembers((unusederr, self) => { // Always succeeds even if it fails it just leaves members unexpanded.
+      this._expandMembers((unusederr, unusedSelf) => { // Always succeeds even if it fails it just leaves members unexpanded.
         if ((this.membersFav.length + this.membersSearch.length) < (Math.max(this.page,1)*this.rows)) {
           // Either cant read file (cos yet cached), or it has a smaller set of results
           this._buildQuery(); // Build query if not explicitly set
@@ -454,7 +453,6 @@ class ArchiveItem {
         // noinspection JSCheckFunctionSignatures
         DwebTransports.createReadStream(relatedUrl, {}, cb);
       } else {
-        // TODO this should be using DwebTransports via Gun & Wolk as well
         // Maybe problem if offline but I believe error propagates up
         DwebTransports.fetch([relatedUrl], {noCache}, (err, res) => {
           if (err) {
@@ -475,7 +473,7 @@ class ArchiveItem {
   /**
    *
    * maybe Obsolete as thumbnails usually shown from ArchiveMember (TODO search for usages)
-   * @param opts {noCache}
+   * @param opts {noCache?}
    * @returns {Promise<[URL]>}
    */
   async thumbnaillinks(opts={}) {
@@ -492,9 +490,8 @@ class ArchiveItem {
    */
   thumbnailFile() {
     // New items should have __ia_thumb.jpg but older ones dont
-    let af = this.files && this.files.find(af => af.metadata.name === "__ia_thumb.jpg"
+    return this.files && this.files.find(af => af.metadata.name === "__ia_thumb.jpg"
       || af.metadata.name.endsWith("_itemimage.jpg"));
-    return af;
   }
 
   /**
@@ -511,7 +508,6 @@ class ArchiveItem {
       return this.playlist[0].imageurls;
     } else {
       const videoThumbnailUrls = this.files.filter(fi => (fi.metadata.name.includes(`${this.itemid}.thumbs/`))); // Array of ArchiveFile
-      // TODO - use this.playlist[0].image but it needs to be a ArchiveFile
       return videoThumbnailUrls.length
         ? videoThumbnailUrls[Math.min(videoThumbnailUrls.length - 1, 1)]
         : this.thumbnailFile(); // If none then return ordinary thumbnail, or undefined if no thumbnail for item either
@@ -532,7 +528,7 @@ class ArchiveItem {
    * @param filename
    * @returns ARCHIVEFILE|undefined
    */
-  fileFromFilename(filename) { //TODO-API
+  fileFromFilename(filename) {
     return filename ? this.files.find(f => f.metadata.name === filename) : undefined
   }
 
@@ -565,6 +561,7 @@ class ArchiveItem {
       // Add some fields to the track to make it usable
       // Note old setPlaylist returned .original, callers have been changed to expect .orig
       t.imagename = filename(t.image);
+      // noinspection JSPotentiallyInvalidUsageOfClassThis
       t.imageurls = this.fileFromFilename(t.imagename);   // An ArchiveFile
       t.sources.forEach(s => {
         // "file" is unusable root-relative URL but its not used by callers
@@ -580,15 +577,14 @@ class ArchiveItem {
   }
 
   /**
-   * Find the mimimum set of files needed to display a details page, includes for example a version of a video that can be played and its thumbnail
+   * Find the minimum set of files needed to display a details page, includes for example a version of a video that can be played and its thumbnail
    * @param config (optional) { experimental: { epubdownload}}  if true enables epubs so they are crawled
    * @returns [ARCHIVEFILE] | undefined
    */
   minimumForUI({crawlEpubs=undefined}={}) {
-    //TODO-CAROUSEL
     // This will be tuned for different mediatype etc}
     // Note mediatype will have been retrieved and may have been rewritten by processMetadataFjords from "education"
-    console.assert(this.metadata || this.is_dark, "Should either be metadata or is_dark")
+    console.assert(this.metadata || this.is_dark, "Should either be metadata or is_dark");
     if (this.is_dark) { return undefined; }
     const minimumFiles = [];
     if (this.itemid) { // Exclude "search"
@@ -662,7 +658,7 @@ class ArchiveItem {
         //const hasPDF = this.files.find(f => f.metadata.format.endsWith("PDF"));
         const hasSPP = this.files.find(f => f.metadata.format.startsWith("Single Page Processed")
                                             && (f.metadata.format.endsWith('ZIP') || f.metadata.format.endsWith('Tar')));
-        const hasScandata = this.files.find(f=>["Scandata","Scribe Scandata ZIP"].includes(f.metadata.format))
+        const hasScandata = this.files.find(f=>["Scandata","Scribe Scandata ZIP"].includes(f.metadata.format));
         return (hasSPP && hasScandata)
           ? "bookreader"
           : "carousel";     // e.g. thetaleofpeterra14838gut
@@ -699,3 +695,5 @@ ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "crawl"
   "is_dark", "magnetlink", "numFound", "server"];
 
 exports = module.exports = ArchiveItem;
+
+// Code review by Mitra 2019-11-20

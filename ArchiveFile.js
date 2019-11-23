@@ -91,7 +91,7 @@ class ArchiveFile {
       if (this.metadata.name.endsWith("_archive.torrent")) {
         cbout(null,
           // Either mirror URL or to torrent service
-          (((typeof DwebArchive !== "undefined") && ( typeof DwebArchive.mirror !== "undefined") )
+          (((typeof DwebArchive !== "undefined") && DwebArchive.mirror )
             ? [DwebArchive.mirror, 'download', this.itemid].join('/')
             : 'http://www-dweb-torrent.dev.archive.org'
           ) +  "/" + this.metadata.name);

@@ -41,11 +41,8 @@ class ArchiveMember {
         return `${gatewayServer()}/services/img/${this.identifier}`;  // Supported by dweb-mirror & gateway as well
     }
     urls() {
-        // Return single or array of urls
-        return this.thumbnaillinks ? this.thumbnaillinks : this.httpUrl();
-    }
-    async p_urls() {    // Its synchronous but maybe used asynchronously e.g. by ReactFake.p_loadImg > p_resolveUrls
-        return await this.urls();
+        // Return single or array of urls (used to return obs thumbnaillinks, now same as httpUrl)
+        return this.httpUrl();
     }
     collection0() {
         // The first collection listed, (undefined if unexpanded) this is probably undefined

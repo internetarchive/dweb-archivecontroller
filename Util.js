@@ -743,14 +743,14 @@ const homeQuery = `mediatype:collection AND NOT noindex:true AND NOT collection:
 
 
 // Add some fields that the gateways add to repeatable_fields
-item_rules.repeatable_fields.push('thumbnaillinks');
+//item_rules.repeatable_fields.push();
 // Add fields that are missing in item_rules
 item_rules.repeatable_fields.push('publisher'); // e.g. https://archive.org/metadata/GratefulDead/metadata/publisher
 
 const rules = {
     item: item_rules,
     member: {
-        repeatable_fields:  [ "collection", "collection0thumbnaillinks", 'creator', 'thumbnaillinks', "comments"],
+        repeatable_fields:  [ "collection", 'creator', "comments"],
         nonrepeatable_fields: ["identifier", "title", "mediatype", "downloads", "num_reviews", "publicdate", "item_count", "loans__status__status", "updatedate", "downloaded", "crawl"],
         required_fields: gateway.url_default_fl.split(',').filter(f => item_rules.required_fields.includes(f))
     },

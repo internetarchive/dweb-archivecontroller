@@ -471,17 +471,6 @@ class ArchiveItem {
   }
 
   /**
-   *
-   * maybe Obsolete as thumbnails usually shown from ArchiveMember (TODO search for usages)
-   * @param opts {noCache?}
-   * @returns {Promise<[URL]>}
-   */
-  async thumbnaillinks(opts={}) {
-    await this.fetch_metadata(opts);
-    return this.metadata ? this.metadata.thumbnaillinks : [] ; // Short cut since metadata changes may move this
-  }
-
-  /**
    * Find the file to use for the thumbnail
    * this should handle the case of whether the item has had metadata fetched or not,
    * and must be synchronous as stored in <img src=> (the resolution is asynchronous)
@@ -502,8 +491,8 @@ class ArchiveItem {
    * @returns ARCHIVEFILE || undefined
    */
   videoThumbnailFile() {
-    console.assert(this.files, "videoThumbnaillinks: assumes setup .files before");
-    console.assert(this.metadata.mediatype === "movies", "videoThumbnaillinks only valid for movies");
+    console.assert(this.files, "videoThumbnailFile: assumes setup .files before");
+    console.assert(this.metadata.mediatype === "movies", "videoThumbnailFile only valid for movies");
     if (this.playlist[0] && this.playlist[0].imageurls) {
       return this.playlist[0].imageurls;
     } else {

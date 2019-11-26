@@ -158,9 +158,6 @@ Fetch next page of query
 Fetch and return RelatedItems query. Default is the raw API, but can extract ArchiveMembers
 (overridden in dweb-mirror.ArchiveItemPatched to use cache) 
 
-##### thumbnaillinks
-Return array of thumbnaillinks - maybe Obsolete as thumbnails usually shown from ArchiveMember
-
 ##### thumbnailFile()
 Find appropriate thumbnail file, and return ArchiveFile for it.
 Uses heuristic approach since Archive data is inconsistent currently. File could be `__ia_thumb.jpg` or `_itemimage.jpg`
@@ -232,10 +229,7 @@ Enforces array / string rules
 Returns http url to fetch member, usually via gateway Server or mirror
 
 ##### urls()
-Return an array of urls ... either via defined thumbnaillinks or http url
-
-##### async p_urls()
-Asynchronous version of urls
+Return urls for the image - will be /services/img/IDENTIFIER
 
 ##### collection0 
 Return first collection this member is in, used for parent tile.

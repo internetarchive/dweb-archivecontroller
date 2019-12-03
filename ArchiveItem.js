@@ -321,6 +321,13 @@ class ArchiveItem {
       : this.membersFav.concat(this.membersSearch).slice((Math.max(1,this.page) - 1) * this.rows, this.page * this.rows);
   }
 
+  currentPageOfMembersFail() {
+    // Probably failed if: wanted (based on page) more than in members(Search+Fav) and numFound is more than this
+    // Note be careful about using numFound if havent done search at all (now or in dweb-mirror previously)
+    const membersCombinedLength = (this.membersFav.length + this.membersSearch.length)
+    return (this.page * this.rows > membersCombinedLength) && (membersCombinedLength < this.numFound)
+  }
+
   _expandMembers(cb) {
     // Dont actually need to expand this.membersSearch, will be result of search, or cached and so expanded already
     ArchiveMember.expandMembers(this.membersFav, (err, mm) => {
@@ -348,28 +355,6 @@ class ArchiveItem {
     }
   }
 
-
-  _doQuery(opts, cb) {
-    // For opts see dweb-transports.httptools.p_GET
-    const sort = this.collection_sort_order
-      ? this.collection_sort_order
-      : this.sort.length
-      ? this.sort
-      : (this.metadata && this.metadata.mediatype === "account")
-      ? "-publicdate"
-      : "-downloads";
-    _query( {
-      output: "json",
-      q: this.query,
-      rows: this.rows,
-      page: this.page,
-      'sort[]': sort,
-      'and[]': this.and,
-      'save': 'yes',
-      'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
-    }, opts, cb);
-  }
-
   _fetch_query({wantFullResp=false, noCache=false}={}, cb) { // No opts currently
     /*
         rejects: TransportError or CodingError if no urls
@@ -381,37 +366,88 @@ class ArchiveItem {
         Defined by simple Lists  e.g. vtmas_disabilityresources
         Defined by query - e.g. from searchbox
 
+        Note this is complicated because of handling paged requests that might be out of order, it tries to self correct
+        so the query sent upstream might not match the request.
     */
     // First we look for the fav-xyz type collection, where there is an explicit JSON of the members
     try {
       // Make it easier rather than testing each time
       if (!Array.isArray(this.membersFav)) this.membersFav = [];
       if (!Array.isArray(this.membersSearch)) this.membersSearch = [];
-      this._expandMembers((unusederr, unusedSelf) => { // Always succeeds even if it fails it just leaves members unexpanded.
+      this._expandMembers((unusederr, self) => { // Always succeeds even if it fails it just leaves members unexpanded.
         if ((this.membersFav.length + this.membersSearch.length) < (Math.max(this.page,1)*this.rows)) {
           // Either cant read file (cos yet cached), or it has a smaller set of results
           this._buildQuery(); // Build query if not explicitly set
           if (this.query) {   // If this is a "Search" then will come here.
-            this._doQuery({noCache}, (err, j) => {
+            const sort = this.collection_sort_order
+              ? this.collection_sort_order
+              : this.sort.length
+                ? this.sort
+                : (this.metadata && this.metadata.mediatype === "acount")
+                  ? "-publicdate"
+                  : "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
+            const queryObj = {
+              output: "json",
+              q: this.query,
+              rows: this.rows,
+              page: this.page,
+              'sort[]': sort,
+              'and[]': this.and,
+              'save': 'yes',
+              'fl': gateway.url_default_fl,  // Ensure get back fields necessary to paint tiles
+            };
+            // Handle the cases here we are jumping ahead beyond current page - best to fill in the gap
+            const expectedCurrentLengthMembersSearch = (this.rows * (this.page-1));
+            const expectedFinalLengthMembersSearch = this.rows * (this.page-1);
+            if ( expectedCurrentLengthMembersSearch !== this.membersSearch.length) {
+              if ((this.membersSearch.length * 2) >= expectedFinalLengthMembersSearch) {
+                // Half way there, can get in one go, but look ahead a bit anyway.
+                queryObj.page = 2;
+                queryObj.rows = this.membersSearch.length;
+              } else {
+                // Not half way there reread the lot.
+                this.membersSearch = [];
+                queryObj.page = 1;
+                queryObj.rows = (this.rows * this.page);
+              }
+              debug("_fetch_query filling in the gap retrieved so far=%s expected %s fetching page=%s rows=%s", this.membersSearch.length, expectedCurrentLengthMembersSearch, queryObj.page, queryObj.rows);
+            }
+            _query(queryObj, {noCache}, (err, j) => {
               if (err) { // Will get error "failed to fetch" if fails
                 debug("ERROR _fetch_query %s", err.message)
+                cb(null, this.currentPageOfMembers(wantFullResp));
                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
                 //TODO 2019-08-27 see https://github.com/internetarchive/dweb-mirror/issues/248 want ability to see error and requeue
               } else {
                 const oldids = this.membersSearch.map(am => am.identifier);
-                this.membersSearch = this.membersSearch.concat(
-                  j.response.docs.map(o => new ArchiveMember(o)).filter(m => !oldids.includes(m.identifier)) // Any new members in response
-                );
-                this.start = j.response.start;
-                this.numFound = j.response.numFound;
-                this.downloaded = j.response.downloaded;
-                if (j.response.crawl) this.crawl = j.response.crawl;
-              }
-              //cb(null, wantFullResp ? j : newmembers);  // wantFullResp is used when proxying unmodified result
-              cb(null, this.currentPageOfMembers(wantFullResp));
-            });
-            return; // Will cb above
+                const corruptOrder = j.response.docs.find(o => oldids.includes(o.identifier)); // Shouldnt be any overlap
+                // If the order is corrupt we should do the full search but we'll fake it and pretend its just one big page
+                if (!corruptOrder) {
+                  this.membersSearch = this.membersSearch.concat(j.response.docs.map(o => new ArchiveMember(o)));
+                  this.start = j.response.start;
+                  this.numFound = j.response.numFound;
+                  this.downloaded = j.response.downloaded;
+                  if (j.response.crawl) this.crawl = j.response.crawl;
+                  cb(null, this.currentPageOfMembers(wantFullResp));
+                } else {
+                  debug("Search order corruption - correcting by requery");
+                  Object.assign(queryObj, {rows: this.page*this.rows, page: 1});
+                  _query(queryObj, {noCache}, (err, j) => {
+                    if (err) {
+                      debug("ERROR re-query failed %s rows=%s page=%s", queryObj.q, queryObj.rows, queryObj.page);
+                    } else {
+                      this.membersSearch = j.response.docs.map(o => new ArchiveMember(o));
+                      this.start = j.response.start;
+                      this.numFound = j.response.numFound;
+                      this.downloaded = j.response.downloaded;
+                      if (j.response.crawl) this.crawl = j.response.crawl;
+                    }
+                    cb(null, this.currentPageOfMembers(wantFullResp));
+                  });
+                }
+              }});
+            return; // Will cb above after query
           }
           // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
         }

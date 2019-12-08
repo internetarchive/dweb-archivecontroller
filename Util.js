@@ -858,7 +858,25 @@ const torrentRejectList = [ // Baked into torrentmaker at in petabox/sw/bin/ia_m
   "_meta.xml"         // Always written after the torrent so cant be in it
 ];
 
+const collectionSortOrder = { // This defines a collections sort order based on its id.
+  '-lastupdate': [],
+  '-publicdate': ['tvnews'],
+  '-reviewdate': ['librivoxaudio', 'library_of_congress'],
+  '-date': ['peterboroughcitydirectories', 'democracy_now', 'democracy_now_vid', 'ianewsletter',
+            'eastridgechurchofchrist', 'lighthousebaptistchurch'],
+  'titleSorter': ['densho']
+}
+const parentSortOrder = {  // This defines a collections sort order if the collection appears in another specific collection
+  '-publicdate': ['tvnews', 'tvarchive' ],
+  '-date': ['podcasts', 'audio_podcast', 'community_media'],
+  'titleSorter': ['densho'],
+}
+//See petabox/TV.inc/is_tv_collection() for TVNewsKitchen exception
+const excludeParentSortOrder = ['TVNewsKitchen'];
+
+
 const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, upstreamPrefix, gatewayServer, gateway,
   homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap,
-  parmsFrom, rules, _query, specialidentifiers, torrentRejectList}; // Needed by archive.html to access gatewayServer
+  parmsFrom, rules, _query, specialidentifiers, torrentRejectList,
+  collectionSortOrder, parentSortOrder, excludeParentSortOrder };
 exports = module.exports = ACUtil

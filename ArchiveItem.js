@@ -1,7 +1,8 @@
 /* global DwebTransports, DwebArchive */
 const ArchiveFile = require("./ArchiveFile");
 const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntries, parmsFrom, rules, upstreamPrefix, _query, specialidentifiers} = require("./Util");
+const {enforceStringOrArray, gateway, gatewayServer, objectFrom, ObjectFromEntries, parmsFrom, rules, upstreamPrefix,
+  _query, specialidentifiers, collectionSortOrder, parentSortOrder, excludeParentSortOrder } = require("./Util");
 
 //require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
@@ -355,6 +356,33 @@ class ArchiveItem {
     }
   }
 
+  /**
+   * Heuristic to determine default sort order - its baked into the PHP on archive.org but not sure where.
+   * TV News is defined in  petabox/TV.inc/is_tv_collection()
+   * Note the sort order depends on the collection it is part of.
+   * @returns {array}
+   * @private
+   */
+  defaultSortArr() {
+    const ownOrderDef = Object.entries(collectionSortOrder).find(kv => kv[1].includes(this.itemid)); // Pre-defined
+    const parentOrderDef = this.metadata && ( Object.entries(collectionSortOrder)
+      .find(kv => this.metadata.collection.some(c => kv[1].includes(c))));
+    return (
+      (Array.isArray(this.sort) && this.sort.length)
+      ? this.sort
+      : this.sort.length  // string
+      ? [ this.sort ]
+      : this.itemid && this.itemid.startsWith('fav-')
+      ? ['-updatedate']
+      : ownOrderDef
+      ? [ ownOrderDef[0] ]
+      : parentOrderDef && !excludeParentSortOrder.includes(this.itemid)
+      ? [ parentOrderDef[0] ]
+      : (this.metadata && this.metadata.mediatype === 'account')
+      ? [ '-publicdate' ]
+      : [ '-downloads' ]
+    );
+  }
   _fetch_query({wantFullResp=false, noCache=false}={}, cb) { // No opts currently
     /*
         rejects: TransportError or CodingError if no urls
@@ -379,13 +407,7 @@ class ArchiveItem {
           // Either cant read file (cos yet cached), or it has a smaller set of results
           this._buildQuery(); // Build query if not explicitly set
           if (this.query) {   // If this is a "Search" then will come here.
-            const sort = this.collection_sort_order
-              ? this.collection_sort_order
-              : this.sort.length
-                ? this.sort
-                : (this.metadata && this.metadata.mediatype === "acount")
-                  ? "-publicdate"
-                  : "-downloads"; //TODO remove sort = "-downloads" from various places (dweb-archive, dweb-archivecontroller, dweb-mirror) and add default here
+            const sort = this.defaultSortArr();
             const queryObj = {
               output: "json",
               q: this.query,

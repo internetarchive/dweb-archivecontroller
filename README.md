@@ -58,6 +58,7 @@ Ask Arthur for the Google spreadsheet "Metadata Audit" which is currently IA int
 
 ## Release notes
 
+* v0.1.86 Major naming refactor; support sort order; query edge cases 
 * v0.1.85 Minor bug fixes and code reviews and link fixes
 * v0.1.84 naming refactor; torrent support; format updates
 * v0.1.83 move magnetlink up one level

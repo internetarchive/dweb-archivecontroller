@@ -12,11 +12,11 @@
     "@babel/core": "^7.2.2",
     "@stratumn/canonicaljson": "^1.0.2",
     "async": "^2.6.2",
+    "bencode": "^2.0.1",
     "debug": "^4.1.1",
     "es2015": "^0.0.0",
-    "prettier-bytes": "^1.0.4",
-    "bencode" : "^2.0.1",
     "magnet-uri": "^5.2.4",
+    "prettier-bytes": "^1.0.4",
     "simple-sha1": "^3.0.1"
   },
   "devDependencies": {

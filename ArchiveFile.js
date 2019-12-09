@@ -1,4 +1,4 @@
-const {fetch_json, upstreamPrefix, gatewayServer, gateway, formats, torrentRejectList } = require( './Util');
+const {fetch_json, formats, torrentRejectList } = require( './Util');
 const prettierBytes = require( "prettier-bytes");
 const waterfall = require('async/waterfall');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
@@ -83,14 +83,15 @@ class ArchiveFile {
    * @errors if fetch_json doesn't succeed, or retrieves something other than JSON
    */
   // TODO-TORRENT make consumer pass in magnetlink or maybe utem if has it
-  urls(cb) { //TODO-MIRROR fix this to make sense for _torrent.xml files which dont have sha1 and probably not IPFS
+  urls(cb) { //TODO-MIRROR fix this to make sense for _archive.torrent files which dont have sha1 and probably not IPFS
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cbout) {
       // noinspection JSUnresolvedFunction
-      const res = [this.httpUrl()];
+      const res = [`https://archive.org/download/${this.itemid}/${this.metadata.name}`];
       if (this.metadata.name.endsWith("_archive.torrent")) {
         cbout(null,
           // Either mirror URL or to torrent service
+          // TODO-DM242 = see comment on torrents
           (((typeof DwebArchive !== "undefined") && DwebArchive.mirror )
             ? [DwebArchive.mirror, 'download', this.itemid].join('/')
             : 'http://www-dweb-torrent.dev.archive.org'
@@ -113,7 +114,11 @@ class ArchiveFile {
               let name = this.metadata.name.replace('?', '%3F');
               // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
               // maybe problem offline but above test should catch cases where no IPFS so not useful
-              fetch_json(`${gatewayServer()}/metadata/${this.itemid}/${encodeURIComponent(name)}`,
+              // TODO-DM242 this might not work - might get pointed at dweb-metadata which probably wont handle the file case.
+              fetch_json(
+                DwebTransports.httpFetchUrl(
+                  DwebTransports.resolveNames(
+                    `https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`)),
                 (err, fileMeta)=>{
                   if (!err) {
                     if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
@@ -131,13 +136,15 @@ class ArchiveFile {
 
   /**
    * Find a HTTP URL - three cases:
-   * on browser direct: want dweb.archive.org as need CORS protection
-   * on dweb-mirror: want archive.org as no benefit going through dweb.archive.org (see https://github.com/internetarchive/dweb-mirror/issues/242)
-   * on browser to DM: want localhost (which gatewayServer will return
+   * on browser direct: want dweb.archive.org or cors.archive.org as need CORS protection
+   * on dweb-mirror: want archive.org or cors.archive.org as no benefit going through dweb.archive.org (see https://github.com/internetarchive/dweb-mirror/issues/242)
+   * on browser to DM: want localhost (which resolveNames will return
+   * Uses the table in dweb-transports/Naming.js to do the mapping
    * @returns {URL} http URL - typically on dweb.archive.org or localhost:4244
    */
   httpUrl() {
-    return [ upstreamPrefix(), "download", this.itemid, this.metadata.name].join('/');
+    return DwebTransports.httpFetchUrl(
+      DwebTransports.resolveNames(`https://archive.org/download/${this.itemid}/${this.metadata.name}`));
   }
 
   /**

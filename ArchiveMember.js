@@ -37,13 +37,6 @@ class ArchiveMember {
     static processMetadataFjords(meta, rules) {
         return enforceStringOrArray(meta, rules);  // TODO-IAJS this is probably wrong now, will use wrong set of rules
     }
-    httpUrl() {
-        return `${gatewayServer()}/services/img/${this.identifier}`;  // Supported by dweb-mirror & gateway as well
-    }
-    urls() {
-        // Return single or array of urls (used to return obs thumbnaillinks, now same as httpUrl)
-        return this.httpUrl();
-    }
     collection0() {
         // The first collection listed, (undefined if unexpanded) this is probably undefined
         return (this.collection && this.collection.length) ? this.collection[0] : undefined;

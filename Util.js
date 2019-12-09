@@ -46,46 +46,6 @@ const item_rules = require('./item_rules.js');
         return first ? (ff.length ? ff[0] : undefined) : ff;
     }
 
-/**
- * Interim function to help with https://github.com/internetarchive/dweb-mirror/issues/242
- * Each has to handle three cases ...
- * Typically three cases
- *    browser via mirror: direct DA defined, Mirror defined -> mirror
- *    DM server: DA not, Mirror not -> archive.org direct (because if want to go via dweb.archive.org will be using older gatewayServer() function
- *    browser direct: DA define, Mirror not -> dweb.archive.org because need CORS
- *    Note that Naming.js may further process this URL to somewhere different.
- */
-function upstreamPrefix() {
-  return (
-    (typeof DwebArchive === "undefined") ? "https://archive.org"  // dweb-mirror going direct - not via dweb.archive.org
-      : (DwebArchive.mirror !== null) ? DwebArchive.mirror        // Browser via mirror - use the mirror
-      : "https://dweb.archive.org"                                // Browser direct, use dweb.archive.org for CORS protection
-  );
-}
-
-    /*
-    Return a string suitable for prepending to root relative URLs choosing between normal, Dweb, and dweb-mirror scenarios
-
-    Note copy of this in dweb-archivecontroller/Util.js and ia-components/util.js
-     */
-    function gatewayServer(server=undefined) {
-        /*
-         Return location for http calls to a gateway server that understands canonical addresses like /arc/archive.. or /ipfs/Q...
-         Has to be a function rather than constant because searchparams is defined after this library is loaded
-         Note that for example where Util.js is included from dweb-mirror that currently (this may change) DwebArchive is not defined
-         If server is supplied will use that rather than dweb.archive.org, this is (possibly temporary) for bookreader //TODO-BOOK
-         Typically three cases
-         * browser via mirror: direct DA defined, Mirror defined -> mirror
-         * DM server: DA not, Mirror not -> dweb.archive.org or specified server
-         * browser direct: DA define, Mirror not -> dweb.archive.org  .... See
-         *
-         * Note that Naming.js may further process this URL to somewhere different
-         */
-        return ((typeof DwebArchive !== "undefined") && (DwebArchive.mirror !== null)) ? DwebArchive.mirror
-                : server ? "https://"+server
-                : "https://dweb.archive.org"
-    }
-
     function enforceStringOrArray(meta, rules) { // See ArchiveItem.loadMetadataFromAPI for other Fjord handling
         // The Archive is nothing but edge cases, handle some of them here so the code doesnt have to !
         // Note this called by ArchiveMember and ArchiveItem and will probably be called by ArchiveFiles so keep it generic and put class-specifics in Archive*.processMetadataFjord
@@ -727,7 +687,7 @@ const _formatarr = [
     'x-ms-wmv'  => 'Windows Media',
 */
 const gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
-    "urlDownload": "/arc/archive.org/download", //OBSOLETING - see https://github.com/internetarchive/dweb-mirror/issues/242
+    "urlDownload": "/arc/archive.org/download", //TODO-DM242 OBSOLETEING - see https://github.com/internetarchive/dweb-mirror/issues/242
     "url_default_fl": "identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"  // Note also used in dweb-mirror
 };
 //https://archive.org/advancedsearch.php?q=mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:(fav-* OR what_cd OR cd OR vinyl OR librarygenesis OR bibalex OR movies OR audio OR texts OR software OR image OR data OR web OR additional_collections OR animationandcartoons OR artsandmusicvideos OR audio_bookspoetry OR audio_foreign OR audio_music OR audio_news OR audio_podcast OR audio_religion OR audio_tech OR computersandtechvideos OR coverartarchive OR culturalandacademicfilms OR ephemera OR gamevideos OR inlibrary OR moviesandfilms OR newsandpublicaffairs OR ourmedia OR radioprograms OR samples_only OR spiritualityandreligion OR stream_only OR television OR test_collection OR usgovfilms OR vlogs OR youth_media)&sort[]=-downloads&rows=10&output=json&save=yes&page=
@@ -802,8 +762,7 @@ function _query(queryobj, opts={}, cb) { // No opts curr// ently
     try {
         const urlparms = parmsFrom(queryobj);
         // Note direct call to archive.org leads to CORS fail
-        //TODO would be good to move to DwebTransports
-        const url = `${gatewayServer()}/advancedsearch?${urlparms}`;
+        const url = `https://archive.org/advancedsearch?${urlparms}`;
         DwebTransports.fetch([url], opts, cb);
     } catch(err) {
         console.error('Caught unhandled error in _query',err);
@@ -875,7 +834,7 @@ const parentSortOrder = {  // This defines a collections sort order if the colle
 const excludeParentSortOrder = ['TVNewsKitchen'];
 
 
-const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, upstreamPrefix, gatewayServer, gateway,
+const ACUtil = { enforceStringOrArray, fetch_json, formats, _formatarr, gateway,
   homeQuery, objectFrom, ObjectDeeperAssign, ObjectFilter, ObjectForEach, ObjectFromEntries, ObjectIndexFrom, ObjectMap,
   parmsFrom, rules, _query, specialidentifiers, torrentRejectList,
   collectionSortOrder, parentSortOrder, excludeParentSortOrder };

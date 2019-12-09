@@ -70,7 +70,7 @@ Expand metadata to urls could pass to DwebTransports,
 cb(err, urls)
 ```
 ##### httpUrl()
-Return URL to file on a http server, typically dweb.archive.org or local gateway
+Return URL to file on a http server, typically cors.archive.org or local gateway
 
 ##### mimetype()
  
@@ -225,12 +225,6 @@ enough metadata to paint a tile.
 ##### processMetadataFjords(meta, rules)
 Enforces array / string rules
 
-##### httpUrl
-Returns http url to fetch member, usually via gateway Server or mirror
-
-##### urls()
-Return urls for the image - will be /services/img/IDENTIFIER
-
 ##### collection0 
 Return first collection this member is in, used for parent tile.
 
@@ -338,12 +332,6 @@ first   if true, will return an object for the first match,
         otherwise an array of all matches
 ```
 Typical usage ... `formats("format", this.metadata.format, {first:true}.downloadable`
-
-##### gatewayServer(server=undefined)
-
-Return a string suitable for prepending to root relative URLs choosing between normal, Dweb, and dweb-mirror scenarios
-
-Note copy of this in dweb-archivecontroller/Util.js and ia-components/util.js
 
 ##### enforceStringOrArray(meta, rules)
 Apply a set of rules (see item_rules.js) to metadata. 

@@ -5,7 +5,7 @@ module.exports.toMagnetURI = magnet.encode
 // TODO have dweb-torrent import this
 
 const torrentConfigDefault = {
-  trackers: ['wss://dweb.archive.org:6969',
+  trackers: ['wss://dweb.archive.org:6969', // TODO-DM242/torrent
     'wss://tracker.btorrent.xyz',
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.fastcast.nz'

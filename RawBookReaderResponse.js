@@ -20,7 +20,6 @@ class RawBookReaderResponse {
     cooked({server=undefined, protocol=undefined}={}) {
         // Cook the results of the API for passing to browser (with or without mirror) - alternative to asking for '.data"
         // TODO-BOOK This could be running in different places, document where here.
-        // TODO-BOOK if reqd, use DwebArchive.mirror as test if running on browser with mirror.
 
         /* Typical no-mirror scenario
             browser calls fetch_bookreader which forwards to datanode

@@ -360,7 +360,7 @@ class ArchiveItem {
    */
   defaultSortArr() {
     const ownOrderDef = Object.entries(collectionSortOrder).find(kv => kv[1].includes(this.itemid)); // Pre-defined
-    const parentOrderDef = this.metadata && ( Object.entries(collectionSortOrder)
+    const parentOrderDef = this.metadata && this.metadata.collection && ( Object.entries(collectionSortOrder)
       .find(kv => this.metadata.collection.some(c => kv[1].includes(c))));
     return (
       (Array.isArray(this.sort) && this.sort.length)
@@ -704,13 +704,14 @@ class ArchiveItem {
           ? "bookreader"
           : "carousel";     // e.g. thetaleofpeterra14838gut
       case "movies":
-        return this.metadata.collection.some( c => ["tvnews", "tvarchive"].includes(c)) // See same heuristic in hasPlaylist()
+        return (this.metadata.collection && this.metadata.collection.some( c => ["tvnews", "tvarchive"].includes(c))) // See same heuristic in hasPlaylist()
         ? "tv"
         : undefined;
       case "audio":
         return this.files.find(af => af.metadata.format === 'JSON SRT')
         ? "radio"
-        : [ 'acdc', 'samples_only', 'meridamexico'].some(c => this.metadata.collection.includes(c))
+        : (this.metadata.collection &&
+            [ 'acdc', 'samples_only', 'meridamexico'].some(c => this.metadata.collection.includes(c)))
         ? "album"
         : undefined;
       default:

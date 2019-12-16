@@ -320,7 +320,7 @@ class ArchiveItem {
   currentPageOfMembersFail() {
     // Probably failed if: wanted (based on page) more than in members(Search+Fav) and numFound is more than this
     // Note be careful about using numFound if havent done search at all (now or in dweb-mirror previously)
-    const membersCombinedLength = (this.membersFav.length + this.membersSearch.length)
+    const membersCombinedLength = (this.membersFav.length + this.membersSearch.length);
     return (this.page * this.rows > membersCombinedLength) && (membersCombinedLength < this.numFound)
   }
 
@@ -431,7 +431,7 @@ class ArchiveItem {
             }
             _query(queryObj, {noCache}, (err, j) => {
               if (err) { // Will get error "failed to fetch" if fails
-                debug("ERROR _fetch_query %s", err.message)
+                debug("ERROR _fetch_query %s", err.message);
                 cb(null, this.currentPageOfMembers(wantFullResp));
                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
@@ -727,6 +727,13 @@ class ArchiveItem {
   files4carousel() {
     return this.files.filter(f => f.metadata.format === "JPEG").sort((a,b) => a.metadata.name < b.metadata.name ? -1 : a.metadata.name > b.metadata.name ? 1 : 0)
   }
+
+  pageManifests() {
+    return [].concat(...this.bookreader.brOptions.data);
+  }
+  pageManifestFrom({leafNum}) {
+    return this.pageManifests().find(pm => pm.leafNum === leafNum);
+  }
 }
 
 /**
@@ -738,4 +745,4 @@ ArchiveItem.extraFields = ["collection_sort_order", "collection_titles", "crawl"
 
 exports = module.exports = ArchiveItem;
 
-// Code review by Mitra 2019-11-20
+// Code review by Mitra 2019-12-14

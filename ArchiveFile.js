@@ -78,7 +78,7 @@ class ArchiveFile {
   }
   /**
    *
-   * @param cb(err, [URL])  Array of urls that might be a good place to get this item
+   * @param cb(err, [URL])  Array of urls that might be a good place to get this item - will be subject to dweb-transports/Naming.js
    * @returns {Promise<[URL]>} if no cb
    * @errors if fetch_json doesn't succeed, or retrieves something other than JSON
    */
@@ -87,16 +87,14 @@ class ArchiveFile {
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cbout) {
       // noinspection JSUnresolvedFunction
-      const res = [`https://archive.org/download/${this.itemid}/${this.metadata.name}`];
       if (this.metadata.name.endsWith("_archive.torrent")) {
         cbout(null,
-          // Either mirror URL or to torrent service
-          // TODO-DM242 = see comment on torrents
-          (((typeof DwebArchive !== "undefined") && DwebArchive.mirror )
-            ? [DwebArchive.mirror, 'download', this.itemid].join('/')
-            : 'http://www-dweb-torrent.dev.archive.org'
-          ) +  "/" + this.metadata.name);
+          // Naming will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
+          //TODO-DM242 make Naming catch regexps
+          //`https://archive.org/download/${this.itemid}/${this.metadata.name}`);
+          `https://www-dweb-torrent.dev.archive.org/download/${this.itemid}/${this.metadata.name}`);
       } else {
+        const res = [`https://archive.org/download/${this.itemid}/${this.metadata.name}`];
         waterfall([
           (cb) => DwebTransports.p_connectedNames(cb),
           (connectedNames, cb) => { // Look whether should add magnet link

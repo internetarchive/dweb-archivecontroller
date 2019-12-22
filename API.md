@@ -289,19 +289,6 @@ and be used to encapsulate metadata API response prior to "cooking" into an Arch
 
 A library of functions used in this repo and elsewhere and exported individually. 
 
-##### fetch_json(url, cb)
-Deprecated call to return json. Should be repaced with with httptools.p_GET from DwebTransports.
-
-Constructs CORS safe call.
-```
-url:   to be fetched - construct CORS safe JSON enquiry.
-cb(err, obj)    optional callback otherwise returns a Promise
-  err   TypeError if cant fetch
-        Error if fetch doesnt return JSON.
-  obj   Decoded json response via cb or promise
-```
-
-
 ##### _formatarr
 Note identical copies in dweb-archivecontroller/Util.js and ia-components/util.js
 

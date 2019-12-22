@@ -1,12 +1,10 @@
 /* global DwebTransports, DwebArchive */
-const ArchiveFile = require("./ArchiveFile");
-const ArchiveMember = require("./ArchiveMember");
-const {enforceStringOrArray, gateway, objectFrom, ObjectFromEntries, parmsFrom, rules,
-  _query, specialidentifiers, collectionSortOrder, parentSortOrder, excludeParentSortOrder } = require("./Util");
-
-//require('babel-core/register')({ presets: ['env', 'react']}); // ES6 JS below!
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
-//const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
+const ArchiveFile = require('./ArchiveFile');
+const ArchiveMember = require('./ArchiveMember');
+const {enforceStringOrArray, gateway, objectFrom, ObjectFromEntries, parmsFrom, rules,
+  _query, specialidentifiers, collectionSortOrder, excludeParentSortOrder } = require("./Util");
+const { routed } = require('./routing');
 
 /* Note for Bookreader
     API = RawBookReaderResponse = AI.exportBookReader() = { data: { data, brOptions, lendingInfo, metadata }
@@ -15,8 +13,14 @@ const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 
 // General purpose utility functions
 // Filter an array until f returns true.
-ArrayFilterTill = function(arr, f) { const res = []; for( let i in arr) { // noinspection JSUnfilteredForInLoop
-  const x=arr[i]; if (f(x)) { return res } else { res.push(x)} }  return res; };
+function ArrayFilterTill(arr, f) {
+  const res = [];
+  for (const i in arr) { // noinspection JSUnfilteredForInLoop
+    const x = arr[i];
+    if (f(x)) { return res; } else { res.push(x); }
+  }
+  return res;
+}
 
 /**
  * Base class representing an Item and/or a Search query (A Collection is both).
@@ -39,7 +43,7 @@ class ArchiveItem {
    * @param sort string  e.g. "title" or "-downloads", only relevant to a query
    * @param metaapi    the result of a call to the metadata API (optional) {metadata:{...},...}
    */
-  constructor({identifier=undefined, itemid = undefined, query = undefined, sort=[], metaapi = undefined}={}) {
+  constructor({ identifier= undefined, itemid = undefined, query = undefined, sort= [], metaapi = undefined}={}) {
     this.itemid = identifier || itemid; // Legacy itemid parameter
     this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
     this.query = query;
@@ -59,7 +63,7 @@ class ArchiveItem {
    * @param wantPlaylist boolean  True if want to include the playlist:[] in the results
    * @returns {metadata: {}, ... }  In
    */
-  exportMetadataAPI({wantPlaylist=false}={}) {
+  exportMetadataAPI({wantPlaylist=false} = {}) {
     return Object.assign(
       // SEE-OTHER-ADD-METADATA-API-TOP-LEVEL in dweb-mirror and dweb-archivecontroller
       {
@@ -198,11 +202,11 @@ class ArchiveItem {
       cb(null, this);
     } else {
       debug('getting metadata for %s', this.itemid);
-      // Note dweb-transports/Naming.js resolver will direct this to Gun, dweb-metadata service etc
-      const url = 'https://archive.org/metadata/' + this.itemid;
+      // Note dweb-archivecontoller/routing.js resolver will direct this to Gun, dweb-metadata service etc
+      const urls = routed('https://archive.org/metadata/' + this.itemid);
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
-      DwebTransports.fetch([url], {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
+      DwebTransports.fetch(urls, {noCache, timeoutMS: 5000}, (err, m) => {   //TransportError if all urls fail (e.g. bad itemid)
         if (err) {
           cb(new Error(`Unable to fetch metadata for ${this.itemid}\n ${err.message}`));
         } else {
@@ -210,18 +214,18 @@ class ArchiveItem {
           const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
           if (metaapi.is_dark && !darkOk) { // Only some code handles dark metadata ok
             this.is_dark = true; // Flagged so wont continuously try and call
-            //TODO the \n here is ignored, need the DetailsError to convert to <BR> or handle a real linebreak same way
-            cb(new Error(`This item is no longer available. \nItems may be taken down for various reasons, including by decision of the uploader or due to a violation of our Terms of Use.`))
+            // TODO the \n here is ignored, need the DetailsError to convert to <BR> or handle a real linebreak same way
+            cb(new Error('This item is no longer available. \nItems may be taken down for various reasons, including by decision of the uploader or due to a violation of our Terms of Use.'))
           } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
             cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
           } else {
-            debug("metadata for %s fetched successfully %s", this.itemid, this.is_dark ? "BUT ITS DARK" : "");
+            debug('metadata for %s fetched successfully %s', this.itemid, this.is_dark ? 'BUT ITS DARK' : '');
             if (this.hasPlaylist(metaapi)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
-              const playlistUrl = `https://archive.org/embed/${this.itemid}?output=json`;
-              DwebTransports.fetch([playlistUrl], {noCache}, (err, res) => { //TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
-                if (err) {
-                  cb(new Error("Unable to read playlist: "+ err.message));
+              const playlistUrls = routed(`https://archive.org/embed/${this.itemid}?output=json`);
+              DwebTransports.fetch(playlistUrls, { noCache }, (err1, res) => { // TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
+                if (err1) {
+                  cb(new Error('Unable to read playlist: ' + err1.message));
                 } else {
                   metaapi.playlist = res;
                   this.loadFromMetadataAPI(metaapi); // Loads .metadata .files .reviews and some other fields
@@ -499,22 +503,22 @@ class ArchiveItem {
 
     */
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
-    function f(cb) {
-      const relatedUrl = `https://be-api.us.archive.org/mds/v1/get_related/all/${this.itemid}`;
+    function f(cb1) {
+      const relatedUrl = routed(`https://be-api.us.archive.org/mds/v1/get_related/all/${this.itemid}`);
       if (wantStream) { // Stream doesnt really make sense unless caching to file
         // noinspection JSCheckFunctionSignatures
-        DwebTransports.createReadStream(relatedUrl, {}, cb);
+        DwebTransports.createReadStream(relatedUrl, {}, cb1);
       } else {
         // Maybe problem if offline but I believe error propagates up
-        DwebTransports.fetch([relatedUrl], {noCache}, (err, res) => {
+        DwebTransports.fetch(relatedUrl, {noCache}, (err, res) => {
           if (err) {
-            cb(err);
+            cb1(err);
           } else {
             try {
               const rels = objectFrom(res);
-              cb(null, wantMembers ? rels.hits.hits.map(r=>ArchiveMember.fromRel(r)) : rels );
-            } catch (err) {
-              cb(err); // Usually bad json
+              cb1(null, wantMembers ? rels.hits.hits.map(r => ArchiveMember.fromRel(r)) : rels );
+            } catch (err1) {
+              cb1(err1); // Usually bad json
             }
           }
         })

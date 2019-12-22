@@ -3,6 +3,7 @@
 const canonicaljson = require('@stratumn/canonicaljson');
 const debug = require('debug')('dweb-archivecontroller:Util');
 const item_rules = require('./item_rules.js');
+const { routed } = require('./routing');
 
     function fetch_json(url, cb) {
         /*
@@ -762,8 +763,8 @@ function _query(queryobj, opts={}, cb) { // No opts curr// ently
     try {
         const urlparms = parmsFrom(queryobj);
         // Note direct call to archive.org leads to CORS fail
-        const url = `https://archive.org/advancedsearch?${urlparms}`;
-        DwebTransports.fetch([url], opts, cb);
+        const urls = routed(`https://archive.org/advancedsearch?${urlparms}`);
+        DwebTransports.fetch(urls, opts, cb);
     } catch(err) {
         console.error('Caught unhandled error in _query',err);
         cb(err);

@@ -1,6 +1,7 @@
 const {fetch_json, formats, torrentRejectList } = require( './Util');
 const prettierBytes = require( "prettier-bytes");
 const waterfall = require('async/waterfall');
+const {routed} = require('./routing');
 //const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
 
 /**
@@ -78,8 +79,8 @@ class ArchiveFile {
   }
   /**
    *
-   * @param cb(err, [URL])  Array of urls that might be a good place to get this item - will be subject to dweb-transports/Naming.js
-   * @returns {Promise<[URL]>} if no cb
+   * @param cb(err, [URL])  Array of urls that might be a good place to get this item - will be subject to routing.js
+   * @returns {Promise<[URL]>} if no cb, note urls are un-routed and should be routed by caller.
    * @errors if fetch_json doesn't succeed, or retrieves something other than JSON
    */
   // TODO-TORRENT make consumer pass in magnetlink or maybe utem if has it
@@ -89,8 +90,8 @@ class ArchiveFile {
       // noinspection JSUnresolvedFunction
       if (this.metadata.name.endsWith("_archive.torrent")) {
         cbout(null,
-          // Naming will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
-          //TODO-DM242 make Naming catch regexps
+          // routing.js will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
+          //TODO-DM242 make routing.js catch regexps
           //`https://archive.org/download/${this.itemid}/${this.metadata.name}`);
           `https://www-dweb-torrent.dev.archive.org/download/${this.itemid}/${this.metadata.name}`);
       } else {
@@ -114,9 +115,7 @@ class ArchiveFile {
               // maybe problem offline but above test should catch cases where no IPFS so not useful
               // TODO-DM242 this might not work - might get pointed at dweb-metadata which probably wont handle the file case.
               fetch_json(
-                DwebTransports.httpFetchUrl(
-                  DwebTransports.resolveNames(
-                    `https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`)),
+                routed(`https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`, { wantOneHttp: true }),
                 (err, fileMeta)=>{
                   if (!err) {
                     if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
@@ -137,12 +136,11 @@ class ArchiveFile {
    * on browser direct: want dweb.archive.org or cors.archive.org as need CORS protection
    * on dweb-mirror: want archive.org or cors.archive.org as no benefit going through dweb.archive.org (see https://github.com/internetarchive/dweb-mirror/issues/242)
    * on browser to DM: want localhost (which resolveNames will return
-   * Uses the table in dweb-transports/Naming.js to do the mapping
+   * Uses the table in routing.js to do the mapping
    * @returns {URL} http URL - typically on dweb.archive.org or localhost:4244
    */
   httpUrl() {
-    return DwebTransports.httpFetchUrl(
-      DwebTransports.resolveNames(`https://archive.org/download/${this.itemid}/${this.metadata.name}`));
+    return routed(`https://archive.org/download/${this.itemid}/${this.metadata.name}`, { wantOneHttp: true });
   }
 
   /**
@@ -172,8 +170,8 @@ class ArchiveFile {
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cb) {
       waterfall([
-        (cb) => this.urls(cb),
-        (res, cb2) => DwebTransports.fetch(res, {}, cb2),
+        (cb) => this.urls(cb),  // Unrouted urls
+        (res, cb2) => DwebTransports.fetch(routed(res), {}, cb2),
       ], cb)
     }
   }

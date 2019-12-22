@@ -9,9 +9,16 @@ const RawBookReaderResponse = require('./RawBookReaderResponse');
 const RawBookReaderJSONResponse = require('./RawBookReaderJSONResponse');
 // Add specific cases here as used elsewhere.
 const { torrentConfigDefault, dwebMagnetLinkFrom, dwebTorrentObjectFrom } = require('./mungeTorrent');
-const { formats } = require('./Util');
+const { formats, gateway, homeQuery, ObjectDeeperAssign,
+  ObjectFromEntries, ObjectMap, ObjectFilter, parmsFrom, specialidentifiers  } = require('./Util');
+const { routed } = require('./routing');
 
 exports = module.exports = { ArchiveFile, ArchiveItem, ArchiveMember, RawBookReaderResponse, RawBookReaderJSONResponse,
-  dwebMagnetLinkFrom, dwebTorrentObjectFrom, formats, torrentConfigDefault
+  dwebMagnetLinkFrom, dwebTorrentObjectFrom, formats, gateway, homeQuery, torrentConfigDefault, ObjectDeeperAssign,
+  ObjectFromEntries, ObjectMap, ObjectFilter, parmsFrom, specialidentifiers, routed
 };
+if (typeof window !== "undefined") { window.DwebArchiveController = exports; }
+module.exports = exports;
+
+
 // Code review 2019-12-17 by Mitra

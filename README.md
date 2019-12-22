@@ -36,11 +36,12 @@ Just do the "All" case above
 
 ### Repos:
 * *dweb-transports:* Common API to underlying transports (http, webtorrent, ipfs, yjs)
-* *dweb-objects:* Object model for Dweb inc Lists, Authentication, Key/Value, Naming and example html for these
+* *dweb-objects:* Object model for Dweb inc Lists, Authentication, Key/Value and example html for these
 * *dweb-serviceworker:* Run Transports in ServiceWorker (experimental)
 * *dweb-archive:* Decentralized Archive webpage and bootstrapping
 * *dweb-archivecontroller:* Archive objects
 * *dweb-transport:* Original Repo, still has some half-complete projects
+* *dweb-mirror:* Offline archive server
 
 ## Class hierarchy
 * ArchiveFile - represents a single file

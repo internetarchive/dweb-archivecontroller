@@ -755,15 +755,22 @@ function parmsFrom (queryobj) {
         .map(kv => `${kv[0]}=${encodeURIComponent(kv[1])}`)
         .join('&');
 }
-function _query(queryobj, opts={}, cb) { // No opts curr// ently
-    // Deprecated but still use
-    // Opts appropriate here for httptools.p_GET = {noCache, retries, wantstream}
+
+/**
+ *
+ * @param queryobj  e.g. { identifier:(a OR b) }
+ * @param opts      {noCache: bool, retries, wantstream} (There are other opts, but not meaningful to a JSON query)
+ * @param (err, obj)  TransportError
+ *
+ * Note badly named, this is widely used
+ */
+function _query(queryobj, opts = {}, cb) { // No opts currently
     // rejects: TransportError or CodingError if no urls
     if (typeof opts === "function") { cb = opts; opts = {}}
     try {
         const urlparms = parmsFrom(queryobj);
         // Note direct call to archive.org leads to CORS fail
-        const urls = routed(`https://archive.org/advancedsearch?${urlparms}`);
+        const urls = routed(`https://archive.org/advancedsearch.php?${urlparms}`);
         DwebTransports.fetch(urls, opts, cb);
     } catch(err) {
         console.error('Caught unhandled error in _query',err);

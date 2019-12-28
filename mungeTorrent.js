@@ -1,8 +1,8 @@
 const bencode = require('bencode');
 const magnet = require('magnet-uri');
 const sha1 = require('simple-sha1');
-module.exports.toMagnetURI = magnet.encode
-// TODO have dweb-torrent import this
+const { parmsFrom } = require('./Util.js');
+//module.exports.toMagnetURI = magnet.encode
 
 const torrentConfigDefault = {
   trackers: ['wss://dweb.archive.org:6969', // TODO-DM242/torrent
@@ -62,4 +62,17 @@ function dwebMagnetLinkFrom({archiveArray=undefined, archiveBuffer=undefined, co
     })
   );
 }
-exports = module.exports = { dwebMagnetLinkFrom, webTorrentObjectFrom, dwebTorrentFrom, dwebTorrentObjectFrom, torrentObjectFrom, torrentConfigDefault };
+
+function btihQueryUrl(btih) {
+  const query = parmsFrom({
+    q: "btih:"+btih,
+    output: "json",
+    rows: 1,
+    fl: "identifier"  // Only want identifier, not a full ArchiveMember
+  });
+  return "https://archive.org/advancedsearch.php?" + query; // Consumer should decide if want to route this url
+
+}
+
+exports = module.exports = { dwebMagnetLinkFrom, webTorrentObjectFrom, dwebTorrentFrom, dwebTorrentObjectFrom, btihQueryUrl,
+  torrentObjectFrom, torrentConfigDefault };

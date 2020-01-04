@@ -20,6 +20,7 @@ const archiveOrg = {
   'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
 
   // This group are essentially the same thing
+  // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here
   'download': ['https://archive.org/cors/'], // Does not support HEAD but efficient since hits web nodes
   // 'download': ['https://www-dweb-cors.dev.archive.org/download'], // Works but direct /cors/ is quicker
   'serve': ['https://archive.org/cors/'], // Treat same as 'download'
@@ -45,9 +46,9 @@ const archiveOrg = {
   'mds': ['https://be-api.us.archive.org/mds/'], // Currently only '/mds/v1/get_related/all/IDENTIFIER'
 
   // Redirects to archive.html from standard archive.org urls
-  'details': ['https://www-dweb.dev.archive.org/archive/archive.html?item='], // TODO possibly move to static files microservice
-  'search.php': ['https://www-dweb.dev.archive.org/archive/archive.html?query='],
-  'search': ['https://www-dweb.dev.archive.org/archive/archive.html?query=']
+  'details': ['https://www-dweb.dev.archive.org/archive.html?item='],
+  'search.php': ['https://www-dweb.dev.archive.org/archive.html?query='],
+  'search': ['https://www-dweb.dev.archive.org/archive.html?query=']
 };
 // List of URLS mirrored by dweb-mirror
 // Any resolution above that starts with one of these will be replaced by 'mirror' if its passed as a config to Transports
@@ -166,7 +167,7 @@ function _mirrorUrls(urlsArr) {
 function routed(urls, { wantOneHttp=false } = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
  if (!urls) return []; // e.g. passed undefined
   const urlsArr = Array.isArray(urls) ? urls : [urls]; // Make sure its an array
-  const routedUrls = DwebTransports.mirror
+  const routedUrls = (DwebTransports && DwebTransports.mirror)
     ? _mirrorUrls(urlsArr)
     : [].concat(...urlsArr.map(u => resolveName(u)));
   return wantOneHttp ? routedUrls.find(u => u.startsWith("http")) : routedUrls;

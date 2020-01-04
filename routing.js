@@ -23,7 +23,7 @@ const archiveOrg = {
   // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here
   'download': ['https://archive.org/cors/'], // Does not support HEAD but efficient since hits web nodes
   // 'download': ['https://www-dweb-cors.dev.archive.org/download'], // Works but direct /cors/ is quicker
-  'serve': ['https://archive.org/cors/'], // Treat same as 'download'
+  'serve': ['https://archive.org/cors/'], // see example in the metadata.description field in details/commute
 
   'examples': ['https://dweb.archive.org/archive/examples/'], // Only used for demos
 
@@ -167,7 +167,7 @@ function _mirrorUrls(urlsArr) {
 function routed(urls, { wantOneHttp=false } = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
  if (!urls) return []; // e.g. passed undefined
   const urlsArr = Array.isArray(urls) ? urls : [urls]; // Make sure its an array
-  const routedUrls = (DwebTransports && DwebTransports.mirror)
+  const routedUrls = ((typeof DwebTransports !== "undefined") && DwebTransports.mirror)
     ? _mirrorUrls(urlsArr)
     : [].concat(...urlsArr.map(u => resolveName(u)));
   return wantOneHttp ? routedUrls.find(u => u.startsWith("http")) : routedUrls;

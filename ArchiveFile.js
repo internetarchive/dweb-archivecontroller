@@ -97,20 +97,23 @@ class ArchiveFile {
       } else {
         const res = [`https://archive.org/download/${this.itemid}/${this.metadata.name}`];
         waterfall([
-          (cb) => DwebTransports.p_connectedNames(cb),
-          (connectedNames, cb) => { // Look whether should add magnet link
-            if (connectedNames.includes("WEBTORRENT") && this.magnetlink && this.inTorrent()) {
-              // TODO-TORRENT needs to do "inTorrent" work from Archive.py and also exclude __ia_thumb.jpg
+          (cb1) => DwebTransports.p_connectedNames(cb1),
+          (connectedNames, cb1) => { // Look whether should add magnet link
+            if (connectedNames.includes('WEBTORRENT') && this.magnetlink && this.inTorrent()) {
+              // TODO-TORRENT needs to do 'inTorrent' work from Archive.py and also exclude __ia_thumb.jpg
               res.push([this.magnetlink, this.metadata.name].join('/'));
             }
-            cb(null, connectedNames);
+            cb1(null, connectedNames);
           },
           // TODO-TORRENT think through returning dweb-torrent URL esp for _torrent.xml
-          (connectedNames, cb) => { // Decide if need to get file-specific metadata because missing dweb urls
-            if  (!this.metadata.ipfs && connectedNames.includes("IPFS")) {
+          (connectedNames, cb1) => { // Decide if need to get file-specific metadata because missing dweb urls
+            // This fetch of metadata no longer supported on new dweb.archive.org in Javascript, and not yet prioritised
+            // to implement the push to IPFS because of the other IPFS issues (not reliable, so cant use the ids returned)
+            /* eslint-disable-next-line no-constant-condition */
+            if (false && (!this.metadata.ipfs && connectedNames.includes('IPFS'))) {
               // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
               // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
-              let name = this.metadata.name.replace('?', '%3F');
+              const name = this.metadata.name.replace('?', '%3F');
               // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
               // maybe problem offline but above test should catch cases where no IPFS so not useful
               // TODO-DM242 this might not work - might get pointed at dweb-metadata which probably wont handle the file case.

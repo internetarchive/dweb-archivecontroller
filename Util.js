@@ -687,8 +687,7 @@ const _formatarr = [
     'x-msvideo' => 'Windows Media',
     'x-ms-wmv'  => 'Windows Media',
 */
-const gateway = { //TODO remove trailing slash here and in callers and change name at same time - its done on some of the url's
-    "urlDownload": "/arc/archive.org/download", //TODO-DM242 OBSOLETEING - see https://github.com/internetarchive/dweb-mirror/issues/242
+const gateway = {
     "url_default_fl": "identifier,title,collection,mediatype,downloads,creator,num_reviews,publicdate,item_count,loans__status__status"  // Note also used in dweb-mirror
 };
 //https://archive.org/advancedsearch.php?q=mediatype:collection AND NOT noindex:true AND NOT collection:web AND NOT identifier:(fav-* OR what_cd OR cd OR vinyl OR librarygenesis OR bibalex OR movies OR audio OR texts OR software OR image OR data OR web OR additional_collections OR animationandcartoons OR artsandmusicvideos OR audio_bookspoetry OR audio_foreign OR audio_music OR audio_news OR audio_podcast OR audio_religion OR audio_tech OR computersandtechvideos OR coverartarchive OR culturalandacademicfilms OR ephemera OR gamevideos OR inlibrary OR moviesandfilms OR newsandpublicaffairs OR ourmedia OR radioprograms OR samples_only OR spiritualityandreligion OR stream_only OR television OR test_collection OR usgovfilms OR vlogs OR youth_media)&sort[]=-downloads&rows=10&output=json&save=yes&page=

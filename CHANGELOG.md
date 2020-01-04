@@ -1,5 +1,6 @@
 # dweb-archivecontroller - Change Log
 
+* v0.2.2 Metadata check for IPFS hash disabled; fix some routes
 * v0.2.1 Build btihQueryUrl for dweb-torrent
 * v0.2.0 Refactor naming here from dweb-transports; 
 * v0.2.0 Add RawBookReaderJSONResponse

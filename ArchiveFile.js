@@ -1,8 +1,12 @@
-const {fetch_json, formats, torrentRejectList } = require( './Util');
-const prettierBytes = require( "prettier-bytes");
+/* eslint-disable camelcase, no-use-before-define, consistent-return, brace-style */
+/* global DwebTransports */
+const prettierBytes = require('prettier-bytes');
 const waterfall = require('async/waterfall');
-const {routed} = require('./routing');
-//const DwebTransports = require('@internetarchive/dweb-transports'); //Not "required" because available as window.DwebTransports by separate import
+const { debug } = require('debug')('dweb-archivecontroller:archivefile');
+const { routed } = require('./routing');
+const { fetch_json, formats, torrentRejectList } = require('./Util');
+
+// const DwebTransports = require('@internetarchive/dweb-transports'); //Not 'required' because available as window.DwebTransports by separate import
 
 /**
  * Represents a single file, currently one that is in the item, but might create sub/super classes to handle other types
@@ -14,16 +18,16 @@ const {routed} = require('./routing');
  *
  */
 class ArchiveFile {
-  constructor({itemid = undefined, magnetlink = undefined, metadata = undefined}={}) {
+  constructor({ itemid = undefined, magnetlink = undefined, metadata = undefined } = {}) {
     this.itemid = itemid;
     this.magnetlink = magnetlink;
-    if (typeof metadata.downloaded !== "undefined") {
+    if (typeof metadata.downloaded !== 'undefined') {
       // Support dweb-mirror which stores downloaded as AF.metadata.downloaded but needs it as AF.downloaded
       this.downloaded = metadata.downloaded;
-      delete(metadata.downloaded);
+      delete (metadata.downloaded);
     }
     this.metadata = metadata;
-    if (this.metadata.name.endsWith("_archive.torrent")) {
+    if (this.metadata.name.endsWith('_archive.torrent')) {
       // Dont trust the files info for _archive.torrent as will fetch via dweb-torrent service which modifies both.
       this.metadata.sha1 = undefined;
       this.metadata.size = undefined;
@@ -38,18 +42,18 @@ class ArchiveFile {
    * @param cb(err, ArchiveFile)  errors: FileNotFound or errors from ArchiveFile or fetch_metadata()
    * @returns {Promise<ArchiveFile>|undefined} if no cb
    */
-  static new({archiveitem=undefined, filename=undefined, copyDirectory=undefined}={}, cb) {
-    if (cb) { return f.call(this, cb) } else { return new Promise((resolve, reject) => f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
-    function f(cb) {
+  static new({ archiveitem = undefined, filename = undefined, copyDirectory = undefined } = {}, cb) {
+    if (cb) { return f.call(this, cb); } else { return new Promise((resolve, reject) => f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res); } }))}
+    function f(cb1) {
       if (!archiveitem.metadata) {
-        archiveitem.fetch_metadata({copyDirectory}, (err, ai) => { // Note will load from cache if available and load ai.metadata and ai.files
-          if (err)  { cb(err) } else { this.new({itemid: ai.itemid, magnetlink: ai.magnetlink, filename}, cb); } })
+        archiveitem.fetch_metadata({ copyDirectory }, (err, ai) => { // Note will load from cache if available and load ai.metadata and ai.files
+          if (err) { cb1(err); } else { this.new({ itemid: ai.itemid, magnetlink: ai.magnetlink, filename }, cb1); } });
       } else {
-        const af = archiveitem.files.find(af => af.metadata.name === filename); // af, (undefined if not found)
-        return af ? cb(null, af) : cb(new Error(`${archiveitem.itemid}/${filename} not found`));
+        const af = archiveitem.files.find(af1 => af1.metadata.name === filename); // af, (undefined if not found)
+        return af ? cb1(null, af) : cb1(new Error(`${archiveitem.itemid}/${filename} not found`));
       }
     }
-  };
+  }
 
   /**
    * Name suitable for downloading etc
@@ -60,7 +64,7 @@ class ArchiveFile {
   }
 
   /**
-   * @returns: true if expect file to be in torrent
+   * @returns: boolean true if expect file to be in torrent
    */
   inTorrent() {
     /* Not checking the following things which require access to item, but in all cases this should result
@@ -75,24 +79,25 @@ class ArchiveFile {
       If files count is large there is a bug with some part of the tools process Aaron let me know about, setting to 20k as a guess
       TODO In python code this was taken from we checked this, and reported errors, could add here
      */
-    return !torrentRejectList.some(ext => this.metadata.name.endsWirth(ext));
+    return !torrentRejectList.some(ext => this.metadata.name.endsWith(ext));
   }
+
   /**
    *
    * @param cb(err, [URL])  Array of urls that might be a good place to get this item - will be subject to routing.js
    * @returns {Promise<[URL]>} if no cb, note urls are un-routed and should be routed by caller.
    * @errors if fetch_json doesn't succeed, or retrieves something other than JSON
    */
-  // TODO-TORRENT make consumer pass in magnetlink or maybe utem if has it
-  urls(cb) { //TODO-MIRROR fix this to make sense for _archive.torrent files which dont have sha1 and probably not IPFS
+  // TODO-TORRENT make consumer pass in magnetlink or maybe item if has it
+  urls(cb) { // TODO-MIRROR fix this to make sense for _archive.torrent files which dont have sha1 and probably not IPFS
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
     function f(cbout) {
       // noinspection JSUnresolvedFunction
-      if (this.metadata.name.endsWith("_archive.torrent")) {
+      if (this.metadata.name.endsWith('_archive.torrent')) {
         cbout(null,
           // routing.js will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
-          //TODO-DM242 make routing.js catch regexps
-          //`https://archive.org/download/${this.itemid}/${this.metadata.name}`);
+          // TODO-DM242 make routing.js catch regexps
+          // `https://archive.org/download/${this.itemid}/${this.metadata.name}`);
           `https://www-dweb-torrent.dev.archive.org/download/${this.itemid}/${this.metadata.name}`);
       } else {
         const res = [`https://archive.org/download/${this.itemid}/${this.metadata.name}`];
@@ -119,16 +124,17 @@ class ArchiveFile {
               // TODO-DM242 this might not work - might get pointed at dweb-metadata which probably wont handle the file case.
               fetch_json(
                 routed(`https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`, { wantOneHttp: true }),
-                (err, fileMeta)=>{
+                (err, fileMeta) => {
                   if (!err) {
                     if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
                     if (fileMeta.contenthash) { res.push(fileMeta.contenthash); }
                   }
-                  cb(err, res);
-              });
+                  cb1(err, res);
+                });
             } else {
-              cb(null, res);
-            }},
+              cb1(null, res);
+            }
+          },
         ], cbout);
       }
     }
@@ -150,12 +156,12 @@ class ArchiveFile {
    * @returns STRING  converted from metadata.format to a real mime type
    */
   mimetype() {
-    let f =  formats("format", this.metadata.format);
-    if (typeof f === "undefined") {
+    let f = formats('format', this.metadata.format);
+    if (typeof f === 'undefined') {
       const ext = this.metadata.name.split('.').pop();
-      f =  formats("ext", "."+ext)
+      f = formats('ext', '.' + ext);
     }
-    return  (typeof f === "undefined") ? undefined : f.mimetype;
+    return (typeof f === 'undefined') ? undefined : f.mimetype;
   }
 
   // noinspection DuplicatedCode
@@ -171,11 +177,11 @@ class ArchiveFile {
    */
   data(cb) {
     if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
-    function f(cb) {
+    function f(cb1) {
       waterfall([
-        (cb) => this.urls(cb),  // Unrouted urls
+        (cb2) => this.urls(cb2), // Unrouted urls
         (res, cb2) => DwebTransports.fetch(routed(res), {}, cb2),
-      ], cb)
+      ], cb1);
     }
   }
 
@@ -184,40 +190,40 @@ class ArchiveFile {
    * @param cb(err, URL) Url of blob
    * @errors see data()
    */
-  blobUrl(cb) {  //
+  blobUrl(cb) {
     this.data((err, data) => {
       if (err) {
         cb(err);
       } else {
         cb(null, URL.createObjectURL(
-          new Blob([data], {type: this.mimetype()})));
+          new Blob([data], { type: this.mimetype() })));
       }
-    })
+    });
   }
 
   /**
-   * @returns {string} of the size suitable for pretty printing or ""
+   * @returns {string} of the size suitable for pretty printing or ''
    */
   sizePretty() {
     try {
       return this.metadata.size
-        ? prettierBytes(parseInt(this.metadata.size))
-        : ""; // For example files.xml has no size field
+        ? prettierBytes(parseInt(this.metadata.size, 10))
+        : ''; // For example files.xml has no size field
     } catch (err) {
-      debug("ERROR - cant get size for %s/%s", this.itemid, this.metadata.name);
-      return "";
+      debug('ERROR - cant get size for %s/%s', this.itemid, this.metadata.name);
+      return '';
     }
   }
 
   /**
    *
-   * @param type        From range in format field of util._formatarr e.g. "PDF" or "JPEG Thumb"
+   * @param type        From range in format field of util._formatarr e.g. 'PDF' or 'JPEG Thumb'
    * @returns {boolean} True if file is of appropriate type
    */
   istype(type) {
     // True if specify a type and it matches, or don't specify a type BUT fails if type unrecognized
-    let format = formats("format", this.metadata.format);
-    //if (!format) console.warn("Format", this.metadata.format, "unrecognized");
+    const format = formats('format', this.metadata.format);
+    // if (!format) console.warn('Format', this.metadata.format, 'unrecognized');
     return format && (!type || (format.type === type));
   }
 
@@ -227,7 +233,7 @@ class ArchiveFile {
    */
   // noinspection JSUnusedGlobalSymbols
   playable(type) {
-    return this.istype(type) && formats("format", this.metadata.format).playable;
+    return this.istype(type) && formats('format', this.metadata.format).playable;
   }
 
   /**
@@ -235,10 +241,9 @@ class ArchiveFile {
    * @returns {boolean} true if downloadable
    */
   downloadable(type) {
-    return this.istype(type) && !!formats("format", this.metadata.format).downloadable;
+    return this.istype(type) && !!formats('format', this.metadata.format).downloadable;
   }
-
 }
 exports = module.exports = ArchiveFile;
 
-//Code Inspection 2019-09-26
+// Code Inspection 2020-01-04

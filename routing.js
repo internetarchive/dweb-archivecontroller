@@ -17,7 +17,8 @@ const archiveOrg = {
   // 'advancedsearch': ['https://dweb.archive.org/advancedsearch'], // Works but dependent on dweb.me
   // 'advancedsearch': ['https://cors.archive.org/advancedsearch.php'], // Fails
 
-  'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
+  // OBS - only we were using contenthash in this form and anytime we have contenthash we also have a URL
+  // 'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
 
   // This group are essentially the same thing
   // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here

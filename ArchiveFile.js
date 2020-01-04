@@ -127,7 +127,8 @@ class ArchiveFile {
                 (err, fileMeta) => {
                   if (!err) {
                     if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
-                    if (fileMeta.contenthash) { res.push(fileMeta.contenthash); }
+                    // OBS - only we were using contenthash in this form and anytime we have contenthash we also have a URL
+                    // if (fileMeta.contenthash) { res.push(fileMeta.contenthash); }
                   }
                   cb1(err, res);
                 });

@@ -17,8 +17,7 @@ const archiveOrg = {
   // 'advancedsearch': ['https://dweb.archive.org/advancedsearch'], // Works but dependent on dweb.me
   // 'advancedsearch': ['https://cors.archive.org/advancedsearch.php'], // Fails
 
-  // OBS - only we were using contenthash in this form and anytime we have contenthash we also have a URL
-  // 'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
+  'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
 
   // This group are essentially the same thing
   // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here
@@ -71,7 +70,8 @@ const domains = {
   'https://archive.org/': archiveOrg,
   'http://archive.org/': archiveOrg,
   'https://dweb.archive.org/': archiveOrg,
-  'https://be-api.us.archive.org/': archiveOrg // Just /mds/v1/related/all/IDENTIFIER
+  'https://be-api.us.archive.org/': archiveOrg, // Just /mds/v1/related/all/IDENTIFIER
+  '/': archiveOrg // Just passed an absolute URL, assume relative to archive
 };
 
 
@@ -165,8 +165,8 @@ function _mirrorUrls(urlsArr) {
  * @param opts          wantOneHttp true if want just one HTTP url (for example to pass to a backgroundImage
  * @returns {string[]}  An array or urls for passing to DwebTransports
  */
-function routed(urls, { wantOneHttp=false } = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
- if (!urls) return []; // e.g. passed undefined
+function routed(urls, { wantOneHttp=false} = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
+  if (!urls) return []; // e.g. passed undefined
   const urlsArr = Array.isArray(urls) ? urls : [urls]; // Make sure its an array
   const routedUrls = ((typeof DwebTransports !== "undefined") && DwebTransports.mirror)
     ? _mirrorUrls(urlsArr)

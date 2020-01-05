@@ -1,5 +1,6 @@
 # dweb-archivecontroller - Change Log
 
+* v0.2.4 routing: Catch root-relative urls (as seen in eg. www-dweb.Main.js)
 * v0.2.3 Error in routing
 * v0.2.2 Metadata check for IPFS hash disabled; fix some routes
 * v0.2.1 Build btihQueryUrl for dweb-torrent

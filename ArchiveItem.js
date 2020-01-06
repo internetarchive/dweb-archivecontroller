@@ -94,10 +94,15 @@ class ArchiveItem {
    */
   loadFromMetadataAPI(metaapi) {
     if (metaapi) {
-      console.assert(typeof this.itemid !== "undefined", "itemid should be loaded before here - if legit reason why not, then load from meta.identifier");
+      console.assert(typeof this.itemid !== 'undefined', 'itemid should be loaded before here - if legit reason why not, then load from meta.identifier');
       this.files = (metaapi && metaapi.files)
-        ? metaapi.files.map((f) => new ArchiveFile({itemid: this.itemid, magnetlink: this.magnetlink, metadata: f}))
-        : [];   // Default to empty, so usage simpler.
+        ? metaapi.files.map((f) => new ArchiveFile({
+          itemid: this.itemid,
+          // Note code did show this.magnetlink, so maybe called that way, but I'm finding magnetlink in metaapi when
+          // called directly in browser after call to metadata API - if called other way make this metaapi.magnetlink || this.magnetlink
+          magnetlink: metaapi.magnetlink,
+          metadata: f }))
+        : []; // Default to empty, so usage simpler.
       if (metaapi.metadata) {
         const meta = enforceStringOrArray(metaapi.metadata, rules.item); // Just processes the .metadata part
         if (meta.mediatype === "education") {

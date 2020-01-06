@@ -5,7 +5,7 @@ const { parmsFrom } = require('./Util.js');
 //module.exports.toMagnetURI = magnet.encode
 
 const torrentConfigDefault = {
-  trackers: ['wss://dweb.archive.org:6969', // TODO-DM242/torrent
+  trackers: ['wss://dweb.archive.org:6969', // TODO see https://github.com/internetarchive/dweb-mirror/issues/292
     'wss://tracker.btorrent.xyz',
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.fastcast.nz'

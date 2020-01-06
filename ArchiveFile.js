@@ -96,7 +96,7 @@ class ArchiveFile {
       if (this.metadata.name.endsWith('_archive.torrent')) {
         cbout(null,
           // routing.js will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
-          // TODO-DM242 make routing.js catch regexps
+          // TODO make routing.js catch regexps see https://github.com/internetarchive/dweb-archivecontroller/issues/12
           // `https://archive.org/download/${this.itemid}/${this.metadata.name}`);
           `https://www-dweb-torrent.dev.archive.org/download/${this.itemid}/${this.metadata.name}`);
       } else {
@@ -121,7 +121,7 @@ class ArchiveFile {
               const name = this.metadata.name.replace('?', '%3F');
               // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
               // maybe problem offline but above test should catch cases where no IPFS so not useful
-              // TODO-DM242 this might not work - might get pointed at dweb-metadata which probably wont handle the file case.
+              // TODO not currently supported, see https://github.com/internetarchive/dweb-archivecontroller/issues/11
               fetch_json(
                 routed(`https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`, { wantOneHttp: true }),
                 (err, fileMeta) => {

@@ -6,7 +6,8 @@ const debug = require('debug')('dweb-archivecontroller:routing');
  *
  * Note this table looks messy because cors handling at the archive is messy,
  * and also because dweb.me aka dweb.archive.org python gateway is being transitioned out.
- * TODO-DM242 should handle archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent -> www-dweb-torrent.dev.archive.org
+ * Should handle archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent -> www-dweb-torrent.dev.archive.org
+ * Not supporting metadata/IDENTIFIER/IDENTIFIER see https://github.com/internetarchive/dweb-archivecontroller/issues/12
  */
 const archiveOrg = {
   '.': ['https://www-dweb-cors.dev.archive.org/'], // Handles at least '/about and /bookreader /embed' catch al to go thru cors to archive.org
@@ -17,7 +18,7 @@ const archiveOrg = {
   // 'advancedsearch': ['https://dweb.archive.org/advancedsearch'], // Works but dependent on dweb.me
   // 'advancedsearch': ['https://cors.archive.org/advancedsearch.php'], // Fails
 
-  'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
+  //'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
 
   // This group are essentially the same thing
   // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here
@@ -25,7 +26,7 @@ const archiveOrg = {
   // 'download': ['https://www-dweb-cors.dev.archive.org/download'], // Works but direct /cors/ is quicker
   'serve': ['https://archive.org/cors/'], // see example in the metadata.description field in details/commute
 
-  'examples': ['https://dweb.archive.org/archive/examples/'], // Only used for demos
+  //'examples': ['https://dweb.archive.org/archive/examples/'], // Legacy, no longer used - only used for demos
 
   // CORS issues requested in slack with Tracey 2019-nov-27
   'images': ['https://www-dweb-cors.dev.archive.org/images/'],
@@ -39,8 +40,8 @@ const archiveOrg = {
   'thumbnail': ['https://archive.org/services/img/'], // Deprecated way to get thumbnails when it looked like there might be a different way
 
   'metadata': [
-    'wolk://dweb.archive.org/metadata/', // TODO-TORRENT move wolk hijacker to use dweb-metadata
-    'gun:/gun/arc/archive.org/metadata/', // TODO-TORRENT move gunDB hijacker to use dweb-metadata
+    'wolk://dweb.archive.org/metadata/', // TODO-TORRENT move wolk hijacker to use dweb-metadata but will work redirected
+    'gun:/gun/arc/archive.org/metadata/', // TODO-TORRENT move gunDB hijacker to use dweb-metadata but will work redirected
     'https://www-dweb-metadata.dev.archive.org/metadata/'], // Appends magnet link
 
   'mds': ['https://be-api.us.archive.org/mds/'], // Currently only '/mds/v1/get_related/all/IDENTIFIER'

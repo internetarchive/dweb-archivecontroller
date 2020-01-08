@@ -1,5 +1,8 @@
 # dweb-archivecontroller - Change Log
 
+* v0.2.5 obsolete contenthash & examples,
+* v0.2.5 fix bug with magnetlink and files
+* v0.2.5 mungeTorrent - point at www-dweb-cors instead of archive.org because of CORS
 * v0.2.4 routing: Catch root-relative urls (as seen in eg. www-dweb.Main.js)
 * v0.2.3 Error in routing
 * v0.2.2 Metadata check for IPFS hash disabled; fix some routes

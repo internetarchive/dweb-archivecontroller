@@ -10,7 +10,9 @@ const torrentConfigDefault = {
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.fastcast.nz'
   ],
-  "urlList": ["https://archive.org/download/"]
+  //"urlList": ["https://archive.org/download/"]
+  // Archive.org/download has rotten cors support - only certain files, no headers on OPTIONS etc ...
+  "urlList": ["https://www-dweb-cors.dev.archive.org/download/"]
 }
 
 

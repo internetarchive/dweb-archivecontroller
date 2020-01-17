@@ -1,5 +1,5 @@
 # dweb-archivecontroller - Change Log
-
+* v0.2.6 Object.DeeperAssign ha
 * v0.2.5 obsolete contenthash & examples,
 * v0.2.5 fix bug with magnetlink and files
 * v0.2.5 mungeTorrent - point at www-dweb-cors instead of archive.org because of CORS

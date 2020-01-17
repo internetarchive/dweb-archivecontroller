@@ -721,27 +721,30 @@ ObjectMap = (obj, f) => ObjectFromEntries( Object.entries(obj).map(kv=>f(kv[0], 
 ObjectForEach = (obj, f) => Object.entries(obj).forEach(kv=>f(kv[0], kv[1]));
 ObjectIndexFrom = (arr, f) => ObjectFromEntries( arr.map(o => [f(o), o]));
 function ObjectDeeperAssign(res, ...objs) {
-    /*
-        return res the result of copying the objs into the existing res in order
-        its a recursive copy, but not a full deep copy, i.e. if the field is an object, it will be copied, but not strings
-        Note that arrays are just copied over the existing value, so it can't be used to add to an array.
+  /*
+      return res the result of copying the objs into the existing res in order
+      its a recursive copy, but not a full deep copy, i.e. if the field is an object, it will be copied, but not strings
+      Note that arrays are just copied over the existing value, so it can't be used to add to an array.
 
-        This is syntactically equivalent to Object.assign, i.e. pass {} as the first parameter if you don't want the arguments modified
-        res can be a plain Object or most class instances, although interaction with custom getters and setters is not guarranteed.
-     */
-    objs.forEach(o => {
-        Object.entries(o).forEach(kv => {
-            const k = kv[0];
-            const v = kv[1];
-            if (typeof (v) === "object" && !Array.isArray(v)) {
-                // If its an object, then merge in newer one, creating place to merge it into if reqd.
-                res[k] = ObjectDeeperAssign(res[k] || {}, v); // Recurse
-            } else {
-                res[k] = v
-            }
-        })
-    })
-    return res;
+      This is syntactically equivalent to Object.assign, i.e. pass {} as the first parameter if you don't want the arguments modified
+      res can be a plain Object or most class instances, although interaction with custom getters and setters is not guarranteed.
+   */
+  objs.forEach(o => {
+    if (o) { // handle one or more objects being undefined - easier here than in consumers
+      Object.entries(o)
+        .forEach(kv => {
+          const k = kv[0];
+          const v = kv[1];
+          if (typeof (v) === "object" && !Array.isArray(v)) {
+            // If its an object, then merge in newer one, creating place to merge it into if reqd.
+            res[k] = ObjectDeeperAssign(res[k] || {}, v); // Recurse
+          } else {
+            res[k] = v
+          }
+        });
+    }
+  });
+  return res;
 };
 
 function objectFrom(jsonstring) {

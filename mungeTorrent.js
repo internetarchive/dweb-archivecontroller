@@ -2,7 +2,7 @@ const bencode = require('bencode');
 const magnet = require('magnet-uri');
 const sha1 = require('simple-sha1');
 const { parmsFrom } = require('./Util.js');
-//module.exports.toMagnetURI = magnet.encode
+// module.exports.toMagnetURI = magnet.encode
 
 const torrentConfigDefault = {
   trackers: ['wss://dweb.archive.org:6969', // TODO see https://github.com/internetarchive/dweb-mirror/issues/292
@@ -10,9 +10,9 @@ const torrentConfigDefault = {
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.fastcast.nz'
   ],
-  //"urlList": ["https://archive.org/download/"]
+  // 'urlList': ['https://archive.org/download/']
   // Archive.org/download has rotten cors support - only certain files, no headers on OPTIONS etc ...
-  "urlList": ["https://www-dweb-cors.dev.archive.org/download/"]
+  'urlList': ['https://www-dweb-cors.dev.archive.org/download/']
 }
 
 
@@ -30,16 +30,16 @@ function torrentObjectFrom({array=undefined, buffer=undefined}) {
       : buffer
   );
 }
-function dwebTorrentObjectFrom({archiveArray=undefined, archiveBuffer=undefined, config=torrentConfigDefault }) {
-  const torrentObject = torrentObjectFrom({array: archiveArray, buffer: archiveBuffer}); // archiveTorrentObject with broken tracker and url-list fields
-  torrentObject["announce-list"] = torrentObject["announce-list"].map(b=>b.toString())
-  torrentObject["announce-list"].push(...config.trackers);
-  torrentObject["url-list"] = config.urlList; // archive.org default includes absolute data server and root-relative
+function dwebTorrentObjectFrom({archiveArray = undefined, archiveBuffer = undefined, config = torrentConfigDefault }) {
+  const torrentObject = torrentObjectFrom({ array: archiveArray, buffer: archiveBuffer }); // archiveTorrentObject with broken tracker and url-list fields
+  torrentObject['announce-list'] = torrentObject['announce-list'].map(b => b.toString());
+  torrentObject['announce-list'].push(...config.trackers);
+  torrentObject['url-list'] = config.urlList; // archive.org default includes absolute data server and root-relative
   return torrentObject; // Now converted to dwebTorrentObject
 }
-function dwebTorrentFrom({archiveArray=undefined, archiveBuffer=undefined, config=torrentConfigDefault}) {
+function dwebTorrentFrom({ archiveArray = undefined, archiveBuffer = undefined, config = torrentConfigDefault }) {
   return bencode.encode(
-    dwebTorrentObjectFrom({archiveArray, archiveArray, config})
+    dwebTorrentObjectFrom({ archiveArray, archiveBuffer, config })
   );
 }
 function webTorrentObjectFrom({torrentObject=undefined, torrentUrl=undefined}) {
@@ -47,12 +47,12 @@ function webTorrentObjectFrom({torrentObject=undefined, torrentUrl=undefined}) {
   return Object.assign({},
     torrentObject,
     {
-      announce: torrentObject["announce-list"],
-      "announce-list": undefined,
+      announce: torrentObject['announce-list'],
+      'announce-list': undefined,
       infoHash: sha1.sync(bencode.encode(torrentObject.info)),
-      urlList: torrentObject["url-list"],
-      "url-list": undefined,
-      "xs": torrentUrl,
+      urlList: torrentObject['url-list'],
+      'url-list': undefined,
+      'xs': torrentUrl,
     });
 }
 function dwebMagnetLinkFrom({archiveArray=undefined, archiveBuffer=undefined, config=torrentConfigDefault, dwebTorrentUrl=undefined}) {
@@ -67,12 +67,12 @@ function dwebMagnetLinkFrom({archiveArray=undefined, archiveBuffer=undefined, co
 
 function btihQueryUrl(btih) {
   const query = parmsFrom({
-    q: "btih:"+btih,
-    output: "json",
+    q: 'btih:'+btih,
+    output: 'json',
     rows: 1,
-    fl: "identifier"  // Only want identifier, not a full ArchiveMember
+    fl: 'identifier'  // Only want identifier, not a full ArchiveMember
   });
-  return "https://archive.org/advancedsearch.php?" + query; // Consumer should decide if want to route this url
+  return 'https://archive.org/advancedsearch.php?' + query; // Consumer should decide if want to route this url
 
 }
 

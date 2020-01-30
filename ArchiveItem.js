@@ -691,6 +691,9 @@ class ArchiveItem {
     return minimumFiles;
   }
 
+  isPalmLeaf() {
+    return this.metadata && this.metadata["external-identifier"] && this.metadata["external-identifier"].some(ei => ei.includes("//palmleaf.org"));
+  }
   /**
    * Find what kind of text or what kind of movie, used to pick the appropriate UX
    * @returns {string|undefined|*}

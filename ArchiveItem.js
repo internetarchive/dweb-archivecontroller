@@ -351,7 +351,7 @@ class ArchiveItem {
         // Catch any collections - note 'collection: might need to be first to catch a pattern match in mirror
         this.itemid && this.metadata && this.metadata.mediatype === 'collection' && 'collection:' + this.itemid,
         // Now two kinds of simple lists, but also only on collections
-        this.metadata && this.metadata.search_collection && this.metadata.search_collection.replace('\\"', '"'),
+        this.metadata && this.metadata.search_collection && "(" + this.metadata.search_collection.replace('\\"', '"') + ")",
         this.itemid && this.metadata && this.metadata.mediatype === 'collection' && this.itemid && 'simplelists__items:' + this.itemid,
         this.itemid && this.metadata && this.metadata.mediatype === 'collection' && this.itemid && 'simplelists__holdings:' + this.itemid,
         // Search will have !this.item example = 'ElectricSheep'

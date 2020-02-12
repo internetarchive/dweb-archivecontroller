@@ -1,4 +1,5 @@
 # dweb-archivecontroller - Change Log
+* v0.2.8 bracketing on buildQuery
 * v0.2.7 isPalmLeaf
 * v0.2.6 Object.DeeperAssign handle undefined
 * v0.2.5 obsolete contenthash & examples,

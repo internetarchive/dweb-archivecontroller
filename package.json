@@ -53,8 +53,7 @@
   "scripts": {
     "build": "webpack --mode development",
     "dependers":  "grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json",
-    "editdependers":  "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`",
-    "postpublish":  "yarn run dependers"
+    "editdependers":  "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`"
   },
   "version": "0.2.8"
 }

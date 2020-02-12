@@ -51,7 +51,10 @@
     "url": "git://github.com/internetarchive/dweb-archivecontroller.git"
   },
   "scripts": {
-    "build": "webpack --mode development"
+    "build": "webpack --mode development",
+    "dependers":  "grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json",
+    "editdependers":  "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`",
+    "postpublish":  "yarn run dependers"
   },
   "version": "0.2.8"
 }

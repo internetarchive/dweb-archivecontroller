@@ -252,26 +252,28 @@ class ArchiveItem {
    * @param cb(err, ARCHIVEITEM)
    * @returns {Promise<ARCHIVEITEM>|void} if no cb passed
    */
-  fetch_bookreader(opts={}, cb) {
-    if (cb) { return this._fetch_bookreader(opts, cb)} else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
+  fetch_bookreader(opts = {}, cb) {
+    if (cb) { return this._fetch_bookreader(opts, cb); } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
   }
 
   _fetch_bookreader({ page = undefined } = {}, cb) {
     console.assert(this.server, 'fetch_bookreader must be called after fetch_metadata because it requires specific IA server');
     // TODO-BOOK this was requesting format=jsonp but seems to return json (which is what we want) anyway
     // See also configuration in dweb-archive/BookReaderWrapper.js
-    const protocolServer = (typeof DwebArchive !== 'undefined' && DwebArchive.mirror) || ('https://' + this.server);
+    const protocolServer = (typeof DwebArchive !== 'undefined' && DwebArchive.mirror) || 'https://www-dweb-cors.dev.archive.org';
     const [unusedProtocol, unused, server] = protocolServer.split('/');
     const subPrefixFile = this.files.find(f => f.metadata.format.startsWith('Single Page Processed'));
     const subPrefix = subPrefixFile ? subPrefixFile.metadata.name.slice(0,subPrefixFile.metadata.name.lastIndexOf('_')) : undefined;
-    const parms = parmsFrom({ subPrefix, server,
+    const parms = parmsFrom({
+      subPrefix,
+      server,
       audioLinerNotes: this.metadata.mediatype === 'audio' ? 1 : 0,
       id: this.itemid,
       itemPath: this.dir,
       format: 'json',
       requestUri: `/details/${this.itemid}${page ? '/page/'+page : ''}` // Doesnt seem to be used
     });
-    const url = `${protocolServer}/BookReader/BookReaderJSIA.php?${parms}`;
+    const url = routed(`https://archive.org/BookReader/BookReaderJSIA.php?${parms}`, { wantOneHttp: true }); // Not really a valid url as would need to be a datanode
     DwebTransports.httptools.p_GET(url, {}, (err, res) => {
       if (res) {
         delete res.data.metadata; // Duplicates ai.metadata
@@ -297,8 +299,8 @@ class ArchiveItem {
    * @param cb(err. [ARCHIVEMEMBER])
    * @returns {Promise<[ARCHIVEMEMBER]>|void} (if no cb passed)
    */
-  fetch_query(opts={}, cb) { // opts = {wantFullResp=false}
-    if (cb) { return this._fetch_query(opts, cb) } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
+  fetch_query(opts = {}, cb) { // opts = {wantFullResp=false}
+    if (cb) { return this._fetch_query(opts, cb); } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
   }
 
   /**

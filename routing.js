@@ -18,7 +18,7 @@ const archiveOrg = {
   // 'advancedsearch': ['https://dweb.archive.org/advancedsearch'], // Works but dependent on dweb.me
   // 'advancedsearch': ['https://cors.archive.org/advancedsearch.php'], // Fails
 
-  //'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
+  // 'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
 
   // This group are essentially the same thing
   // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here
@@ -26,11 +26,17 @@ const archiveOrg = {
   // 'download': ['https://www-dweb-cors.dev.archive.org/download'], // Works but direct /cors/ is quicker
   'serve': ['https://archive.org/cors/'], // see example in the metadata.description field in details/commute
 
-  //'examples': ['https://dweb.archive.org/archive/examples/'], // Legacy, no longer used - only used for demos
+  // 'examples': ['https://dweb.archive.org/archive/examples/'], // Legacy, no longer used - only used for demos
 
   // CORS issues requested in slack with Tracey 2019-nov-27
   'images': ['https://www-dweb-cors.dev.archive.org/images/'],
   // 'images': ['https://cors.archive.org/images/'], // Fails
+
+  // This group go through www-dweb-cors which redirects to data nodes
+  'BookReader': {
+    'BookReaderJSIA.php': ['https://www-dweb-cors.dev.archive.org/BookReader/BookReaderJSIA.php'],
+    'BookReaderImages.php': ['https://www-dweb-cors.dev.archive.org/BookReader/BookReaderImages.php']
+  },
 
   'archive': ['https://www-dweb-cors.deb.archive.org/'], // Legacy
 
@@ -166,7 +172,7 @@ function _mirrorUrls(urlsArr) {
  * @param opts          wantOneHttp true if want just one HTTP url (for example to pass to a backgroundImage
  * @returns {string[]}  An array or urls for passing to DwebTransports
  */
-function routed(urls, { wantOneHttp=false} = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
+function routed(urls, { wantOneHttp = false } = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
   if (!urls) return []; // e.g. passed undefined
   const urlsArr = Array.isArray(urls) ? urls : [urls]; // Make sure its an array
   const routedUrls = ((typeof DwebTransports !== "undefined") && DwebTransports.mirror)

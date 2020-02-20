@@ -52,6 +52,7 @@ class ArchiveItem {
   }
 
   /**
+   * Export a data structure of files suitable for stringify, moves downloaded flag down one level.
    * @returns [ { } ] returns the file metadata with addition of downloaded field, suitable for storing in a cache
    */
   exportFiles() {

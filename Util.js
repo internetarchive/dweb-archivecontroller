@@ -789,7 +789,7 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
         publicdate: "",
         uploader: "",
         search_collection: homeQuery,
-        thumbnaillinks: "/archive/images/archivelogo246x246.jpg",
+        thumbnaillinks: "/archive/images/settings.svg"
     },
     "local":{
         identifier: "local",
@@ -798,7 +798,7 @@ const specialidentifiers = { //SEE-OTHER-ADD-SPECIAL-PAGE in dweb-mirror dweb-ar
         mediatype: "collection",
         publicdate: "",
         uploader: "",
-        thumbnaillinks: "/archive/images/settings.svg", //TODO find a good icon for this, but note its not currently visible anywhere.
+        thumbnaillinks: "/archive/images/baseline-home-24px.svg",  //TODO find a good icon for this, but note its not currently visible anywhere.
     },
     "settings": {
         identifier: "settings",

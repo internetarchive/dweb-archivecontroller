@@ -321,7 +321,7 @@ first   if true, will return an object for the first match,
 Typical usage ... `formats("format", this.metadata.format, {first:true}.downloadable`
 
 ##### enforceStringOrArray(meta, rules)
-Apply a set of rules (see item_rules.js) to metadata. 
+Apply a set of rules (see itemRules.js) to metadata. 
 Covers required fields, strings and arrays. 
 Generally returns warnings rather than errors, 
 converting data to something usable but not-ideal. (e.g. selecting first option from an array that should be a string)
@@ -362,9 +362,9 @@ Returns e.g. `a=foo&b=bar&c=hello%20world`
 
 ##### _query(queryobj, cb)
 Perform a query via gateway to advancedsearch 
-Deprecated as should be using DwebTransports but uses fetch_json
+Deprecated as should be using DwebTransports but uses fetchJson
 
-## File item_rules.js 
+## File itemRules.js 
 
 Contains a ruleset suitable for Util/rules but with some more.
 

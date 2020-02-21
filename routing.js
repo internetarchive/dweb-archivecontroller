@@ -175,13 +175,13 @@ function _mirrorUrls(urlsArr) {
 function routed(urls, { wantOneHttp = false } = {}) { // TODO-ROUTING remove p_resolvenames and resolvenames from DTS
   if (!urls) return []; // e.g. passed undefined
   const urlsArr = Array.isArray(urls) ? urls : [urls]; // Make sure its an array
-  const routedUrls = ((typeof DwebTransports !== "undefined") && DwebTransports.mirror)
+  const routedUrls = ((typeof DwebTransports !== 'undefined') && DwebTransports.mirror)
     ? _mirrorUrls(urlsArr)
     : [].concat(...urlsArr.map(u => resolveName(u)));
-  return wantOneHttp ? routedUrls.find(u => u.startsWith("http")) : routedUrls;
+  return wantOneHttp ? routedUrls.find(u => u.startsWith('http')) : routedUrls;
 }
 
-//TESTING start uncomment to test
+// TESTING start uncomment to test
 /*
 const testdata = {
   'dweb:/arc/archive.org/metadata/foo': [

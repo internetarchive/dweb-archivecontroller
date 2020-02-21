@@ -1,5 +1,6 @@
 /* global DwebTransports, DwebArchive */
 /* eslint-disable camelcase, consistent-return, curly, indent, object-property-newline, no-console, nonblock-statement-body-position */
+/* eslint-disable no-use-before-define *//* because of promisify pattern */
 const debug = require('debug')('dweb-archivecontroller:ArchiveItem');
 const ArchiveFile = require('./ArchiveFile');
 const ArchiveMember = require('./ArchiveMember');
@@ -35,7 +36,6 @@ function ArrayFilterTill(arr, f) {
  * query:  Either a string e.g. 'bananas' or a an object like {collection: 'mitratest', description: 'bananas'}
  */
 class ArchiveItem {
-
   /**
    *
    * @param identifier IDENTIFIER (optional)
@@ -167,7 +167,7 @@ class ArchiveItem {
    */
   fetch_metadata(opts = {}, cb) {
     if (typeof opts === 'function') { cb = opts; opts = {}; } // Allow opts parameter to be skipped
-    if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
+    if (cb) { try { f.call(this, cb); } catch (err) { cb(err); } } else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) { reject(err); } else { resolve(res); } }); } catch (err) { reject(err); } }); } // Promisify pattern v2
     function f(cb1) {
       // noinspection JSPotentiallyInvalidUsageOfClassThis
       if (this.itemid && !(this.metadata || this.is_dark)) { // If have not already fetched (is_dark means no .metadata field)
@@ -207,7 +207,7 @@ class ArchiveItem {
       cb(null, this);
     } else {
       debug('getting metadata for %s', this.itemid);
-      // Note dweb-archivecontoller/routing.js resolver will direct this to Gun, dweb-metadata service etc
+      // Note dweb-archivecontroller/routing.js resolver will direct this to Gun, dweb-metadata service etc
       const urls = routed('https://archive.org/metadata/' + this.itemid);
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
@@ -254,7 +254,7 @@ class ArchiveItem {
    * @returns {Promise<ARCHIVEITEM>|void} if no cb passed
    */
   fetch_bookreader(opts = {}, cb) {
-    if (cb) { return this._fetch_bookreader(opts, cb); } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
+    if (cb) { return this._fetch_bookreader(opts, cb); } else { return new Promise((resolve, reject) => this._fetch_bookreader(opts, (err, res) => { if (err) { reject(err); } else { resolve(res); } })); }
   }
 
   _fetch_bookreader({ page = undefined } = {}, cb) {
@@ -264,7 +264,7 @@ class ArchiveItem {
     const protocolServer = (typeof DwebArchive !== 'undefined' && DwebArchive.mirror) || 'https://www-dweb-cors.dev.archive.org';
     const [unusedProtocol, unused, server] = protocolServer.split('/');
     const subPrefixFile = this.files.find(f => f.metadata.format.startsWith('Single Page Processed'));
-    const subPrefix = subPrefixFile ? subPrefixFile.metadata.name.slice(0,subPrefixFile.metadata.name.lastIndexOf('_')) : undefined;
+    const subPrefix = subPrefixFile ? subPrefixFile.metadata.name.slice(0, subPrefixFile.metadata.name.lastIndexOf('_')) : undefined;
     const parms = parmsFrom({
       subPrefix,
       server,
@@ -272,7 +272,7 @@ class ArchiveItem {
       id: this.itemid,
       itemPath: this.dir,
       format: 'json',
-      requestUri: `/details/${this.itemid}${page ? '/page/'+page : ''}` // Doesnt seem to be used
+      requestUri: `/details/${this.itemid}${page ? '/page/' + page : ''}` // Doesnt seem to be used
     });
     const url = routed(`https://archive.org/BookReader/BookReaderJSIA.php?${parms}`, { wantOneHttp: true }); // Not really a valid url as would need to be a datanode
     DwebTransports.httptools.p_GET(url, {}, (err, res) => {
@@ -301,7 +301,7 @@ class ArchiveItem {
    * @returns {Promise<[ARCHIVEMEMBER]>|void} (if no cb passed)
    */
   fetch_query(opts = {}, cb) { // opts = {wantFullResp=false}
-    if (cb) { return this._fetch_query(opts, cb); } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) {reject(err)} else {resolve(res)} }))}
+    if (cb) { return this._fetch_query(opts, cb); } else { return new Promise((resolve, reject) => this._fetch_query(opts, (err, res) => { if (err) { reject(err); } else { resolve(res); } })); }
   }
 
   /**
@@ -331,7 +331,7 @@ class ArchiveItem {
 
   currentPageOfMembersFail() {
     // Probably failed if: wanted (based on page) more than in members(Search+Fav) and numFound is more than this
-    // Note be careful about using numFound if havent done search at all (now or in dweb-mirror previously)
+    // Note be careful about using numFound if have not done search at all (now or in dweb-mirror previously)
     const membersCombinedLength = (this.membersFav.length + this.membersSearch.length);
     return (this.page * this.rows > membersCombinedLength) && (membersCombinedLength < this.numFound);
   }
@@ -354,7 +354,7 @@ class ArchiveItem {
         // Catch any collections - note 'collection: might need to be first to catch a pattern match in mirror
         this.itemid && this.metadata && this.metadata.mediatype === 'collection' && 'collection:' + this.itemid,
         // Now two kinds of simple lists, but also only on collections
-        this.metadata && this.metadata.search_collection && "(" + this.metadata.search_collection.replace('\\"', '"') + ")",
+        this.metadata && this.metadata.search_collection && '(' + this.metadata.search_collection.replace('\\"', '"') + ')',
         this.itemid && this.metadata && this.metadata.mediatype === 'collection' && this.itemid && 'simplelists__items:' + this.itemid,
         this.itemid && this.metadata && this.metadata.mediatype === 'collection' && this.itemid && 'simplelists__holdings:' + this.itemid,
         // Search will have !this.item example = 'ElectricSheep'
@@ -391,7 +391,7 @@ class ArchiveItem {
     );
   }
 
-  _fetch_query({wantFullResp = false, noCache = false } = {}, cb) { // No opts currently
+  _fetch_query({ wantFullResp = false, noCache = false } = {}, cb) { // No opts currently
     /*
         rejects: TransportError or CodingError if no urls
 
@@ -462,7 +462,7 @@ class ArchiveItem {
                   cb(null, this.currentPageOfMembers(wantFullResp));
                 } else {
                   debug('Search order corruption - correcting by requery');
-                  Object.assign(queryObj, { rows: this.page * this.rows, page: 1});
+                  Object.assign(queryObj, { rows: this.page * this.rows, page: 1 });
                   _query(queryObj, { noCache }, (err1, j1) => {
                     if (err1) {
                       debug('ERROR re-query failed %s rows=%s page=%s', queryObj.q, queryObj.rows, queryObj.page);
@@ -476,7 +476,8 @@ class ArchiveItem {
                     cb(null, this.currentPageOfMembers(wantFullResp));
                   });
                 }
-              }});
+              }
+});
             return; // Will cb above after query
           }
           // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
@@ -485,7 +486,7 @@ class ArchiveItem {
         cb(null, this.currentPageOfMembers(wantFullResp));
       });
     } catch (err) {
-      console.error('Caught unexpected error in ArchiveItem._fetch_query',err);
+      console.error('Caught unexpected error in ArchiveItem._fetch_query', err);
       cb(err);
     }
   }
@@ -511,7 +512,7 @@ class ArchiveItem {
         in dweb-mirror/mirrorHttp/sendRelated (wantStream) to proxy to a client
 
     */
-    if (cb) { try { f.call(this, cb) } catch(err) { cb(err)}} else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) {reject(err)} else {resolve(res)} })} catch(err) {reject(err)}})} // Promisify pattern v2
+    if (cb) { try { f.call(this, cb); } catch (err) { cb(err); } } else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) { reject(err); } else { resolve(res); } }); } catch (err) { reject(err); } }); } // Promisify pattern v2
     function f(cb1) {
       const relatedUrl = routed(`https://be-api.us.archive.org/mds/v1/get_related/all/${this.itemid}`);
       if (wantStream) { // Stream doesnt really make sense unless caching to file
@@ -530,7 +531,7 @@ class ArchiveItem {
               cb1(err1); // Usually bad json
             }
           }
-        })
+        });
       }
     }
   }
@@ -574,7 +575,7 @@ class ArchiveItem {
    * @returns ARCHIVEFILE|undefined
    */
   playableFile(type) {
-    return this.files.find(fi => fi.playable(type));  // Can be undefined if none included
+    return this.files.find(fi => fi.playable(type)); // Can be undefined if none included
   }
 
   /**
@@ -583,7 +584,7 @@ class ArchiveItem {
    * @returns ARCHIVEFILE|undefined
    */
   fileFromFilename(filename) {
-    return filename ? this.files.find(f => f.metadata.name === filename) : undefined
+    return filename ? this.files.find(f => f.metadata.name === filename) : undefined;
   }
 
   /**
@@ -643,8 +644,7 @@ class ArchiveItem {
     const minimumFiles = [];
     if (this.itemid) { // Exclude 'search'
       console.assert(this.files, 'minimumForUI assumes .files already set up');
-      const thumbnailFiles = this.files.filter(af =>
-        af.metadata.name === '__ia_thumb.jpg'
+      const thumbnailFiles = this.files.filter(af => af.metadata.name === '__ia_thumb.jpg'
         || af.metadata.name.endsWith('_itemimage.jpg')
       );
       // Note thumbnail is also explicitly saved by saveThumbnail
@@ -695,8 +695,9 @@ class ArchiveItem {
   }
 
   isPalmLeaf() {
-    return this.metadata && this.metadata["external-identifier"] && this.metadata["external-identifier"].some(ei => ei.includes("//palmleaf.org"));
+    return this.metadata && this.metadata['external-identifier'] && this.metadata['external-identifier'].some(ei => ei.includes('//palmleaf.org'));
   }
+
   /**
    * Find what kind of text or what kind of movie, used to pick the appropriate UX
    * @returns {string|undefined|*}
@@ -708,19 +709,20 @@ class ArchiveItem {
     // `Single Page Processed...`) and a scandata file (i.e., a file whose format is either `Scandata` or `Scribe Scandata ZIP`).
     if (!this.itemid)
       return undefined; // Not applicable if identifier not defined.
-    console.assert(this.metadata && this.files,'Setup metadata and files before subtype which is synchronous');
+    console.assert(this.metadata && this.files, 'Setup metadata and files before subtype which is synchronous');
     switch (this.metadata.mediatype) {
       // If add subtypes for a new mediatype (other than texts, audio, movies) then needed also in Page.jsx
-      case 'texts':
+      case 'texts': {
         // const hasPDF = this.files.find(f => f.metadata.format.endsWith('PDF'));
         const hasSPP = this.files.find(f => f.metadata.format.startsWith('Single Page Processed')
-                                            && (f.metadata.format.endsWith('ZIP') || f.metadata.format.endsWith('Tar')));
+          && (f.metadata.format.endsWith('ZIP') || f.metadata.format.endsWith('Tar')));
         const hasScandata = this.files.find(f => ['Scandata', 'Scribe Scandata ZIP'].includes(f.metadata.format));
         return (hasSPP && hasScandata)
           ? 'bookreader'
           : 'carousel'; // e.g. thetaleofpeterra14838gut
+      }
       case 'movies':
-        return (this.metadata.collection && this.metadata.collection.some( c => ['tvnews', 'tvarchive'].includes(c))) // See same heuristic in hasPlaylist()
+        return (this.metadata.collection && this.metadata.collection.some(c => ['tvnews', 'tvarchive'].includes(c))) // See same heuristic in hasPlaylist()
         ? 'tv'
         : undefined;
       case 'audio':
@@ -743,7 +745,7 @@ class ArchiveItem {
   files4carousel() {
     return this.files
       .filter(f => f.metadata.format === 'JPEG')
-      .sort((a, b) => (a.metadata.name < b.metadata.name) ? -1 : (a.metadata.name > b.metadata.name) ? 1 : 0);
+      .sort((a, b) => ((a.metadata.name < b.metadata.name) ? -1 : (a.metadata.name > b.metadata.name) ? 1 : 0));
   }
 
   pageManifests() {

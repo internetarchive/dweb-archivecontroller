@@ -4,7 +4,7 @@ const prettierBytes = require('prettier-bytes');
 const waterfall = require('async/waterfall');
 const { debug } = require('debug')('dweb-archivecontroller:archivefile');
 const { routed } = require('./routing');
-const { fetch_json, formats, torrentRejectList } = require('./Util');
+const { fetchJson, formats, torrentRejectList } = require('./Util');
 
 // const DwebTransports = require('@internetarchive/dweb-transports'); //Not 'required' because available as window.DwebTransports by separate import
 
@@ -86,7 +86,7 @@ class ArchiveFile {
    *
    * @param cb(err, [URL])  Array of urls that might be a good place to get this item - will be subject to routing.js
    * @returns {Promise<[URL]>} if no cb, note urls are un-routed and should be routed by caller.
-   * @errors if fetch_json doesn't succeed, or retrieves something other than JSON
+   * @errors if fetchJson doesn't succeed, or retrieves something other than JSON
    */
   // TODO-TORRENT make consumer pass in magnetlink or maybe item if has it
   urls(cb) { // TODO-MIRROR fix this to make sense for _archive.torrent files which dont have sha1 and probably not IPFS
@@ -119,10 +119,10 @@ class ArchiveFile {
               // Connected to IPFS but dont have IPFS URL yet (not included by default because IPFS caching is slow)
               // Fjords: 17BananasIGotThis/17 Bananas? I Got This!.mp3  has a '?' in it
               const name = this.metadata.name.replace('?', '%3F');
-              // TODO using fetch_json on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
+              // TODO using fetchJson on server is ok, but it would be better to incorporate Gun & Wolk and go via DwebTransports
               // maybe problem offline but above test should catch cases where no IPFS so not useful
               // TODO not currently supported, see https://github.com/internetarchive/dweb-archivecontroller/issues/11
-              fetch_json(
+              fetchJson(
                 routed(`https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`, { wantOneHttp: true }),
                 (err, fileMeta) => {
                   if (!err) {

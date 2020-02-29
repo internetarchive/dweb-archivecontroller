@@ -1,4 +1,5 @@
 # dweb-archivecontroller - Change Log
+* v0.2.9 bugs with empty ids to expand; and with local; forward to cors for datanode 
 * v0.2.8 bracketing on buildQuery
 * v0.2.7 isPalmLeaf
 * v0.2.6 Object.DeeperAssign handle undefined

@@ -90,7 +90,7 @@ class ArchiveMember {
    */
   static expandMembers(members, cb) {
     const ids = members && members.filter(am => am.mediatype !== 'search').filter(am => !am.isExpanded()).map(am => am.identifier);
-    if (ids) {
+    if (ids.length) {
       this.expand(ids, (err, res) => {
         if (!err) {
           members = members.map(m => res[m.identifier] || m);

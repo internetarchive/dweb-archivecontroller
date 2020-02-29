@@ -1,3 +1,4 @@
+/* eslint-disable object-property-newline */
 /**
  * Export all of the public components here
  */
@@ -10,7 +11,7 @@ const RawBookReaderJSONResponse = require('./RawBookReaderJSONResponse');
 // Add specific cases here as used elsewhere.
 const { torrentConfigDefault, dwebMagnetLinkFrom, dwebTorrentObjectFrom, btihQueryUrl } = require('./mungeTorrent');
 const { formats, gateway, homeQuery, ObjectDeeperAssign,
-  ObjectFromEntries, ObjectMap, ObjectFilter, parmsFrom, specialidentifiers  } = require('./Util');
+  ObjectFromEntries, ObjectMap, ObjectFilter, parmsFrom, specialidentifiers } = require('./Util');
 const { routed } = require('./routing');
 
 exports = module.exports = { ArchiveFile, ArchiveItem, ArchiveMember, RawBookReaderResponse, RawBookReaderJSONResponse,
@@ -19,7 +20,7 @@ exports = module.exports = { ArchiveFile, ArchiveItem, ArchiveMember, RawBookRea
   ObjectFromEntries, ObjectMap, ObjectFilter, parmsFrom, specialidentifiers,
   routed
 };
-if (typeof window !== "undefined") { window.DwebArchiveController = exports; }
+if (typeof window !== 'undefined') { window.DwebArchiveController = exports; }
 module.exports = exports;
 
 

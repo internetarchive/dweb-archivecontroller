@@ -716,11 +716,12 @@ const rules = {
     required_fields: gateway.url_default_fl.split(',').filter(f => itemRules.required_fields.includes(f))
   },
 };
-function ObjectFromEntries(arr) { arr.reduce((res, kv) => (res[kv[0]] = kv[1], res), {}); }
-function ObjectFilter(obj, f) { ObjectFromEntries(Object.entries(obj).filter(kv => f(kv[0], kv[1]))); }
-function ObjectMap(obj, f) { ObjectFromEntries(Object.entries(obj).map(kv => f(kv[0], kv[1]))); }
-function ObjectForEach(obj, f) { Object.entries(obj).forEach(kv => f(kv[0], kv[1])); }
-function ObjectIndexFrom(arr, f) { ObjectFromEntries(arr.map(o => [f(o), o])); }
+//eslint-disable-next-line no-sequences */
+function ObjectFromEntries(arr) { return arr.reduce((res, kv) => (res[kv[0]] = kv[1], res), {}); }
+function ObjectFilter(obj, f) { return ObjectFromEntries(Object.entries(obj).filter(kv => f(kv[0], kv[1]))); }
+function ObjectMap(obj, f) { return ObjectFromEntries(Object.entries(obj).map(kv => f(kv[0], kv[1]))); }
+function ObjectForEach(obj, f) { return Object.entries(obj).forEach(kv => f(kv[0], kv[1])); }
+function ObjectIndexFrom(arr, f) { return ObjectFromEntries(arr.map(o => [f(o), o])); }
 
 function ObjectDeeperAssign(res, ...objs) {
   /*

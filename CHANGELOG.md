@@ -1,4 +1,5 @@
 # dweb-archivecontroller - Change Log
+* 0.2.10 Support merging dweb-metadata dweb-torrents dweb-cors
 * v0.2.9 bugs with empty ids to expand; and with local; forward to cors for datanode 
 * v0.2.8 bracketing on buildQuery
 * v0.2.7 isPalmLeaf

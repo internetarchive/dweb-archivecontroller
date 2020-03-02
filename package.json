@@ -51,9 +51,8 @@
     "url": "git://github.com/internetarchive/dweb-archivecontroller.git"
   },
   "scripts": {
-    "build": "webpack --mode development",
-    "dependers":  "grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json",
-    "editdependers":  "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`"
+    "dependers": "grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json",
+    "editdependers": "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`"
   },
-  "version": "0.2.9"
+  "version": "0.2.10"
 }

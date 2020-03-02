@@ -12,7 +12,8 @@ const torrentConfigDefault = {
   ],
   // 'urlList': ['https://archive.org/download/']
   // Archive.org/download has rotten cors support - only certain files, no headers on OPTIONS etc ...
-  'urlList': ['https://www-dweb-cors.dev.archive.org/download/']
+  'urlList': ['https://www-dweb-cors.dev.archive.org/download/'],
+  'archiveTorrentServer': ['https://www-dweb-metadata.dev.archive.org'] // Server that delivers munged torrents
 }
 
 

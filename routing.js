@@ -48,7 +48,7 @@ const archiveOrg = {
   'metadata': [
     'wolk://dweb.archive.org/metadata/', // TODO-TORRENT move wolk hijacker to use dweb-metadata but will work redirected
     'gun:/gun/arc/archive.org/metadata/', // TODO-TORRENT move gunDB hijacker to use dweb-metadata but will work redirected
-    'https://www-dweb-metadata.dev.archive.org/metadata/'], // Appends magnet link
+    'https://www-dweb-cors.dev.archive.org/metadata/'], // Appends magnet link
 
   'mds': ['https://be-api.us.archive.org/mds/'], // Currently only '/mds/v1/get_related/all/IDENTIFIER'
 
@@ -181,7 +181,7 @@ function routed(urls, { wantOneHttp = false } = {}) { // TODO-ROUTING remove p_r
   return wantOneHttp ? routedUrls.find(u => u.startsWith('http')) : routedUrls;
 }
 
-// TESTING start uncomment to test
+// TESTING start uncomment to test - note this may be out of date
 /*
 const testdata = {
   'dweb:/arc/archive.org/metadata/foo': [

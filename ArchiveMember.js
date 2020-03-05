@@ -3,7 +3,7 @@ const { enforceStringOrArray, gateway, rules, _query, ObjectIndexFrom, ObjectMap
 
 class ArchiveMember {
   /*
-      Not quite an item, a member is the result of either a search query or the ITEMID_members.json file.
+      Not quite an item, a member is the result of either a search query or the IDENTiFIER_members.json file.
       It can point to an item.
       An array of these can sit in the members field of an item.
    */
@@ -123,7 +123,7 @@ class ArchiveMember {
         'fl': gateway.url_default_fl, // Ensure get back fields necessary to paint tiles
       }, (err, j) => {
         if (err) {
-          debug('Unable to expand ids identifier=%s ids=%s err= %s', this.itemid || '', ids.join(', '), err.message);
+          debug('Unable to expand ids identifier=%s ids=%s err= %s', this.identifier || '', ids.join(', '), err.message);
           cb(err);
         } else {
           // Note some of these might still not be expanded if query partially or fully fails to expand

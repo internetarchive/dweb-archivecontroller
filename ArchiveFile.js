@@ -18,8 +18,8 @@ const { fetchJson, formats, torrentRejectList } = require('./Util');
  *
  */
 class ArchiveFile {
-  constructor({ itemid = undefined, magnetlink = undefined, metadata = undefined } = {}) {
-    this.itemid = itemid;
+  constructor({ identifier = undefined, magnetlink = undefined, metadata = undefined } = {}) {
+    this.identifier = identifier;
     this.magnetlink = magnetlink;
     if (typeof metadata.downloaded !== 'undefined') {
       // Support dweb-mirror which stores downloaded as AF.metadata.downloaded but needs it as AF.downloaded
@@ -47,10 +47,10 @@ class ArchiveFile {
     function f(cb1) {
       if (!archiveitem.metadata) {
         archiveitem.fetch_metadata({ copyDirectory }, (err, ai) => { // Note will load from cache if available and load ai.metadata and ai.files
-          if (err) { cb1(err); } else { this.new({ itemid: ai.itemid, magnetlink: ai.magnetlink, filename }, cb1); } });
+          if (err) { cb1(err); } else { this.new({ identifier: ai.identifier, magnetlink: ai.magnetlink, filename }, cb1); } });
       } else {
         const af = archiveitem.files.find(af1 => af1.metadata.name === filename); // af, (undefined if not found)
-        return af ? cb1(null, af) : cb1(new Error(`${archiveitem.itemid}/${filename} not found`));
+        return af ? cb1(null, af) : cb1(new Error(`${archiveitem.identifier}/${filename} not found`));
       }
     }
   }
@@ -97,10 +97,10 @@ class ArchiveFile {
         cbout(null,
           // routing.js will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
           // TODO make routing.js catch regexps see https://github.com/internetarchive/dweb-archivecontroller/issues/12
-          // `https://archive.org/download/${this.itemid}/${this.metadata.name}`);
-          `https://www-dweb-torrent.dev.archive.org/download/${this.itemid}/${this.metadata.name}`);
+          // `https://archive.org/download/${this.identifier}/${this.metadata.name}`);
+          `https://www-dweb-torrent.dev.archive.org/download/${this.identifier}/${this.metadata.name}`);
       } else {
-        const res = [`https://archive.org/download/${this.itemid}/${this.metadata.name}`];
+        const res = [`https://archive.org/download/${this.identifier}/${this.metadata.name}`];
         waterfall([
           (cb1) => DwebTransports.p_connectedNames(cb1),
           (connectedNames, cb1) => { // Look whether should add magnet link
@@ -123,7 +123,7 @@ class ArchiveFile {
               // maybe problem offline but above test should catch cases where no IPFS so not useful
               // TODO not currently supported, see https://github.com/internetarchive/dweb-archivecontroller/issues/11
               fetchJson(
-                routed(`https://archive.org/metadata/${this.itemid}/${encodeURIComponent(name)}`, { wantOneHttp: true }),
+                routed(`https://archive.org/metadata/${this.identifier}/${encodeURIComponent(name)}`, { wantOneHttp: true }),
                 (err, fileMeta) => {
                   if (!err) {
                     if (fileMeta.ipfs) { res.push(fileMeta.ipfs); }
@@ -150,7 +150,7 @@ class ArchiveFile {
    * @returns {URL} http URL - typically on dweb.archive.org or localhost:4244
    */
   httpUrl() {
-    return routed(`https://archive.org/download/${this.itemid}/${this.metadata.name}`, { wantOneHttp: true });
+    return routed(`https://archive.org/download/${this.identifier}/${this.metadata.name}`, { wantOneHttp: true });
   }
 
   /**
@@ -211,7 +211,7 @@ class ArchiveFile {
         ? prettierBytes(parseInt(this.metadata.size, 10))
         : ''; // For example files.xml has no size field
     } catch (err) {
-      debug('ERROR - cant get size for %s/%s', this.itemid, this.metadata.name);
+      debug('ERROR - cant get size for %s/%s', this.identifier, this.metadata.name);
       return '';
     }
   }

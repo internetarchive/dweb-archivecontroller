@@ -5,7 +5,7 @@ class RawBookReaderJSONResponse {
   /*
   Subset of the data structure returned from BookReaderJSON.php
 
-  See teh similar RawBookReaderResponse.js
+  See the similar RawBookReaderResponse.js
   */
   constructor(props) {
     // Create a new API from props, using a shallow copy (may switch to deeper copy if reqd)
@@ -14,7 +14,7 @@ class RawBookReaderJSONResponse {
 
   /**
    *
-   * @param from    ArchiveItem { itemid, metadata, server, bookreader: {data, brOptions}}
+   * @param from    ArchiveItem { identifier, metadata, server, bookreader: {data, brOptions}}
    * @param server  Optional override of server representing data node
    * @param protocol Optional override of 'https'
    * @returns {{server, archiveFormat: *, titleIndex: number, collection: (*|string), pageNums, title: *, pageHeights, url: string, titleImage: string, itemId: *, numPages, subPrefix, itemPath: *, pageWidths, leafNums: *, titleLeaf: string, previewImage: string}}

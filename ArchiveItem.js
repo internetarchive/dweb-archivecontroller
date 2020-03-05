@@ -29,7 +29,7 @@ function ArrayFilterTill(arr, f) {
  * This is just storage, the UI is in dweb-archive, this class is also used by dweb-mirror to encapsulate access to IA APIs
  *
  * Fields:
- * itemid|identifier: Archive.org reference for object (itemid is legacy - use identifier where possible)
+ * identifier: Archive.org reference for object (used to be itemid)
  * item:   Metadata decoded from JSON from metadata search.
  * members:  Array of data from a search.
  * files:  Will hold a list of files when its a single item
@@ -38,15 +38,14 @@ function ArrayFilterTill(arr, f) {
 class ArchiveItem {
   /**
    *
-   * @param identifier IDENTIFIER (optional)
-   * @param itemid     IDENTIFIER deprecated
+   * @param identifier     IDENTIFIER deprecated
    * @param query      search string e.g. 'foo' or 'creator:foo'
    * @param sort string  e.g. 'title' or '-downloads', only relevant to a query
    * @param metaapi    the result of a call to the metadata API (optional) {metadata:{...},...}
    */
-  constructor({ identifier = undefined, itemid = undefined, query = undefined, sort = [], metaapi = undefined } = {}) {
-    this.itemid = identifier || itemid; // Legacy itemid parameter
-    this.loadFromMetadataAPI(metaapi); // Note - must be after itemid loaded
+  constructor({ identifier = undefined, query = undefined, sort = [], metaapi = undefined } = {}) {
+    this.identifier = identifier;
+    this.loadFromMetadataAPI(metaapi); // Note - must be after identifier loaded
     this.query = query;
     this.sort = Array.isArray(sort) ? sort : sort ? [sort] : []; // Always an array here
   }
@@ -96,10 +95,10 @@ class ArchiveItem {
    */
   loadFromMetadataAPI(metaapi) {
     if (metaapi) {
-      console.assert(typeof this.itemid !== 'undefined', 'itemid should be loaded before here - if legit reason why not, then load from meta.identifier');
+      console.assert(typeof this.identifier !== 'undefined', 'identifier should be loaded before here - if legit reason why not, then load from meta.identifier');
       this.files = (metaapi && metaapi.files)
         ? metaapi.files.map((f) => new ArchiveFile({
-          itemid: this.itemid,
+          identifier: this.identifier,
           // Note code did show this.magnetlink, so maybe called that way, but I'm finding magnetlink in metaapi when
           // called directly in browser after call to metadata API - if called other way make this metaapi.magnetlink || this.magnetlink
           magnetlink: metaapi.magnetlink,
@@ -122,10 +121,10 @@ class ArchiveItem {
           // TODO-EPUB get size and downloaded from file in DM when already cached
           if (!this.files.find(af => af.metadata.format === 'Epub'))
             this.files.push(new ArchiveFile({ // Intentionally not passing magnetlink its not in the torrent
-              itemid: this.itemid, metadata: { name: this.itemid + '.epub', format: 'Epub' } }));
+              identifier: this.identifier, metadata: { name: this.identifier + '.epub', format: 'Epub' } }));
           if (!this.files.find(af => af.metadata.format === 'Kindle'))
             this.files.push(new ArchiveFile({ // Intentionally not passing magnetlink its not in the torrent
-              itemid: this.itemid, metadata: { name: this.itemid + '.mobi', format: 'Kindle' } }));
+              identifier: this.identifier, metadata: { name: this.identifier + '.mobi', format: 'Kindle' } }));
         }
         this.metadata = meta;
       }
@@ -146,7 +145,7 @@ class ArchiveItem {
    */
   loadFromBookreaderAPI(bookapi) {
     if (bookapi) {
-      console.assert(typeof this.itemid !== 'undefined', 'itemid should be loaded before here - if legit reason why not, then load from meta.identifier');
+      console.assert(typeof this.identifier !== 'undefined', 'identifier should be loaded before here - if legit reason why not, then load from meta.identifier');
       delete (bookapi.data.metadata); // Dont keep  metadata as its just a duplicate
       this.bookreader = bookapi.data;
     }
@@ -170,7 +169,7 @@ class ArchiveItem {
     if (cb) { try { f.call(this, cb); } catch (err) { cb(err); } } else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) { reject(err); } else { resolve(res); } }); } catch (err) { reject(err); } }); } // Promisify pattern v2
     function f(cb1) {
       // noinspection JSPotentiallyInvalidUsageOfClassThis
-      if (this.itemid && !(this.metadata || this.is_dark)) { // If have not already fetched (is_dark means no .metadata field)
+      if (this.identifier && !(this.metadata || this.is_dark)) { // If have not already fetched (is_dark means no .metadata field)
         // noinspection JSPotentiallyInvalidUsageOfClassThis
         this._fetch_metadata(opts, cb1); // Processes Fjords & Loads .metadata .files etc
       } else {
@@ -200,20 +199,20 @@ class ArchiveItem {
     /*
     Fetch the metadata for this item - dont use directly, use fetch_metadata.
      */
-    // If the itemid is one of the special ids and we are not talking to a mirror then load the predefined 'special' metadata
-    const special = specialidentifiers[this.itemid];
+    // If the identifier is one of the special ids and we are not talking to a mirror then load the predefined 'special' metadata
+    const special = specialidentifiers[this.identifier];
     if (!(typeof DwebArchive !== 'undefined' && DwebArchive.mirror) && typeof special !== 'undefined') {
       this.loadFromMetadataAPI({ metadata: special });
       cb(null, this);
     } else {
-      debug('getting metadata for %s', this.itemid);
+      debug('getting metadata for %s', this.identifier);
       // Note dweb-archivecontroller/routing.js resolver will direct this to Gun, dweb-metadata service etc
-      const urls = routed('https://archive.org/metadata/' + this.itemid);
+      const urls = routed('https://archive.org/metadata/' + this.identifier);
       // Fetch using Transports as its multiurl and might not be HTTP urls
       // noinspection JSUnusedLocalSymbols
-      DwebTransports.fetch(urls, { noCache, timeoutMS: 5000 }, (err, m) => { // TransportError if all urls fail (e.g. bad itemid)
+      DwebTransports.fetch(urls, { noCache, timeoutMS: 5000 }, (err, m) => { // TransportError if all urls fail (e.g. bad identifier)
         if (err) {
-          cb(new Error(`Unable to fetch metadata for ${this.itemid}\n ${err.message}`));
+          cb(new Error(`Unable to fetch metadata for ${this.identifier}\n ${err.message}`));
         } else {
           // noinspection ES6ModulesDependencies
           const metaapi = objectFrom(m); // Handle Buffer or Uint8Array
@@ -221,13 +220,13 @@ class ArchiveItem {
             this.is_dark = true; // Flagged so wont continuously try and call
             // TODO the \n here is ignored, need the DetailsError to convert to <BR> or handle a real linebreak same way
             cb(new Error('This item is no longer available. \nItems may be taken down for various reasons, including by decision of the uploader or due to a violation of our Terms of Use.'));
-          } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.itemid)) {
-            cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.itemid}`));
+          } else if (!metaapi.is_dark && (metaapi.metadata.identifier !== this.identifier)) {
+            cb(new Error(`_fetch_metadata didnt read back expected identifier for ${this.identifier}`));
           } else {
-            debug('metadata for %s fetched successfully %s', this.itemid, this.is_dark ? 'BUT ITS DARK' : '');
+            debug('metadata for %s fetched successfully %s', this.identifier, this.is_dark ? 'BUT ITS DARK' : '');
             if (this.hasPlaylist(metaapi)) {
               // Fetch and process a playlist (see processPlaylist for documentation of result)
-              const playlistUrls = routed(`https://archive.org/embed/${this.itemid}?output=json`);
+              const playlistUrls = routed(`https://archive.org/embed/${this.identifier}?output=json`);
               DwebTransports.fetch(playlistUrls, { noCache }, (err1, res) => { // TODO-PLAYLIST add to other transports esp Gun and cache in DwebMirror
                 if (err1) {
                   cb(new Error('Unable to read playlist: ' + err1.message));
@@ -269,10 +268,10 @@ class ArchiveItem {
       subPrefix,
       server,
       audioLinerNotes: this.metadata.mediatype === 'audio' ? 1 : 0,
-      id: this.itemid,
+      id: this.identifier,
       itemPath: this.dir,
       format: 'json',
-      requestUri: `/details/${this.itemid}${page ? '/page/' + page : ''}` // Doesnt seem to be used
+      requestUri: `/details/${this.identifier}${page ? '/page/' + page : ''}` // Doesnt seem to be used
     });
     const url = routed(`https://archive.org/BookReader/BookReaderJSIA.php?${parms}`, { wantOneHttp: true }); // Not really a valid url as would need to be a datanode
     DwebTransports.httptools.p_GET(url, {}, (err, res) => {
@@ -352,11 +351,11 @@ class ArchiveItem {
       this.query = [
         // TODO may want to turn this into a 'member' query if running to mirror, then have mirror cache on item and run this algorithm
         // Catch any collections - note 'collection: might need to be first to catch a pattern match in mirror
-        this.itemid && this.metadata && this.metadata.mediatype === 'collection' && 'collection:' + this.itemid,
+        this.identifier && this.metadata && this.metadata.mediatype === 'collection' && 'collection:' + this.identifier,
         // Now two kinds of simple lists, but also only on collections
         this.metadata && this.metadata.search_collection && '(' + this.metadata.search_collection.replace('\\"', '"') + ')',
-        this.itemid && this.metadata && this.metadata.mediatype === 'collection' && this.itemid && 'simplelists__items:' + this.itemid,
-        this.itemid && this.metadata && this.metadata.mediatype === 'collection' && this.itemid && 'simplelists__holdings:' + this.itemid,
+        this.identifier && this.metadata && this.metadata.mediatype === 'collection' && this.identifier && 'simplelists__items:' + this.identifier,
+        this.identifier && this.metadata && this.metadata.mediatype === 'collection' && this.identifier && 'simplelists__holdings:' + this.identifier,
         // Search will have !this.item example = 'ElectricSheep'
         this.metadata && this.metadata.mediatype === 'account' && 'uploader:' + this.metadata.uploader,
       ].filter(f => !!f).join(' OR '); // OR any non empty ones
@@ -371,7 +370,7 @@ class ArchiveItem {
    * @private
    */
   defaultSortArr() {
-    const ownOrderDef = Object.entries(collectionSortOrder).find(kv => kv[1].includes(this.itemid)); // Pre-defined
+    const ownOrderDef = Object.entries(collectionSortOrder).find(kv => kv[1].includes(this.identifier)); // Pre-defined
     const parentOrderDef = this.metadata && this.metadata.collection && (Object.entries(collectionSortOrder)
       .find(kv => this.metadata.collection.some(c => kv[1].includes(c))));
     return (
@@ -379,11 +378,11 @@ class ArchiveItem {
       ? this.sort
       : this.sort.length // string
       ? [this.sort]
-      : this.itemid && this.itemid.startsWith('fav-')
+      : this.identifier && this.identifier.startsWith('fav-')
       ? ['-updatedate']
       : ownOrderDef
       ? [ownOrderDef[0]]
-      : parentOrderDef && !excludeParentSortOrder.includes(this.itemid)
+      : parentOrderDef && !excludeParentSortOrder.includes(this.identifier)
       ? [parentOrderDef[0]]
       : (this.metadata && this.metadata.mediatype === 'account')
       ? ['-publicdate']
@@ -480,7 +479,7 @@ class ArchiveItem {
 });
             return; // Will cb above after query
           }
-          // Neither query, nor metadata.search_collection nor file/ITEMID_members.json so not really a collection
+          // Neither query, nor metadata.search_collection nor file/IDENTIFIER_members.json so not really a collection
         }
         // If did not do the query, just return what we've got
         cb(null, this.currentPageOfMembers(wantFullResp));
@@ -514,7 +513,7 @@ class ArchiveItem {
     */
     if (cb) { try { f.call(this, cb); } catch (err) { cb(err); } } else { return new Promise((resolve, reject) => { try { f.call(this, (err, res) => { if (err) { reject(err); } else { resolve(res); } }); } catch (err) { reject(err); } }); } // Promisify pattern v2
     function f(cb1) {
-      const relatedUrl = routed(`https://be-api.us.archive.org/mds/v1/get_related/all/${this.itemid}`);
+      const relatedUrl = routed(`https://be-api.us.archive.org/mds/v1/get_related/all/${this.identifier}`);
       if (wantStream) { // Stream doesnt really make sense unless caching to file
         // noinspection JSCheckFunctionSignatures
         DwebTransports.createReadStream(relatedUrl, {}, cb1);
@@ -562,7 +561,7 @@ class ArchiveItem {
     if (this.playlist[0] && this.playlist[0].imageurls) {
       return this.playlist[0].imageurls;
     } else {
-      const videoThumbnailUrls = this.files.filter(fi => (fi.metadata.name.includes(`${this.itemid}.thumbs/`))); // Array of ArchiveFile
+      const videoThumbnailUrls = this.files.filter(fi => (fi.metadata.name.includes(`${this.identifier}.thumbs/`))); // Array of ArchiveFile
       return videoThumbnailUrls.length
         ? videoThumbnailUrls[Math.min(videoThumbnailUrls.length - 1, 1)]
         : this.thumbnailFile(); // If none then return ordinary thumbnail, or undefined if no thumbnail for item either
@@ -642,7 +641,7 @@ class ArchiveItem {
     console.assert(this.metadata || this.is_dark, 'Should either be metadata or is_dark');
     if (this.is_dark) { return undefined; }
     const minimumFiles = [];
-    if (this.itemid) { // Exclude 'search'
+    if (this.identifier) { // Exclude 'search'
       console.assert(this.files, 'minimumForUI assumes .files already set up');
       const thumbnailFiles = this.files.filter(af => af.metadata.name === '__ia_thumb.jpg'
         || af.metadata.name.endsWith('_itemimage.jpg')
@@ -671,7 +670,7 @@ class ArchiveItem {
           console.assert(this.playlist, 'minimumforUI expects playlist');
           // Almost same logic for video & audio
           minimumFiles.push(...Object.values(this.playlist).map(track => track.sources[0].urls)); // First source from each (urls is a single ArchiveFile in this case)
-          // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://archive.org/services/img/itemid which should get canonicalized
+          // Audio uses the thumbnail image, puts URLs direct in html, but that always includes http://archive.org/services/img/identifier which should get canonicalized
           break;
         case 'movies':
           if (this.subtype === 'tv') {
@@ -707,7 +706,7 @@ class ArchiveItem {
     // Return a subtype used by different mechanisms to make decisions
     // From @hank in slack.bookreader-libre 2019-07-16 i believe it needs at least an image stack (i.e., a file whose format begins with
     // `Single Page Processed...`) and a scandata file (i.e., a file whose format is either `Scandata` or `Scribe Scandata ZIP`).
-    if (!this.itemid)
+    if (!this.identifier)
       return undefined; // Not applicable if identifier not defined.
     console.assert(this.metadata && this.files, 'Setup metadata and files before subtype which is synchronous');
     switch (this.metadata.mediatype) {

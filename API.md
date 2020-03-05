@@ -30,29 +30,29 @@ A controller that represents a file.
 Common arguments... 
 ```
  archiveitem:   Instance of ArchiveItem with or without its metadata loaded
- itemid:        Identifier of item 
-                (note gradually code is changing to use "identifier" especially as it touches the IAUX library)
+ identifier:        Identifier of item 
+                (note this used to be "itemid")
  metadata:      As returned by metadata call for file, or in .file of a item metadata API call
  filename:      Name of an existing file, (may be multipart e.g. foo/bar)
 ```
 
-##### new ArchiveFile({itemid, metadata})
+##### new ArchiveFile({identifier, metadata})
 
 Instantiate new object, optionally defining its metadata. Object typically has structure
 ```
 {
-    itemid: Archive Identifier of parent item 
+    identifier: Archive Identifier of parent item 
     metadata: { as returned by metadata API for each file }
 }
 ```
 
-##### ArchiveFile.new(({itemid, archiveitem, metadata, filename, cb(err,data)))
+##### ArchiveFile.new(({identifier, archiveitem, metadata, filename, cb(err,data)))
 
 Asynchronously create a new ArchiveFile instance and load its metadata from server.
 Will fetch metadata on archiveitem if not present.
 
 ```
- itemid is alternative to archiveitem 
+ identifier is alternative to archiveitem 
  filename:      Name of an existing file, (may be multipart e.g. foo/bar)
  cb(err, archivefile): passed Archive File
  resolves to:   archivefile if no cb
@@ -104,8 +104,8 @@ A controller that represents an Archive item.
 Common Parameters:
 ```
  bookapi:       Result of bookreader api call, or export
- itemid:        Identifier of item 
-                (note gradually code is changing to use "identifier" especially as it touches the IAUX library)
+ identifier:        Identifier of item 
+                (note this used to be "itemid")
  query          Query string such as "collection: foo"
  metaapi        Result of a metadata API call (includes files, reviews etc)
  sort           Array of strings for sorting query
@@ -341,9 +341,9 @@ Map three letter (marc) codes to Longer names
 ##### rules = { RULESET: RULES } 
 ```
 { RULESET: { 
-    repeatable_fields: [IDENTiFIER*],   fields that may be repeated i.e. always return as array
-    nonrepeatable_fields: [IDENTiFIER*], fields that may not be repeated always return as a string
-    requiredfields: [IDENTiFIER*]}}     fields that are required convert to "" or []
+    repeatable_fields: [IDENTIFIER*],   fields that may be repeated i.e. always return as array
+    nonrepeatable_fields: [IDENTIFIER*], fields that may not be repeated always return as a string
+    requiredfields: [IDENTIFIER*]}}     fields that are required convert to "" or []
     }
 }
 ```

@@ -1,4 +1,7 @@
 # dweb-archivecontroller - Change Log
+* v0.2.11
+  * Itemid -> Identifier
+  * Point at new longterm address for tracker and move pointer from dweb-metadata to dweb-cors (which it was merged into) 
 * 0.2.10 Support merging dweb-metadata dweb-torrents dweb-cors
 * v0.2.9 bugs with empty ids to expand; and with local; forward to cors for datanode 
 * v0.2.8 bracketing on buildQuery

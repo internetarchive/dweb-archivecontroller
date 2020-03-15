@@ -5,7 +5,7 @@ const { parmsFrom } = require('./Util.js');
 // module.exports.toMagnetURI = magnet.encode
 
 const torrentConfigDefault = {
-  trackers: ['wss://dweb.archive.org:6969', // TODO see https://github.com/internetarchive/dweb-mirror/issues/292
+  trackers: ['wss://wt.archive.org:6969',
     'wss://tracker.btorrent.xyz',
     'wss://tracker.openwebtorrent.com',
     'wss://tracker.fastcast.nz'
@@ -13,7 +13,7 @@ const torrentConfigDefault = {
   // 'urlList': ['https://archive.org/download/']
   // Archive.org/download has rotten cors support - only certain files, no headers on OPTIONS etc ...
   'urlList': ['https://www-dweb-cors.dev.archive.org/download/'],
-  'archiveTorrentServer': ['https://www-dweb-metadata.dev.archive.org'] // Server that delivers munged torrents
+  'archiveTorrentServer': ['https://www-dweb-cors.dev.archive.org'] // Server that delivers munged torrents
 }
 
 

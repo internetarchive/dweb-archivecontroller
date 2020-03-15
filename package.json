@@ -54,5 +54,5 @@
     "dependers": "grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json",
     "editdependers": "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`"
   },
-  "version": "0.2.10"
+  "version": "0.2.11"
 }

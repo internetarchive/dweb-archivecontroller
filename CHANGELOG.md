@@ -1,4 +1,5 @@
 # dweb-archivecontroller - Change Log
+* v0.2.12 fix bug with torrent announce
 * v0.2.11
   * Itemid -> Identifier
   * Point at new longterm address for tracker and move pointer from dweb-metadata to dweb-cors (which it was merged into) 

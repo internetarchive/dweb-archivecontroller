@@ -33,8 +33,8 @@ function torrentObjectFrom({array=undefined, buffer=undefined}) {
 }
 function dwebTorrentObjectFrom({archiveArray = undefined, archiveBuffer = undefined, config = torrentConfigDefault }) {
   const torrentObject = torrentObjectFrom({ array: archiveArray, buffer: archiveBuffer }); // archiveTorrentObject with broken tracker and url-list fields
-  torrentObject['announce-list'] = torrentObject['announce-list'].map(b => b.toString());
-  torrentObject['announce-list'].push(...config.trackers);
+  torrentObject['announce-list'] = torrentObject['announce-list'].map(b => [b.toString()]);
+  torrentObject['announce-list'].push(...config.trackers.map(b=>[b]));
   torrentObject['url-list'] = config.urlList; // archive.org default includes absolute data server and root-relative
   return torrentObject; // Now converted to dwebTorrentObject
 }

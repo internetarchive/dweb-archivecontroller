@@ -43,7 +43,7 @@
     "webpack-dev-server": "^3.1.14"
   },
   "homepage": "https://github.com/internetarchive/dweb-archivecontroller#readme",
-  "keywords": [],
+  "keywords": ["dweb"],
   "license": "AGPL-3.0",
   "name": "@internetarchive/dweb-archivecontroller",
   "repository": {
@@ -54,5 +54,5 @@
     "dependers": "grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json",
     "editdependers": "vi `grep -l dweb-archivecontroller ../dweb*/package.json | grep -v dweb-archivecontroller/package.json`"
   },
-  "version": "0.2.12"
+  "version": "0.2.13"
 }

@@ -1,4 +1,5 @@
 # dweb-archivecontroller - Change Log
+* v0.2.13 fix bug where click on Torrent file on dweb.archive.org, www-dweb-torrent is no longer running, its www-dweb-cors
 * v0.2.12 fix bug with torrent announce
 * v0.2.11
   * Itemid -> Identifier

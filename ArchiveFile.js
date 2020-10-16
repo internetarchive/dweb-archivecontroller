@@ -98,7 +98,7 @@ class ArchiveFile {
           // routing.js will add www-dweb-torrent.dev.archive.org/download/IDENTIFIER/IDENTIFIER_archive.torrent or via mirror
           // TODO make routing.js catch regexps see https://github.com/internetarchive/dweb-archivecontroller/issues/12
           // `https://archive.org/download/${this.identifier}/${this.metadata.name}`);
-          `https://www-dweb-torrent.dev.archive.org/download/${this.identifier}/${this.metadata.name}`);
+          `https://www-dweb-cors.dev.archive.org/download/${this.identifier}/${this.metadata.name}`);
       } else {
         const res = [`https://archive.org/download/${this.identifier}/${this.metadata.name}`];
         waterfall([

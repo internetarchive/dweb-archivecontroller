@@ -450,6 +450,7 @@ class ArchiveItem {
                 // TODO 2019-08-27 see https://github.com/internetarchive/dweb-mirror/issues/248 want ability to see error and requeue
               } else {
                 const oldids = this.membersSearch.map(am => am.identifier);
+                // TODO - this next line fails if the response does not contain a "docs" e.g. from - https://archive.org/advancedsearch.php?output=json&q=compute!&rows=30&page=1&sort[]=-downloads&and[]=&save=yes&fl=identifier%2Ctitle%2Ccollection%2Cmediatype%2Cdownloads%2Ccreator%2Cnum_reviews%2Cpublicdate%2Citem_count%2Cloans__status__status
                 const corruptOrder = j.response.docs.find(o => oldids.includes(o.identifier)); // Shouldnt be any overlap
                 // If the order is corrupt we should do the full search but we'll fake it and pretend its just one big page
                 if (!corruptOrder) {

@@ -201,6 +201,7 @@ const _formatarr = [
   { format: 'Word Document', ext: '.doc', type: 'application', mimetype: 'application/msword', playable: false, downloadable: undefined },
   { format: 'Word Document', ext: '.docx', type: 'application', mimetype: 'application/msword', playable: false, downloadable: undefined },
   { format: 'XML', ext: '.xml', type: 'text', mimetype: 'text/xml', playable: false, downloadable: 'XML' },
+  { format: 'youtube-dl Video Description File', ext: '.description', type: 'text', mimetype: 'text/plain', playable: undefined, downloadable: 'TEXT' },
   { format: 'ZIP', ext: '.zip', type: 'application', mimetype: 'application/zip', playable: false, downloadable: 'ZIP' },
   { format: undefined, ext: '.3gp', type: 'video', mimetype: 'video/3gpp', playable: undefined, downloadable: undefined },
   { format: undefined, ext: '.3gpp', type: 'video', mimetype: 'video/3gpp', playable: undefined, downloadable: undefined },

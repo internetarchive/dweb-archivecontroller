@@ -2,6 +2,9 @@ const bencode = require('bencode');
 const magnet = require('magnet-uri');
 const sha1 = require('simple-sha1');
 const { parmsFrom } = require('./Util.js');
+// TODO Using magnet-uri 7.* is ESM only, this wont load on dweb-mirror since dweb-mirror is not an ESM module nor is dweb-archivecontroller
+// import magnet from 'magnet-uri';
+
 // module.exports.toMagnetURI = magnet.encode
 
 const torrentConfigDefault = {

@@ -1,4 +1,6 @@
 # dweb-archivecontroller - Change Log
+* 0.2.16 bunch of dependabot updates
+* 0.2.15 Handle error return from elasticsearch response
 * v0.2.14 Add .description to file extensions 
 * v0.2.13 fix bug where click on Torrent file on dweb.archive.org, www-dweb-torrent is no longer running, its www-dweb-cors
 * v0.2.12 fix bug with torrent announce

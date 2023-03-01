@@ -375,18 +375,18 @@ class ArchiveItem {
       .find(kv => this.metadata.collection.some(c => kv[1].includes(c))));
     return (
       (Array.isArray(this.sort) && this.sort.length)
-      ? this.sort
-      : this.sort.length // string
-      ? [this.sort]
-      : this.identifier && this.identifier.startsWith('fav-')
-      ? ['-updatedate']
-      : ownOrderDef
-      ? [ownOrderDef[0]]
-      : parentOrderDef && !excludeParentSortOrder.includes(this.identifier)
-      ? [parentOrderDef[0]]
-      : (this.metadata && this.metadata.mediatype === 'account')
-      ? ['-publicdate']
-      : ['-downloads']
+        ? this.sort
+        : this.sort.length // string
+          ? [this.sort]
+          : this.identifier && this.identifier.startsWith('fav-')
+            ? ['-updatedate']
+            : ownOrderDef
+              ? [ownOrderDef[0]]
+              : parentOrderDef && !excludeParentSortOrder.includes(this.identifier)
+                ? [parentOrderDef[0]]
+                : (this.metadata && this.metadata.mediatype === 'account')
+                  ? ['-publicdate']
+                  : ['-downloads']
     );
   }
 
@@ -442,8 +442,9 @@ class ArchiveItem {
               debug('_fetch_query filling in the gap retrieved so far=%s expected %s fetching page=%s rows=%s', this.membersSearch.length, expectedCurrentLengthMembersSearch, queryObj.page, queryObj.rows);
             }
             _query(queryObj, { noCache }, (err, j) => {
-              if (err) { // Will get error 'failed to fetch' if fails
-                debug('ERROR _fetch_query %s', err.message);
+              // ElasticSearch can return an error by setting an error field instead of failing but treat same, i.e. report and fallback to existing page
+              if (err || j.error) { // Will get error 'failed to fetch' if fails
+                debug('ERROR _fetch_query %s', err && err.message || j.error );
                 cb(null, this.currentPageOfMembers(wantFullResp));
                 // Note not calling cb(err,undefined) because if fail to fetch more items the remainder may be good especially if offline
                 // 2019-01-20 Mitra - I'm not sure about this change, on client maybe wrong, on mirror might be right.
@@ -477,7 +478,7 @@ class ArchiveItem {
                   });
                 }
               }
-});
+            });
             return; // Will cb above after query
           }
           // Neither query, nor metadata.search_collection nor file/IDENTIFIER_members.json so not really a collection
@@ -723,15 +724,15 @@ class ArchiveItem {
       }
       case 'movies':
         return (this.metadata.collection && this.metadata.collection.some(c => ['tvnews', 'tvarchive'].includes(c))) // See same heuristic in hasPlaylist()
-        ? 'tv'
-        : undefined;
+          ? 'tv'
+          : undefined;
       case 'audio':
         return this.files.find(af => af.metadata.format === 'JSON SRT')
-        ? 'radio'
-        : (this.metadata.collection
+          ? 'radio'
+          : (this.metadata.collection
             && ['acdc', 'samples_only', 'meridamexico'].some(c => this.metadata.collection.includes(c)))
-        ? 'album'
-        : undefined;
+            ? 'album'
+            : undefined;
       default:
         return undefined;
     }

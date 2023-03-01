@@ -21,7 +21,7 @@ const archiveOrg = {
   // 'contenthash': ['https://dweb.archive.org/contenthash/'], // TODO Legacy, if need to support should move to static microservice
 
   // This group are essentially the same thing
-  // Note does not support https://archive.org/download/foo which really wants details page, but that shouldnt come here
+  // Note does not support https://archive.org/download/foo which really wants details page, but that should not come here
   'download': ['https://archive.org/cors/'], // Does not support HEAD but efficient since hits web nodes
   // 'download': ['https://www-dweb-cors.dev.archive.org/download'], // Works but direct /cors/ is quicker
   'serve': ['https://archive.org/cors/'], // see example in the metadata.description field in details/commute
